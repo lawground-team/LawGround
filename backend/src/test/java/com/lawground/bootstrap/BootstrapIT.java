@@ -52,7 +52,7 @@ class BootstrapIT {
                         jdbc.queryForObject(
                                 "SELECT count(*) FROM flyway_schema_history WHERE success = true",
                                 Integer.class))
-                .isEqualTo(2);
+                .isEqualTo(5);
         assertThat(
                         jdbc.queryForObject(
                                 "SELECT extversion FROM pg_extension WHERE extname = 'vector'",
@@ -99,7 +99,11 @@ class BootstrapIT {
     void openApiCanBeGeneratedWithPinnedSpringdocVersion() throws Exception {
         mvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.info.title").value("LawGround API"));
+                .andExpect(jsonPath("$.info.title").value("LawGround API"))
+                .andExpect(
+                        jsonPath(
+                                        "$.paths['/api/v1/questions'].post.parameters[?(@.name == 'X-CSRF-TOKEN')].required")
+                                .value(org.hamcrest.Matchers.contains(true)));
         mvc.perform(get("/swagger-ui/index.html")).andExpect(status().isOk());
     }
 }

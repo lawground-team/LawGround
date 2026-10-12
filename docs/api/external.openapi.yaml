@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: LawGround 사용자 API
   version: 0.1.0-draft
-  description: 등록·단건 조회는 2주차 구현. 나머지는 검토용 초안이며 팀 합의/전체 구현 완료를 뜻하지 않는다. 모든 예시는 합성 데이터다.
+  description: 문제 CRUD·제출 목록·검수 조문 조회와 개발 Mock 분석 API를 구현했다. 실제 모델·수집·인증·추천은 후속 범위다. 팀 합의/전체 구현 완료를 뜻하지 않으며 모든 예시는 합성 데이터다.
 servers:
 - url: http://127.0.0.1:8080/api/v1
 x-contract-status: draft-not-team-approved
@@ -148,7 +148,7 @@ paths:
     get:
       operationId: listQuestions
       summary: listQuestions
-      x-implementation-status: planned
+      x-implementation-status: implemented-week-03
       security:
       - SessionCookie: []
       responses:
@@ -313,7 +313,7 @@ paths:
     put:
       operationId: replaceQuestion
       summary: replaceQuestion
-      x-implementation-status: planned
+      x-implementation-status: implemented-week-03
       security:
       - SessionCookie: []
       responses:
@@ -467,7 +467,7 @@ paths:
     delete:
       operationId: deleteQuestion
       summary: deleteQuestion
-      x-implementation-status: planned
+      x-implementation-status: implemented-week-03
       security:
       - SessionCookie: []
       responses:
@@ -553,7 +553,7 @@ paths:
     post:
       operationId: createTraceRun
       summary: createTraceRun
-      x-implementation-status: planned
+      x-implementation-status: implemented-mock
       security:
       - SessionCookie: []
       responses:
@@ -629,6 +629,18 @@ paths:
                 requestId: 00000000-0000-4000-8000-000000000009
                 timestamp: '2026-10-03T13:00:00Z'
                 fieldErrors: []
+        '503':
+          description: 분석 서비스 비활성화 또는 미준비
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: REQUEST_FAILED
+                message: 분석 서비스가 준비되지 않았습니다.
+                requestId: 00000000-0000-4000-8000-000000000009
+                timestamp: '2026-10-12T10:00:00Z'
+                fieldErrors: []
       requestBody:
         required: true
         content:
@@ -647,7 +659,7 @@ paths:
     get:
       operationId: listTraceRuns
       summary: listTraceRuns
-      x-implementation-status: planned
+      x-implementation-status: implemented-mock
       security:
       - SessionCookie: []
       responses:
@@ -732,7 +744,7 @@ paths:
     get:
       operationId: getJob
       summary: getJob
-      x-implementation-status: planned
+      x-implementation-status: implemented-mock
       security:
       - SessionCookie: []
       responses:
@@ -806,7 +818,7 @@ paths:
     get:
       operationId: getTraceRun
       summary: getTraceRun
-      x-implementation-status: planned
+      x-implementation-status: implemented-mock
       security:
       - SessionCookie: []
       responses:
@@ -887,7 +899,7 @@ paths:
     get:
       operationId: getTraceResult
       summary: getTraceResult
-      x-implementation-status: planned
+      x-implementation-status: implemented-mock
       security:
       - SessionCookie: []
       responses:
@@ -1000,7 +1012,7 @@ paths:
     post:
       operationId: cancelTraceRun
       summary: cancelTraceRun
-      x-implementation-status: planned
+      x-implementation-status: implemented-mock
       security:
       - SessionCookie: []
       responses:
@@ -1178,7 +1190,7 @@ paths:
     get:
       operationId: getLawArticle
       summary: getLawArticle
-      x-implementation-status: planned
+      x-implementation-status: implemented-week-03
       security: []
       responses:
         '200':

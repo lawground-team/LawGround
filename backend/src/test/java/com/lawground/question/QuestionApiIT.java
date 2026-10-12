@@ -374,11 +374,32 @@ class QuestionApiIT {
     }
 
     @Test
-    void invalidUuidAndFutureWriteRoutesAreRejected() throws Exception {
+    void invalidUuidIsRejectedAndAuthenticatedLibraryIsAvailable() throws Exception {
         for (String id : new String[] {"bad", "1-1-1-1-1"})
             mvc.perform(get("/api/v1/questions/" + id)).andExpect(status().isBadRequest());
         mvc.perform(get("/api/v1/questions").with(user(owner.toString())))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items").isEmpty());
+    }
+
+    @Test
+    void defaultAnalysisDoesNotSilentlyRunMockOrCreateJobs() throws Exception {
+        UUID id = UUID.fromString(create(input(), owner).path("id").asText());
+        mvc.perform(
+                        post("/api/v1/questions/" + id + "/trace-runs")
+                                .with(user(owner.toString()))
+                                .with(csrf())
+                                .header("Idempotency-Key", UUID.randomUUID())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"questionRevision\":1}"))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.code").value("REQUEST_FAILED"));
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT count(*) FROM trace_runs WHERE question_id=?",
+                                Integer.class,
+                                id))
+                .isZero();
     }
 
     @Test

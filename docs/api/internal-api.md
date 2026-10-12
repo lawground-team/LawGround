@@ -1,6 +1,6 @@
 # Spring ↔ Python 내부 계약 제안
 
-**Python 담당자 검토 전 초안 0.1.0-draft**. 원본은 [internal.openapi.yaml](internal.openapi.yaml). JSON 예시와 검증기는 준비했지만 Python 서비스·HTTP 어댑터·실제 모델은 아직 구현하지 않았다. 모델명 fixture 접두사는 합성 예시다.
+**Python 담당자 검토 전 초안 0.1.0-draft**. 원본은 [internal.openapi.yaml](internal.openapi.yaml). JSON 예시와 검증기를 준비했고 Python 개발 Mock 서버 PR #5가 main에 병합됐다. Spring HTTP 어댑터·실제 모델 연결은 아직 없다. 이번 Spring 큐는 자체 Mock이며 wire 공동 합의/실제 모델 완료와 구분한다. 모델명 fixture 접두사는 합성 예시다.
 
 ## 역할과 흐름
 

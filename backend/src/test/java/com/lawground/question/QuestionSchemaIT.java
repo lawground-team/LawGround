@@ -84,18 +84,30 @@ class QuestionSchemaIT {
     }
 
     @Test
-    void emptyDatabaseContainsOnlyThisWeeksTablesAndVector() {
+    void emptyDatabaseContainsVersionedProductTablesAndVector() {
         assertThat(
                         jdbc.queryForObject(
                                 "SELECT count(*) FROM flyway_schema_history WHERE success AND type='SQL'",
                                 Integer.class))
-                .isEqualTo(2);
+                .isEqualTo(5);
         assertThat(
                         jdbc.queryForList(
                                 "SELECT table_name FROM information_schema.tables WHERE table_schema='public' ORDER BY table_name",
                                 String.class))
                 .containsExactly(
-                        "flyway_schema_history", "members", "question_choices", "questions");
+                        "evidence_results",
+                        "flyway_schema_history",
+                        "law_articles",
+                        "law_chunk_indexes",
+                        "law_chunks",
+                        "law_versions",
+                        "laws",
+                        "members",
+                        "processing_jobs",
+                        "question_choices",
+                        "question_embeddings",
+                        "questions",
+                        "trace_runs");
         assertThat(
                         jdbc.queryForObject(
                                 "SELECT extversion FROM pg_extension WHERE extname='vector'",
@@ -128,7 +140,7 @@ class QuestionSchemaIT {
                         sql.queryForObject(
                                 "SELECT count(*) FROM flyway_schema_history WHERE success AND type='SQL'",
                                 Integer.class))
-                .isEqualTo(2);
+                .isEqualTo(5);
         assertThat(
                         sql.queryForObject(
                                 "SELECT checksum FROM flyway_schema_history WHERE version='001' OR version='1'",
@@ -335,25 +347,13 @@ class QuestionSchemaIT {
                 postgres.execInContainer(
                         "sh",
                         "-c",
-                        "pg_dump -U test -d test --schema=public --no-owner --no-privileges > /tmp/week2.sql");
+                        "pg_dump -U test -d test --no-owner --no-privileges > /tmp/week2.sql");
         assertThat(dump.getExitCode()).isZero();
         assertThat(
                         postgres.execInContainer("createdb", "-U", "test", "restore_week2")
                                 .getExitCode())
                 .isZero();
-        assertThat(
-                        postgres.execInContainer(
-                                        "psql",
-                                        "-U",
-                                        "test",
-                                        "-d",
-                                        "restore_week2",
-                                        "-v",
-                                        "ON_ERROR_STOP=1",
-                                        "-c",
-                                        "DROP SCHEMA public")
-                                .getExitCode())
-                .isZero();
+        // A full pg_dump expects the new database's default public schema to exist.
         var restore =
                 postgres.execInContainer(
                         "psql",
@@ -378,7 +378,7 @@ class QuestionSchemaIT {
                                         "-v",
                                         "ON_ERROR_STOP=1",
                                         "-c",
-                                        "CREATE EXTENSION vector")
+                                        "CREATE EXTENSION IF NOT EXISTS vector")
                                 .getExitCode())
                 .isZero();
         var restored =
