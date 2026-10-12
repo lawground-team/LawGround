@@ -90,3 +90,9 @@ IDE 설정(`.vscode/`, `.idea/`, Eclipse 설정 등), 빌드 결과, `.env`, `AI
 로컬 `AI/`와 에이전트 파일은 clone으로 복원되지 않으므로 개인적으로 보관하세요. 팀 공유 문서는 `docs/`에 둡니다.
 
 자세한 안내는 [공유 문서](docs/README.md), [백엔드 구조](docs/architecture/backend.md), [문제 해결](docs/runbooks/local-development.md)을 참고하세요.
+
+## 문제 라이브러리·개발 Mock 분석·검색 기반
+
+문제 목록/수정/삭제, 멱등 분석 접수·작업/결과 조회·취소, RabbitMQ 복구, 법령 fixture import, PostgreSQL cosine/FTS/RRF 기반을 추가했습니다. 개발 Mock은 기본 비활성화이며 실제 법령 판정·모델 연결·Google 로그인은 미완료입니다.
+
+[아키텍처·저장 구조](docs/architecture/analysis-search.md) · [Swagger 검토 순서](docs/runbooks/week-02-03-review.md) · [OAuth 준비](docs/runbooks/oauth-preparation.md). backend 검사 후 `python scripts/check_runtime_responses.py`로 합성 API 응답을 공유 계약과 대조할 수 있습니다.

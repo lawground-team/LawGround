@@ -8,7 +8,7 @@
 4. `cd backend` 후 Windows는 `.\gradlew.bat bootRun`, Linux/macOS는 `./gradlew bootRun`을 실행한다.
 5. `http://127.0.0.1:8080/actuator/health/readiness`가 UP인지 확인한다. Swagger는 `/swagger-ui/index.html`에 있다.
 
-V001 vector 확장과 V002 members/questions/question_choices가 적용된다. 문제 등록·단건 조회를 구현했으며 목록/수정/삭제·분석·실제 로그인은 후속 주차다. 기존 볼륨은 유지하고 새 Flyway 버전이 자동 적용되는지 기동 로그로 확인한다.
+V001~V005가 적용된다. 문제 CRUD·제출 목록·개발 Mock 분석과 검색 계산 기반을 구현했다. 실제 모델·수집·로그인은 후속 범위다. 기존 볼륨은 유지하고 새 Flyway 버전이 자동 적용되는지 기동 로그로 확인한다. [새 기능 검토 순서](week-02-03-review.md)를 따른다.
 
 ## 문제 등록·조회 재현 (local 전용)
 

@@ -69,6 +69,8 @@ tasks.register('integrationTest', Test) {
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
     include '**/*IT.class'
+    // Keep API response evidence when Gradle restores this test task from cache.
+    outputs.dir(layout.buildDirectory.dir('contract-responses'))
     shouldRunAfter test
 }
 

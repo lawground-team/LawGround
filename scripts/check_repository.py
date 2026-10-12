@@ -65,7 +65,7 @@ def main():
             failures.append("Potential secret in tracked file: " + path)
         if local.name == ".env.example":
             for line in content.splitlines():
-                if line.startswith(("POSTGRES_PASSWORD=", "RABBITMQ_PASSWORD=", "AI_SERVICE_API_KEY=", "LAW_GO_KR_API_KEY=")):
+                if line.startswith(("POSTGRES_PASSWORD=", "RABBITMQ_PASSWORD=", "AI_SERVICE_API_KEY=", "LAW_GO_KR_API_KEY=", "GOOGLE_CLIENT_SECRET=")):
                     if line.split("=", 1)[1].strip():
                         failures.append("Example credential must be empty: " + path)
 

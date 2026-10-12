@@ -85,6 +85,25 @@ public class GlobalExceptionHandler {
                 request);
     }
 
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponseDTO> integrity(
+            org.springframework.dao.DataIntegrityViolationException exception,
+            HttpServletRequest request) {
+        for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+            if (cause instanceof java.sql.SQLException sql
+                    && "23505".equals(sql.getSQLState())
+                    && sql.getMessage() != null
+                    && sql.getMessage().contains("questions_active_owner_hash_uq"))
+                return response(
+                        HttpStatus.CONFLICT,
+                        ErrorCode.DUPLICATE_QUESTION,
+                        "이미 등록한 문제입니다.",
+                        List.of(),
+                        request);
+        }
+        return unexpected(exception, request);
+    }
+
     private ResponseEntity<ErrorResponseDTO> response(
             HttpStatusCode status,
             ErrorCode code,

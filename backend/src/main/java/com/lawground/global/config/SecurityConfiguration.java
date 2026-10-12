@@ -50,6 +50,19 @@ public class SecurityConfiguration {
                     }
                     requests.requestMatchers(HttpMethod.POST, "/api/v1/questions").authenticated();
                     requests.requestMatchers(HttpMethod.GET, "/api/v1/questions/*").permitAll();
+                    requests.requestMatchers(
+                                    HttpMethod.GET, "/api/v1/questions", "/api/v1/law-articles/*")
+                            .permitAll();
+                    requests.requestMatchers(HttpMethod.PUT, "/api/v1/questions/*").authenticated();
+                    requests.requestMatchers(HttpMethod.DELETE, "/api/v1/questions/*")
+                            .authenticated();
+                    requests.requestMatchers(
+                                    "/api/v1/questions/*/trace-runs",
+                                    "/api/v1/jobs/*",
+                                    "/api/v1/trace-runs/*",
+                                    "/api/v1/trace-runs/*/result",
+                                    "/api/v1/trace-runs/*/cancel")
+                            .authenticated();
                     if (devAuthEnabled)
                         requests.requestMatchers(HttpMethod.GET, "/api/v1/dev/csrf")
                                 .authenticated();

@@ -70,6 +70,8 @@ springdoc:
     enabled: false
 
 lawground:
+  analysis:
+    mock-enabled: ${LAWGROUND_ANALYSIS_MOCK_ENABLED:false}
   security:
     dev-auth-enabled: ${LAWGROUND_DEV_AUTH_ENABLED:false}
   ai:
