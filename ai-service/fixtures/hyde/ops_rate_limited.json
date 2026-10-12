@@ -1,0 +1,64 @@
+{
+  "description": "운영 오류: 429 RATE_LIMITED + Retry-After(초), retryable=true",
+  "mock": true,
+  "request": {
+    "method": "POST",
+    "path": "/internal/v1/hyde",
+    "headers": {
+      "X-Internal-Token": "<서비스 토큰: 환경변수 INTERNAL_API_TOKEN>",
+      "X-Request-Id": "00000000-0000-0000-0000-000000000006",
+      "X-Contract-Version": "0.1.0-draft",
+      "X-Job-Id": "00000000-0000-0000-0000-000000000385",
+      "Idempotency-Key": "00000000-0000-0000-0000-000000000386",
+      "Content-Type": "application/json",
+      "X-Mock-Scenario": "rate_limited"
+    },
+    "body": {
+      "requestId": "00000000-0000-0000-0000-000000000006",
+      "questionSnapshot": {
+        "subject": "BROKER_LAW",
+        "stem": "다음 중 중개보수의 지급시기에 관한 설명으로 옳은 것은?",
+        "questionType": "SELECT_CORRECT",
+        "choices": [
+          {
+            "number": 1,
+            "text": "선지 1"
+          },
+          {
+            "number": 2,
+            "text": "선지 2"
+          },
+          {
+            "number": 3,
+            "text": "선지 3"
+          },
+          {
+            "number": 4,
+            "text": "선지 4"
+          },
+          {
+            "number": 5,
+            "text": "선지 5"
+          }
+        ],
+        "providedAnswerNumber": 2,
+        "referenceDate": "2025-10-01",
+        "revision": 1
+      },
+      "referenceDate": "2025-10-01"
+    }
+  },
+  "expected": {
+    "status": 429,
+    "headers": {
+      "retry-after": "2"
+    },
+    "body": {
+      "code": "RATE_LIMITED",
+      "message": "Mock 시나리오: rate_limited",
+      "requestId": "00000000-0000-0000-0000-000000000006",
+      "timestamp": "<UTC-Z>",
+      "retryable": true
+    }
+  }
+}

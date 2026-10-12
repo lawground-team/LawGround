@@ -1,0 +1,1064 @@
+openapi: 3.1.0
+info:
+  title: LawGround Python AI 내부 API (Mock)
+  description: 계약 0.1.0-draft(Spring 측 제안) 기준 Mock. 실제 모델이 아니다.
+  version: 0.1.0-draft
+paths:
+  /internal/v1/embed:
+    post:
+      tags:
+      - embed
+      summary: Embed
+      operationId: embed_internal_v1_embed_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmbedRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmbedResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '413':
+          description: Request Entity Too Large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '504':
+          description: Gateway Timeout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+  /internal/v1/tokenize:
+    post:
+      tags:
+      - tokenize
+      summary: Tokenize
+      operationId: tokenize_internal_v1_tokenize_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenizeRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenizeResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '413':
+          description: Request Entity Too Large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '504':
+          description: Gateway Timeout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+  /internal/v1/hyde:
+    post:
+      tags:
+      - hyde
+      summary: Hyde
+      operationId: hyde_internal_v1_hyde_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HydeRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HydeResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '413':
+          description: Request Entity Too Large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '504':
+          description: Gateway Timeout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+  /internal/v1/rerank:
+    post:
+      tags:
+      - rerank
+      summary: Rerank
+      operationId: rerank_internal_v1_rerank_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RerankRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RerankResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '413':
+          description: Request Entity Too Large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '504':
+          description: Gateway Timeout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+  /internal/v1/verify:
+    post:
+      tags:
+      - verify
+      summary: Verify
+      operationId: verify_internal_v1_verify_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '413':
+          description: Request Entity Too Large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '504':
+          description: Gateway Timeout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+  /internal/v1/health/ready:
+    get:
+      tags:
+      - health
+      summary: Ready
+      operationId: ready_internal_v1_health_ready_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadyOutput'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadyOutput'
+components:
+  schemas:
+    CandidateMetadata:
+      properties:
+        articleId:
+          type: string
+          format: uuid
+          title: Articleid
+        lawVersionId:
+          type: string
+          format: uuid
+          title: Lawversionid
+        lawTitle:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Lawtitle
+        articleLabel:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Articlelabel
+        effectiveFrom:
+          type: string
+          format: date
+          title: Effectivefrom
+        effectiveTo:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Effectiveto
+      additionalProperties: false
+      type: object
+      required:
+      - articleId
+      - lawVersionId
+      - lawTitle
+      - articleLabel
+      - effectiveFrom
+      - effectiveTo
+      title: CandidateMetadata
+    EmbedItem:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        vector:
+          items:
+            type: number
+          type: array
+          maxItems: 1024
+          minItems: 1024
+          title: Vector
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - vector
+      title: EmbedItem
+    EmbedRequest:
+      properties:
+        requestId:
+          type: string
+          format: uuid
+          title: Requestid
+        texts:
+          items:
+            $ref: '#/components/schemas/IdText'
+          type: array
+          maxItems: 32
+          minItems: 1
+          title: Texts
+        modelRevision:
+          type: string
+          maxLength: 160
+          minLength: 1
+          title: Modelrevision
+      additionalProperties: false
+      type: object
+      required:
+      - requestId
+      - texts
+      - modelRevision
+      title: EmbedRequest
+    EmbedResponse:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/EmbedItem'
+          type: array
+          maxItems: 32
+          minItems: 1
+          title: Items
+        dim:
+          type: integer
+          maximum: 1024.0
+          minimum: 1024.0
+          title: Dim
+        modelRevision:
+          type: string
+          maxLength: 160
+          minLength: 1
+          title: Modelrevision
+      additionalProperties: false
+      type: object
+      required:
+      - items
+      - dim
+      - modelRevision
+      title: EmbedResponse
+    ErrorCode:
+      type: string
+      enum:
+      - INVALID_REQUEST
+      - RATE_LIMITED
+      - MODEL_NOT_READY
+      - MODEL_TIMEOUT
+      - INTERNAL_ERROR
+      - UNAUTHORIZED
+      - UNSUPPORTED_CONTRACT_VERSION
+      - MODEL_REVISION_MISMATCH
+      - INPUT_TOO_LONG
+      - PAYLOAD_TOO_LARGE
+      - MODEL_OUTPUT_INVALID
+      - MODEL_UPSTREAM_ERROR
+      - IDEMPOTENCY_CONFLICT
+      title: ErrorCode
+    ErrorOut:
+      properties:
+        code:
+          $ref: '#/components/schemas/ErrorCode'
+        message:
+          type: string
+          maxLength: 500
+          minLength: 1
+          title: Message
+        requestId:
+          type: string
+          format: uuid
+          title: Requestid
+        timestamp:
+          type: string
+          format: date-time
+          title: Timestamp
+        retryable:
+          type: boolean
+          title: Retryable
+      additionalProperties: false
+      type: object
+      required:
+      - code
+      - message
+      - requestId
+      - timestamp
+      - retryable
+      title: ErrorOut
+    Evidence:
+      properties:
+        evidenceKey:
+          type: string
+          maxLength: 80
+          minLength: 1
+          title: Evidencekey
+        chunkId:
+          type: string
+          format: uuid
+          title: Chunkid
+        quote:
+          type: string
+          maxLength: 20000
+          minLength: 1
+          title: Quote
+        start:
+          type: integer
+          minimum: 0.0
+          title: Start
+        end:
+          type: integer
+          minimum: 0.0
+          title: End
+      additionalProperties: false
+      type: object
+      required:
+      - evidenceKey
+      - chunkId
+      - quote
+      - start
+      - end
+      title: Evidence
+    HydeRequest:
+      properties:
+        requestId:
+          type: string
+          format: uuid
+          title: Requestid
+        questionSnapshot:
+          $ref: '#/components/schemas/QuestionSnapshot'
+        referenceDate:
+          type: string
+          format: date
+          title: Referencedate
+      additionalProperties: false
+      type: object
+      required:
+      - requestId
+      - questionSnapshot
+      - referenceDate
+      title: HydeRequest
+    HydeResponse:
+      properties:
+        hypotheticalText:
+          type: string
+          maxLength: 20000
+          minLength: 1
+          title: Hypotheticaltext
+        searchTerms:
+          items:
+            type: string
+            maxLength: 200
+            minLength: 1
+          type: array
+          maxItems: 20
+          title: Searchterms
+        modelRevision:
+          type: string
+          maxLength: 160
+          minLength: 1
+          title: Modelrevision
+        promptVersion:
+          type: string
+          maxLength: 160
+          minLength: 1
+          title: Promptversion
+      additionalProperties: false
+      type: object
+      required:
+      - hypotheticalText
+      - searchTerms
+      - modelRevision
+      - promptVersion
+      title: HydeResponse
+    IdText:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        text:
+          type: string
+          maxLength: 30000
+          minLength: 1
+          title: Text
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - text
+      title: IdText
+    ModelState:
+      properties:
+        name:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Name
+        revision:
+          anyOf:
+          - type: string
+            maxLength: 160
+            minLength: 1
+          - type: 'null'
+          title: Revision
+        ready:
+          type: boolean
+          title: Ready
+      additionalProperties: false
+      type: object
+      required:
+      - name
+      - revision
+      - ready
+      title: ModelState
+    QuestionChoice:
+      properties:
+        number:
+          type: integer
+          maximum: 5.0
+          minimum: 1.0
+          title: Number
+        text:
+          type: string
+          maxLength: 2000
+          minLength: 1
+          title: Text
+      additionalProperties: false
+      type: object
+      required:
+      - number
+      - text
+      title: QuestionChoice
+    QuestionSnapshot:
+      properties:
+        subject:
+          type: string
+          pattern: ^BROKER_LAW$
+          title: Subject
+        stem:
+          type: string
+          maxLength: 10000
+          minLength: 1
+          title: Stem
+        questionType:
+          $ref: '#/components/schemas/QuestionType'
+        choices:
+          items:
+            $ref: '#/components/schemas/QuestionChoice'
+          type: array
+          maxItems: 5
+          minItems: 5
+          title: Choices
+        providedAnswerNumber:
+          type: integer
+          maximum: 5.0
+          minimum: 1.0
+          title: Providedanswernumber
+        referenceDate:
+          type: string
+          format: date
+          title: Referencedate
+        revision:
+          type: integer
+          minimum: 1.0
+          title: Revision
+      additionalProperties: false
+      type: object
+      required:
+      - subject
+      - stem
+      - questionType
+      - choices
+      - providedAnswerNumber
+      - referenceDate
+      - revision
+      title: QuestionSnapshot
+    QuestionType:
+      type: string
+      enum:
+      - SELECT_CORRECT
+      - SELECT_INCORRECT
+      title: QuestionType
+    ReadyOutput:
+      properties:
+        status:
+          $ref: '#/components/schemas/ReadyStatus'
+        models:
+          items:
+            $ref: '#/components/schemas/ModelState'
+          type: array
+          maxItems: 20
+          title: Models
+      additionalProperties: false
+      type: object
+      required:
+      - status
+      - models
+      title: ReadyOutput
+    ReadyStatus:
+      type: string
+      enum:
+      - READY
+      - NOT_READY
+      title: ReadyStatus
+    Relation:
+      type: string
+      enum:
+      - SUPPORTS
+      - CONTRADICTS
+      - INSUFFICIENT
+      title: Relation
+    RerankCandidate:
+      properties:
+        chunkId:
+          type: string
+          format: uuid
+          title: Chunkid
+        text:
+          type: string
+          maxLength: 30000
+          minLength: 1
+          title: Text
+      additionalProperties: false
+      type: object
+      required:
+      - chunkId
+      - text
+      title: RerankCandidate
+    RerankItem:
+      properties:
+        chunkId:
+          type: string
+          format: uuid
+          title: Chunkid
+        score:
+          type: number
+          title: Score
+      additionalProperties: false
+      type: object
+      required:
+      - chunkId
+      - score
+      title: RerankItem
+    RerankRequest:
+      properties:
+        requestId:
+          type: string
+          format: uuid
+          title: Requestid
+        query:
+          type: string
+          maxLength: 30000
+          minLength: 1
+          title: Query
+        candidates:
+          items:
+            $ref: '#/components/schemas/RerankCandidate'
+          type: array
+          maxItems: 30
+          minItems: 1
+          title: Candidates
+        topK:
+          type: integer
+          maximum: 5.0
+          minimum: 1.0
+          title: Topk
+      additionalProperties: false
+      type: object
+      required:
+      - requestId
+      - query
+      - candidates
+      - topK
+      title: RerankRequest
+    RerankResponse:
+      properties:
+        ranked:
+          items:
+            $ref: '#/components/schemas/RerankItem'
+          type: array
+          maxItems: 5
+          minItems: 1
+          title: Ranked
+        modelRevision:
+          type: string
+          maxLength: 160
+          minLength: 1
+          title: Modelrevision
+      additionalProperties: false
+      type: object
+      required:
+      - ranked
+      - modelRevision
+      title: RerankResponse
+    Tag:
+      properties:
+        code:
+          type: string
+          maxLength: 80
+          minLength: 1
+          title: Code
+      additionalProperties: false
+      type: object
+      required:
+      - code
+      title: Tag
+    TokenItem:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tokens:
+          items:
+            type: string
+            maxLength: 200
+            minLength: 1
+          type: array
+          maxItems: 10000
+          title: Tokens
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - tokens
+      title: TokenItem
+    TokenizeRequest:
+      properties:
+        requestId:
+          type: string
+          format: uuid
+          title: Requestid
+        texts:
+          items:
+            $ref: '#/components/schemas/IdText'
+          type: array
+          maxItems: 32
+          minItems: 1
+          title: Texts
+        tokenizerVersion:
+          type: string
+          maxLength: 160
+          minLength: 1
+          title: Tokenizerversion
+      additionalProperties: false
+      type: object
+      required:
+      - requestId
+      - texts
+      - tokenizerVersion
+      title: TokenizeRequest
+    TokenizeResponse:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/TokenItem'
+          type: array
+          maxItems: 32
+          minItems: 1
+          title: Items
+        tokenizerVersion:
+          type: string
+          maxLength: 160
+          minLength: 1
+          title: Tokenizerversion
+      additionalProperties: false
+      type: object
+      required:
+      - items
+      - tokenizerVersion
+      title: TokenizeResponse
+    Verdict:
+      type: string
+      enum:
+      - SUPPORTED
+      - HOLD
+      - REJECTED
+      title: Verdict
+    VerifyCandidate:
+      properties:
+        chunkId:
+          type: string
+          format: uuid
+          title: Chunkid
+        sourceText:
+          type: string
+          maxLength: 200000
+          minLength: 1
+          title: Sourcetext
+        metadata:
+          $ref: '#/components/schemas/CandidateMetadata'
+      additionalProperties: false
+      type: object
+      required:
+      - chunkId
+      - sourceText
+      - metadata
+      title: VerifyCandidate
+    VerifyChoice:
+      properties:
+        choiceNumber:
+          type: integer
+          maximum: 5.0
+          minimum: 1.0
+          title: Choicenumber
+        relation:
+          $ref: '#/components/schemas/Relation'
+        explanation:
+          type: string
+          maxLength: 10000
+          minLength: 1
+          title: Explanation
+        correctedText:
+          anyOf:
+          - type: string
+            maxLength: 2000
+            minLength: 1
+          - type: 'null'
+          title: Correctedtext
+        tags:
+          items:
+            $ref: '#/components/schemas/Tag'
+          type: array
+          maxItems: 20
+          title: Tags
+        evidenceKeys:
+          items:
+            type: string
+            maxLength: 80
+            minLength: 1
+          type: array
+          maxItems: 20
+          title: Evidencekeys
+      additionalProperties: false
+      type: object
+      required:
+      - choiceNumber
+      - relation
+      - explanation
+      - correctedText
+      - tags
+      - evidenceKeys
+      title: VerifyChoice
+    VerifyRequest:
+      properties:
+        requestId:
+          type: string
+          format: uuid
+          title: Requestid
+        questionSnapshot:
+          $ref: '#/components/schemas/QuestionSnapshot'
+        referenceDate:
+          type: string
+          format: date
+          title: Referencedate
+        candidates:
+          items:
+            $ref: '#/components/schemas/VerifyCandidate'
+          type: array
+          maxItems: 5
+          minItems: 1
+          title: Candidates
+      additionalProperties: false
+      type: object
+      required:
+      - requestId
+      - questionSnapshot
+      - referenceDate
+      - candidates
+      title: VerifyRequest
+    VerifyResponse:
+      properties:
+        verdict:
+          $ref: '#/components/schemas/Verdict'
+        reasonCode:
+          type: string
+          maxLength: 80
+          minLength: 1
+          title: Reasoncode
+        summary:
+          type: string
+          maxLength: 10000
+          minLength: 1
+          title: Summary
+        evidences:
+          items:
+            $ref: '#/components/schemas/Evidence'
+          type: array
+          maxItems: 50
+          title: Evidences
+        choiceAnalyses:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/VerifyChoice'
+            type: array
+            maxItems: 5
+            minItems: 5
+          - type: 'null'
+          title: Choiceanalyses
+        tagSetVersion:
+          anyOf:
+          - type: string
+            maxLength: 80
+            minLength: 1
+          - type: 'null'
+          title: Tagsetversion
+        modelRevision:
+          type: string
+          maxLength: 160
+          minLength: 1
+          title: Modelrevision
+        promptVersion:
+          type: string
+          maxLength: 160
+          minLength: 1
+          title: Promptversion
+      additionalProperties: false
+      type: object
+      required:
+      - verdict
+      - reasonCode
+      - summary
+      - evidences
+      - choiceAnalyses
+      - tagSetVersion
+      - modelRevision
+      - promptVersion
+      title: VerifyResponse

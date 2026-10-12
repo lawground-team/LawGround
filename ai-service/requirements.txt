@@ -1,0 +1,11 @@
+# ai-service 의존성 (정확한 버전 고정)
+# 검증 환경: Linux, Python 3.12 (CI 의 ai-check 와 같은 조건). Windows/Python 3.14 는 설치 파일 존재만 확인했고 실행은 미검증.
+# CI 의 ai-check 는 이 파일만 설치하고 `python -m pytest` 를 실행하므로 pytest 도 여기에 둔다.
+fastapi==0.142.4
+starlette==1.7.0
+uvicorn==0.54.0
+pydantic==2.13.5
+pydantic_core==2.46.5
+httpx==0.28.1
+PyYAML==6.0.3
+pytest==9.1.1

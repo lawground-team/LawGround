@@ -1,0 +1,47 @@
+{
+  "description": "운영 오류: 500 INTERNAL_ERROR, retryable=false",
+  "mock": true,
+  "request": {
+    "method": "POST",
+    "path": "/internal/v1/rerank",
+    "headers": {
+      "X-Internal-Token": "<서비스 토큰: 환경변수 INTERNAL_API_TOKEN>",
+      "X-Request-Id": "00000000-0000-0000-0000-000000000008",
+      "X-Contract-Version": "0.1.0-draft",
+      "X-Job-Id": "00000000-0000-0000-0000-000000000385",
+      "Idempotency-Key": "00000000-0000-0000-0000-000000000386",
+      "Content-Type": "application/json",
+      "X-Mock-Scenario": "internal"
+    },
+    "body": {
+      "requestId": "00000000-0000-0000-0000-000000000008",
+      "query": "중개보수 지급시기 약정",
+      "topK": 2,
+      "candidates": [
+        {
+          "chunkId": "00000000-0000-0000-0000-0000000001f4",
+          "text": "중개보수의 지급시기는 약정에 따른다"
+        },
+        {
+          "chunkId": "00000000-0000-0000-0000-0000000001f5",
+          "text": "등기 신청 절차"
+        },
+        {
+          "chunkId": "00000000-0000-0000-0000-0000000001f6",
+          "text": "약정이 없을 때에는 거래대금 지급 완료일"
+        }
+      ]
+    }
+  },
+  "expected": {
+    "status": 500,
+    "headers": {},
+    "body": {
+      "code": "INTERNAL_ERROR",
+      "message": "Mock 시나리오: internal",
+      "requestId": "00000000-0000-0000-0000-000000000008",
+      "timestamp": "<UTC-Z>",
+      "retryable": false
+    }
+  }
+}

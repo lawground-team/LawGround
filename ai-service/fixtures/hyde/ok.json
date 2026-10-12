@@ -1,0 +1,66 @@
+{
+  "description": "정상: 가상 문서와 검색 보조어 (Mock). 가상 문서는 인용 근거가 아니다",
+  "mock": true,
+  "request": {
+    "method": "POST",
+    "path": "/internal/v1/hyde",
+    "headers": {
+      "X-Internal-Token": "<서비스 토큰: 환경변수 INTERNAL_API_TOKEN>",
+      "X-Request-Id": "00000000-0000-0000-0000-000000000006",
+      "X-Contract-Version": "0.1.0-draft",
+      "X-Job-Id": "00000000-0000-0000-0000-000000000385",
+      "Idempotency-Key": "00000000-0000-0000-0000-000000000386",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "requestId": "00000000-0000-0000-0000-000000000006",
+      "questionSnapshot": {
+        "subject": "BROKER_LAW",
+        "stem": "다음 중 중개보수의 지급시기에 관한 설명으로 옳은 것은?",
+        "questionType": "SELECT_CORRECT",
+        "choices": [
+          {
+            "number": 1,
+            "text": "선지 1"
+          },
+          {
+            "number": 2,
+            "text": "선지 2"
+          },
+          {
+            "number": 3,
+            "text": "선지 3"
+          },
+          {
+            "number": 4,
+            "text": "선지 4"
+          },
+          {
+            "number": 5,
+            "text": "선지 5"
+          }
+        ],
+        "providedAnswerNumber": 2,
+        "referenceDate": "2025-10-01",
+        "revision": 1
+      },
+      "referenceDate": "2025-10-01"
+    }
+  },
+  "expected": {
+    "status": 200,
+    "headers": {},
+    "body": {
+      "hypotheticalText": "(Mock 가상 문서) 다음 중 중개보수의 지급시기에 관한 설명으로 옳은 것은?",
+      "searchTerms": [
+        "다음",
+        "중",
+        "중개보수의",
+        "지급시기에",
+        "관한"
+      ],
+      "modelRevision": "mock-llm-0",
+      "promptVersion": "mock-hyde-0"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "description": "준비 안 됨: 503 + ReadyOutput 본문(에러 DTO 아님) — Spring 파싱에서 구분 필요",
+  "mock": true,
+  "request": {
+    "method": "GET",
+    "path": "/internal/v1/health/ready",
+    "headers": {
+      "X-Internal-Token": "<서비스 토큰: 환경변수 INTERNAL_API_TOKEN>",
+      "X-Request-Id": "00000000-0000-0000-0000-000000000384",
+      "X-Contract-Version": "0.1.0-draft",
+      "X-Job-Id": "00000000-0000-0000-0000-000000000385",
+      "Idempotency-Key": "00000000-0000-0000-0000-000000000386",
+      "Content-Type": "application/json",
+      "X-Mock-Scenario": "not_ready"
+    },
+    "body": {}
+  },
+  "expected": {
+    "status": 503,
+    "headers": {},
+    "body": {
+      "status": "NOT_READY",
+      "models": [
+        {
+          "name": "mock-embed",
+          "revision": null,
+          "ready": false
+        }
+      ]
+    }
+  }
+}

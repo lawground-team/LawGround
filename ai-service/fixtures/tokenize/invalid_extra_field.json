@@ -1,0 +1,38 @@
+{
+  "description": "입력 오류: 허용되지 않는 추가 필드 → 422",
+  "mock": true,
+  "request": {
+    "method": "POST",
+    "path": "/internal/v1/tokenize",
+    "headers": {
+      "X-Internal-Token": "<서비스 토큰: 환경변수 INTERNAL_API_TOKEN>",
+      "X-Request-Id": "00000000-0000-0000-0000-000000000005",
+      "X-Contract-Version": "0.1.0-draft",
+      "X-Job-Id": "00000000-0000-0000-0000-000000000385",
+      "Idempotency-Key": "00000000-0000-0000-0000-000000000386",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "requestId": "00000000-0000-0000-0000-000000000005",
+      "tokenizerVersion": "tok-1",
+      "texts": [
+        {
+          "id": "00000000-0000-0000-0000-000000000015",
+          "text": "법 제32조제3항에 따른 30일 이내 지급한다"
+        }
+      ],
+      "unexpected": 1
+    }
+  },
+  "expected": {
+    "status": 422,
+    "headers": {},
+    "body": {
+      "code": "INVALID_REQUEST",
+      "message": "입력 검증 실패: unexpected — Extra inputs are not permitted",
+      "requestId": "00000000-0000-0000-0000-000000000005",
+      "timestamp": "<UTC-Z>",
+      "retryable": false
+    }
+  }
+}

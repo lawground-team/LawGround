@@ -1,0 +1,40 @@
+{
+  "description": "운영 오류: 서비스 토큰 없음 → 401 UNAUTHORIZED [제안 코드]",
+  "mock": true,
+  "request": {
+    "method": "POST",
+    "path": "/internal/v1/embed",
+    "headers": {
+      "X-Request-Id": "00000000-0000-0000-0000-000000000001",
+      "X-Contract-Version": "0.1.0-draft",
+      "X-Job-Id": "00000000-0000-0000-0000-000000000385",
+      "Idempotency-Key": "00000000-0000-0000-0000-000000000386",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "requestId": "00000000-0000-0000-0000-000000000001",
+      "modelRevision": "rev-1",
+      "texts": [
+        {
+          "id": "00000000-0000-0000-0000-00000000000b",
+          "text": "중개보수의 지급시기"
+        },
+        {
+          "id": "00000000-0000-0000-0000-00000000000c",
+          "text": "약정이 없을 때에는"
+        }
+      ]
+    }
+  },
+  "expected": {
+    "status": 401,
+    "headers": {},
+    "body": {
+      "code": "UNAUTHORIZED",
+      "message": "서비스 인증에 실패했다",
+      "requestId": "00000000-0000-0000-0000-000000000001",
+      "timestamp": "<UTC-Z>",
+      "retryable": false
+    }
+  }
+}

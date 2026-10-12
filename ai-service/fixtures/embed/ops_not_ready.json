@@ -1,0 +1,42 @@
+{
+  "description": "운영 오류: 모델 준비 안 됨 → 503 MODEL_NOT_READY, retryable=true",
+  "mock": true,
+  "request": {
+    "method": "POST",
+    "path": "/internal/v1/embed",
+    "headers": {
+      "X-Internal-Token": "<서비스 토큰: 환경변수 INTERNAL_API_TOKEN>",
+      "X-Request-Id": "00000000-0000-0000-0000-000000000001",
+      "X-Contract-Version": "0.1.0-draft",
+      "X-Job-Id": "00000000-0000-0000-0000-000000000385",
+      "Idempotency-Key": "00000000-0000-0000-0000-000000000386",
+      "Content-Type": "application/json",
+      "X-Mock-Scenario": "not_ready"
+    },
+    "body": {
+      "requestId": "00000000-0000-0000-0000-000000000001",
+      "modelRevision": "rev-1",
+      "texts": [
+        {
+          "id": "00000000-0000-0000-0000-00000000000b",
+          "text": "중개보수의 지급시기"
+        },
+        {
+          "id": "00000000-0000-0000-0000-00000000000c",
+          "text": "약정이 없을 때에는"
+        }
+      ]
+    }
+  },
+  "expected": {
+    "status": 503,
+    "headers": {},
+    "body": {
+      "code": "MODEL_NOT_READY",
+      "message": "Mock 시나리오: not_ready",
+      "requestId": "00000000-0000-0000-0000-000000000001",
+      "timestamp": "<UTC-Z>",
+      "retryable": true
+    }
+  }
+}

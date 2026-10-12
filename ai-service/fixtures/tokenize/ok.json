@@ -1,0 +1,48 @@
+{
+  "description": "정상: 조문 번호·숫자+단위가 한 토큰으로 유지됨(Mock 은 정규식 분리, 형태소 분석 아님)",
+  "mock": true,
+  "request": {
+    "method": "POST",
+    "path": "/internal/v1/tokenize",
+    "headers": {
+      "X-Internal-Token": "<서비스 토큰: 환경변수 INTERNAL_API_TOKEN>",
+      "X-Request-Id": "00000000-0000-0000-0000-000000000004",
+      "X-Contract-Version": "0.1.0-draft",
+      "X-Job-Id": "00000000-0000-0000-0000-000000000385",
+      "Idempotency-Key": "00000000-0000-0000-0000-000000000386",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "requestId": "00000000-0000-0000-0000-000000000004",
+      "tokenizerVersion": "tok-1",
+      "texts": [
+        {
+          "id": "00000000-0000-0000-0000-000000000015",
+          "text": "법 제32조제3항에 따른 30일 이내 지급한다"
+        }
+      ]
+    }
+  },
+  "expected": {
+    "status": 200,
+    "headers": {},
+    "body": {
+      "items": [
+        {
+          "id": "00000000-0000-0000-0000-000000000015",
+          "tokens": [
+            "법",
+            "제32조",
+            "제3항",
+            "에",
+            "따른",
+            "30일",
+            "이내",
+            "지급한다"
+          ]
+        }
+      ],
+      "tokenizerVersion": "tok-1"
+    }
+  }
+}

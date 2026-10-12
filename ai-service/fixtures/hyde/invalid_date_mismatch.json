@@ -1,0 +1,61 @@
+{
+  "description": "입력 오류: 바깥 referenceDate 와 snapshot.referenceDate 불일치 → 422",
+  "mock": true,
+  "request": {
+    "method": "POST",
+    "path": "/internal/v1/hyde",
+    "headers": {
+      "X-Internal-Token": "<서비스 토큰: 환경변수 INTERNAL_API_TOKEN>",
+      "X-Request-Id": "00000000-0000-0000-0000-000000000007",
+      "X-Contract-Version": "0.1.0-draft",
+      "X-Job-Id": "00000000-0000-0000-0000-000000000385",
+      "Idempotency-Key": "00000000-0000-0000-0000-000000000386",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "requestId": "00000000-0000-0000-0000-000000000007",
+      "questionSnapshot": {
+        "subject": "BROKER_LAW",
+        "stem": "다음 중 중개보수의 지급시기에 관한 설명으로 옳은 것은?",
+        "questionType": "SELECT_CORRECT",
+        "choices": [
+          {
+            "number": 1,
+            "text": "선지 1"
+          },
+          {
+            "number": 2,
+            "text": "선지 2"
+          },
+          {
+            "number": 3,
+            "text": "선지 3"
+          },
+          {
+            "number": 4,
+            "text": "선지 4"
+          },
+          {
+            "number": 5,
+            "text": "선지 5"
+          }
+        ],
+        "providedAnswerNumber": 2,
+        "referenceDate": "2025-10-01",
+        "revision": 1
+      },
+      "referenceDate": "2025-10-02"
+    }
+  },
+  "expected": {
+    "status": 422,
+    "headers": {},
+    "body": {
+      "code": "INVALID_REQUEST",
+      "message": "입력 검증 실패:  — Value error, referenceDate 와 questionSnapshot.referenceDate 가 달라서는 안 된다",
+      "requestId": "00000000-0000-0000-0000-000000000007",
+      "timestamp": "<UTC-Z>",
+      "retryable": false
+    }
+  }
+}

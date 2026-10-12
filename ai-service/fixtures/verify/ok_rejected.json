@@ -1,0 +1,87 @@
+{
+  "description": "정상: REJECTED(제공 정답이 법령과 충돌). 상충을 보이는 인용 1개 이상 [제안]",
+  "mock": true,
+  "request": {
+    "method": "POST",
+    "path": "/internal/v1/verify",
+    "headers": {
+      "X-Internal-Token": "<서비스 토큰: 환경변수 INTERNAL_API_TOKEN>",
+      "X-Request-Id": "00000000-0000-0000-0000-000000000064",
+      "X-Contract-Version": "0.1.0-draft",
+      "X-Job-Id": "00000000-0000-0000-0000-000000000385",
+      "Idempotency-Key": "00000000-0000-0000-0000-000000000386",
+      "Content-Type": "application/json",
+      "X-Mock-Scenario": "rejected"
+    },
+    "body": {
+      "requestId": "00000000-0000-0000-0000-000000000064",
+      "questionSnapshot": {
+        "subject": "BROKER_LAW",
+        "stem": "다음 중 중개보수의 지급시기에 관한 설명으로 옳은 것은?",
+        "questionType": "SELECT_CORRECT",
+        "choices": [
+          {
+            "number": 1,
+            "text": "선지 1"
+          },
+          {
+            "number": 2,
+            "text": "선지 2"
+          },
+          {
+            "number": 3,
+            "text": "선지 3"
+          },
+          {
+            "number": 4,
+            "text": "선지 4"
+          },
+          {
+            "number": 5,
+            "text": "선지 5"
+          }
+        ],
+        "providedAnswerNumber": 2,
+        "referenceDate": "2025-10-01",
+        "revision": 1
+      },
+      "referenceDate": "2025-10-01",
+      "candidates": [
+        {
+          "chunkId": "00000000-0000-0000-0000-0000000000c9",
+          "sourceText": "법 제32조제3항에 따른 중개보수의 지급시기는 약정에 따르되, 약정이 없을 때에는 거래대금 지급이 완료된 날로 한다.",
+          "metadata": {
+            "articleId": "00000000-0000-0000-0000-00000000012d",
+            "lawVersionId": "00000000-0000-0000-0000-000000000191",
+            "lawTitle": "공인중개사법 시행령",
+            "articleLabel": "제27조의2",
+            "effectiveFrom": "2024-07-01",
+            "effectiveTo": null
+          }
+        }
+      ]
+    }
+  },
+  "expected": {
+    "status": 200,
+    "headers": {},
+    "body": {
+      "verdict": "REJECTED",
+      "reasonCode": "CONTRADICTED_BY_LAW",
+      "summary": "(Mock) 고정 응답이다. 실제 판정이 아니다.",
+      "evidences": [
+        {
+          "evidenceKey": "ev-1",
+          "chunkId": "00000000-0000-0000-0000-0000000000c9",
+          "quote": "법 제32조제3항에 따른 중개보수의 지급시기는 약정에",
+          "start": 0,
+          "end": 29
+        }
+      ],
+      "choiceAnalyses": null,
+      "tagSetVersion": null,
+      "modelRevision": "mock-llm-0",
+      "promptVersion": "mock-verify-0"
+    }
+  }
+}

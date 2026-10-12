@@ -1,0 +1,46 @@
+{
+  "description": "입력 오류: topK=6 → 422",
+  "mock": true,
+  "request": {
+    "method": "POST",
+    "path": "/internal/v1/rerank",
+    "headers": {
+      "X-Internal-Token": "<서비스 토큰: 환경변수 INTERNAL_API_TOKEN>",
+      "X-Request-Id": "00000000-0000-0000-0000-000000000009",
+      "X-Contract-Version": "0.1.0-draft",
+      "X-Job-Id": "00000000-0000-0000-0000-000000000385",
+      "Idempotency-Key": "00000000-0000-0000-0000-000000000386",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "requestId": "00000000-0000-0000-0000-000000000009",
+      "query": "중개보수 지급시기 약정",
+      "topK": 6,
+      "candidates": [
+        {
+          "chunkId": "00000000-0000-0000-0000-0000000001f4",
+          "text": "중개보수의 지급시기는 약정에 따른다"
+        },
+        {
+          "chunkId": "00000000-0000-0000-0000-0000000001f5",
+          "text": "등기 신청 절차"
+        },
+        {
+          "chunkId": "00000000-0000-0000-0000-0000000001f6",
+          "text": "약정이 없을 때에는 거래대금 지급 완료일"
+        }
+      ]
+    }
+  },
+  "expected": {
+    "status": 422,
+    "headers": {},
+    "body": {
+      "code": "INVALID_REQUEST",
+      "message": "입력 검증 실패: topK — Input should be less than or equal to 5",
+      "requestId": "00000000-0000-0000-0000-000000000009",
+      "timestamp": "<UTC-Z>",
+      "retryable": false
+    }
+  }
+}

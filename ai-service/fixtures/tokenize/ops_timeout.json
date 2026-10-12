@@ -1,0 +1,38 @@
+{
+  "description": "운영 오류: 504 MODEL_TIMEOUT, retryable=true",
+  "mock": true,
+  "request": {
+    "method": "POST",
+    "path": "/internal/v1/tokenize",
+    "headers": {
+      "X-Internal-Token": "<서비스 토큰: 환경변수 INTERNAL_API_TOKEN>",
+      "X-Request-Id": "00000000-0000-0000-0000-000000000004",
+      "X-Contract-Version": "0.1.0-draft",
+      "X-Job-Id": "00000000-0000-0000-0000-000000000385",
+      "Idempotency-Key": "00000000-0000-0000-0000-000000000386",
+      "Content-Type": "application/json",
+      "X-Mock-Scenario": "timeout"
+    },
+    "body": {
+      "requestId": "00000000-0000-0000-0000-000000000004",
+      "tokenizerVersion": "tok-1",
+      "texts": [
+        {
+          "id": "00000000-0000-0000-0000-000000000015",
+          "text": "법 제32조제3항에 따른 30일 이내 지급한다"
+        }
+      ]
+    }
+  },
+  "expected": {
+    "status": 504,
+    "headers": {},
+    "body": {
+      "code": "MODEL_TIMEOUT",
+      "message": "Mock 시나리오: timeout",
+      "requestId": "00000000-0000-0000-0000-000000000004",
+      "timestamp": "<UTC-Z>",
+      "retryable": true
+    }
+  }
+}

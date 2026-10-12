@@ -1,0 +1,28 @@
+{
+  "description": "입력 오류: 중복 JSON 키 → 400 INVALID_REQUEST",
+  "mock": true,
+  "request": {
+    "method": "POST",
+    "path": "/internal/v1/verify",
+    "headers": {
+      "X-Internal-Token": "<서비스 토큰: 환경변수 INTERNAL_API_TOKEN>",
+      "X-Request-Id": "00000000-0000-0000-0000-00000000000c",
+      "X-Contract-Version": "0.1.0-draft",
+      "X-Job-Id": "00000000-0000-0000-0000-000000000385",
+      "Idempotency-Key": "00000000-0000-0000-0000-000000000386",
+      "Content-Type": "application/json"
+    },
+    "body": "{\"requestId\": \"00000000-0000-0000-0000-00000000000c\", \"requestId\": \"00000000-0000-0000-0000-00000000000c\"}"
+  },
+  "expected": {
+    "status": 400,
+    "headers": {},
+    "body": {
+      "code": "INVALID_REQUEST",
+      "message": "JSON 파싱 실패: 중복 JSON 키: requestId",
+      "requestId": "00000000-0000-0000-0000-00000000000c",
+      "timestamp": "<UTC-Z>",
+      "retryable": false
+    }
+  }
+}
