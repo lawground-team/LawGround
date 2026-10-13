@@ -6,17 +6,17 @@
 2. 루트 `.env.example`을 `.env`로 복사하고 두 비밀번호를 채운다. `.env`는 커밋하지 않는다.
 3. 루트에서 `docker compose config --quiet`, `docker compose up -d --wait`를 실행한다.
 4. `cd backend` 후 Windows는 `.\gradlew.bat bootRun`, Linux/macOS는 `./gradlew bootRun`을 실행한다.
-5. `http://127.0.0.1:8080/actuator/health/readiness`가 UP인지 확인한다. Swagger는 `/swagger-ui/index.html`에 있다.
+5. `.env`의 `SERVER_PORT=8081`을 확인하고 `http://localhost:8081/actuator/health/readiness`가 UP인지 확인한다. 사용자 화면은 `http://localhost:8081`, Swagger는 `/swagger-ui/index.html`이다. Google callback도 같은 localhost:8081을 사용한다.
 
-V001~V005가 적용된다. 문제 CRUD·제출 목록·개발 Mock 분석과 검색 계산 기반을 구현했다. 실제 모델·수집·로그인은 후속 범위다. 기존 볼륨은 유지하고 새 Flyway 버전이 자동 적용되는지 기동 로그로 확인한다. [새 기능 검토 순서](week-02-03-review.md)를 따른다.
+V001~V006이 적용된다. 사용자 화면에서 Google 로그인·문제 입력/확인·DB 저장·내 라이브러리·상세/수정/삭제를 사용할 수 있다. 프런트는 Spring에 포함되며 별도 서버가 필요 없다. 실제 AI 파이프라인은 미연결이므로 화면의 분석은 비활성 상태이며 가짜 결과를 생성하지 않는다. 개발 Mock 분석·검색 계산 기반은 별도 검수 기능이다. 기존 볼륨을 유지한다. [프런트 범위](../../frontend/README.md), [기존 기능 검토](week-02-03-review.md), [인증 설정·검증](oauth-preparation.md)을 따른다.
 
 ## 문제 등록·조회 재현 (local 전용)
 
-루트 .env의 `LAWGROUND_DEV_AUTH_ENABLED=true`를 명시하고 local/127.0.0.1로 기동한다. 기본은 false다. prod/test 또는 외부 바인딩에서 이 설정을 켜면 기동을 차단한다. 개발 회원 하나를 서버에서 생성하며 클라이언트 memberId로 계정을 고를 수 없다.
+아래는 Google 로그인과 별개인 선택적 개발 회원 재현이다. 실제 사용자 화면은 [Google 설정](oauth-preparation.md)과 `LAWGROUND_DEV_AUTH_ENABLED=false`를 사용한다. 개발 회원 재현 시에만 `LAWGROUND_OIDC_ENABLED=false`, `LAWGROUND_DEV_AUTH_ENABLED=true`를 명시하고 local/127.0.0.1로 기동한다. prod/test 또는 외부 바인딩에서는 차단한다. 개발 회원 하나를 서버에서 생성하며 클라이언트 memberId로 계정을 고를 수 없다.
 
 ```powershell
 $lawgroundSession = New-Object Microsoft.PowerShell.Commands.WebRequestSession
-$lawgroundCsrf = Invoke-RestMethod -Uri 'http://127.0.0.1:8080/api/v1/dev/csrf' -WebSession $lawgroundSession
+$lawgroundCsrf = Invoke-RestMethod -Uri 'http://localhost:8081/api/v1/dev/csrf' -WebSession $lawgroundSession
 $lawgroundBody = @{
   subject = 'BROKER_LAW'
   stem = '[개발용 합성 문제] 옳은 설명은?'
@@ -27,8 +27,8 @@ $lawgroundBody = @{
 } | ConvertTo-Json -Depth 5
 $lawgroundHeaders = @{}
 $lawgroundHeaders[$lawgroundCsrf.headerName] = $lawgroundCsrf.token
-$lawgroundCreated = Invoke-RestMethod -Uri 'http://127.0.0.1:8080/api/v1/questions' -Method Post -WebSession $lawgroundSession -Headers $lawgroundHeaders -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes($lawgroundBody))
-Invoke-RestMethod -Uri "http://127.0.0.1:8080/api/v1/questions/$($lawgroundCreated.id)" -WebSession $lawgroundSession
+$lawgroundCreated = Invoke-RestMethod -Uri 'http://localhost:8081/api/v1/questions' -Method Post -WebSession $lawgroundSession -Headers $lawgroundHeaders -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes($lawgroundBody))
+Invoke-RestMethod -Uri "http://localhost:8081/api/v1/questions/$($lawgroundCreated.id)" -WebSession $lawgroundSession
 ```
 
 같은 개발 회원이 같은 문제를 다시 등록하면409 DUPLICATE_QUESTION이다. 입력 문구를 바꾸거나 기존 결과를 조회한다. 개발 회원은 로컬 임시 인증 주체이며 Google 로그인 완료로 간주하지 않는다. CSRF 경로의 토큰·쿠키를 로그에 붙이지 않는다.

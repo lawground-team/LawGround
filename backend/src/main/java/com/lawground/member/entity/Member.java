@@ -33,4 +33,8 @@ public class Member {
     public boolean isActive() {
         return "ACTIVE".equals(status);
     }
+
+    public String getDisplayName() {
+        return displayName;
+    }
 }

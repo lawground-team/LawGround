@@ -85,8 +85,18 @@ jobs:
         if: steps.check.outputs.exists == 'false'
         run: echo "ai-service is a directory scaffold; no Python tests claimed."
 
+  frontend-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Frontend syntax and behavior tests
+        run: node frontend/scripts/check.mjs
+
   ci-summary:
-    needs: [backend-check, contracts-check, ai-check]
+    needs: [backend-check, contracts-check, ai-check, frontend-check]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -95,7 +105,9 @@ jobs:
           BACKEND_RESULT: ${{ needs.backend-check.result }}
           CONTRACTS_RESULT: ${{ needs.contracts-check.result }}
           AI_RESULT: ${{ needs.ai-check.result }}
+          FRONTEND_RESULT: ${{ needs.frontend-check.result }}
         run: |
           test "$BACKEND_RESULT" = "success"
           test "$CONTRACTS_RESULT" = "success"
           test "$AI_RESULT" = "success"
+          test "$FRONTEND_RESULT" = "success"

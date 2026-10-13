@@ -1,6 +1,6 @@
 # 사용자 API 계약 초안
 
-**제품 계약 0.1.0-draft**. 2주차 구현은 문제 등록·단건 조회이며 나머지 API는 검토용 초안이다. 실제 로그인·Python 연결·팀 합의 완료를 뜻하지 않는다. 등록/조회·health·개발용 Swagger가 실행 가능하다. 계약 원본은 [external.openapi.yaml](external.openapi.yaml)이며 모든 예시는 합성 데이터다.
+**제품 계약 0.1.0-draft**. 문제 CRUD·라이브러리 API·Mock 큐·법령 저장/검색 기반과 OIDC/JDBC 인증을 구현했다. Google 로그인과 기본 문제 관리 화면은 실제 API에 연결되며 Python 연결/품질·전체 분석 화면 완료는 별도다. 익명 GET `/app/config`는 로그인 가능 여부·로컬 여부·분석 가능 여부의 boolean만 no-store로 제공한다. 현재 분석 가능 여부는 false이며 키/회원 정보는 포함하지 않는다. 계약 원본은 [external.openapi.yaml](external.openapi.yaml)이며 모든 예시는 합성 데이터다.
 
 ## 사용자 흐름과 구현 순서
 
@@ -11,7 +11,7 @@
 | 분석 접수·상태 확인 | POST /questions/{id}/trace-runs, GET /jobs/{id} | 3주차 Mock 큐 |
 | 실행 이력·결과·중단 요청 | GET /questions/{id}/trace-runs, GET /trace-runs/{id}, GET /trace-runs/{id}/result, POST /trace-runs/{id}/cancel | 3주차 기반; 실제 AI 연결 6~7주차 |
 | 원문·시행일 확인 | GET /law-articles/{id} | 4주차 기반 |
-| 로그인·내 정보·로그아웃 | OAuth 시작/callback, GET /me, GET /auth/csrf, POST /auth/logout | 5주차 |
+| 로그인·내 정보·로그아웃 | OAuth 시작/callback, GET /me, GET /auth/csrf, POST /auth/logout | 통합4/원본5주차 구현; 테스트 OIDC 검증, Google 실계정 미검증 |
 | 관련 문제 추천 | GET /trace-runs/{id}/recommendations | 8주차 |
 
 JSON API 기본 경로는 `/api/v1`. OAuth 경로 `/oauth2/authorization/google`, `/login/oauth2/code/google`에는 이 접두사를 붙이지 않는다. 수집·평가는 권한이 제한된 서비스/CLI 명령의 스키마만 정의했고 HTTP 관리 API는 보류했다.
@@ -48,7 +48,7 @@ HOLD도 정상 결과이면 job SUCCEEDED + run COMPLETED. 기술 장애를 HOLD
 
 ## 인증과 오류
 
-로그인 도입 후 SESSION 쿠키, 쓰기 요청 X-CSRF-TOKEN을 사용한다. 인증용 memberId를 클라이언트가 보내지 않는다. 2주차에는 MemberResolver·서버 고정 local 개발 회원·local 전용 `/api/v1/dev/csrf`를 구현했다. 명시적 설정 없이 켜지지 않고 prod/test·외부 바인딩에서 금지한다. 실제 로그인 구현은5주차다. [실행 안내](../runbooks/local-development.md)를 따른다.
+SESSION 쿠키와 쓰기 요청 X-CSRF-TOKEN을 사용한다. 인증용 memberId를 클라이언트가 보내지 않는다. GET `/auth/csrf`는 익명200/no-store, GET `/me`는 인증된 `{id,displayName}`만200/미인증401/비활성403이다. POST `/auth/logout`는 현재 세션 무효화·쿠키 만료204, CSRF 누락/불일치403이며 GET은 로그아웃하지 않는다. OIDC와 local 고정 개발 인증은 상호배타다. 이전 local 전용 `/api/v1/dev/csrf`도 개발 인증 명시 설정에서만 유지한다. [인증 설정·검토](../runbooks/oauth-preparation.md)를 따른다.
 
 오류는 code/message/requestId/timestamp/fieldErrors. 입력 원문·rejectedValue·스택트레이스는 반환하지 않는다. 400 입력/JSON, 401 인증, 403 CSRF/권한, 404 접근 가능한 자원 없음, 409 중복/멱등/버전 충돌/결과 미완료, 413 크기 초과, 428 수정 전제 누락을 구분한다. 미래 오류 코드가 현재 예외 처리기에 전부 구현된 것은 아니다.
 
