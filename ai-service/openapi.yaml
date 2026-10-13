@@ -35,6 +35,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorOut'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
         '413':
           description: Request Entity Too Large
           content:
@@ -98,6 +104,12 @@ paths:
                 $ref: '#/components/schemas/ErrorOut'
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '409':
+          description: Conflict
           content:
             application/json:
               schema:
@@ -169,6 +181,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorOut'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
         '413':
           description: Request Entity Too Large
           content:
@@ -236,6 +254,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorOut'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
         '413':
           description: Request Entity Too Large
           content:
@@ -299,6 +323,12 @@ paths:
                 $ref: '#/components/schemas/ErrorOut'
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '409':
+          description: Conflict
           content:
             application/json:
               schema:
