@@ -9,3 +9,9 @@ pydantic_core==2.46.5
 httpx==0.28.1
 PyYAML==6.0.3
 pytest==9.1.1
+# 실제 /tokenize (Kiwi). kiwipiepy_model 은 wheel 없이 소스(.tar.gz)만 배포돼 pip 이 설치 때 직접 빌드한다(컴파일러 불필요, 데이터 패키지).
+kiwipiepy==0.24.0
+kiwipiepy_model==0.24.0
+numpy==2.4.4
+tqdm==4.70.1
+# torch / sentence-transformers 는 여기에 넣지 않는다(CI 가 설치하면 수 GB). 실제 모델용은 requirements-models.txt

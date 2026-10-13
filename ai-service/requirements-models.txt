@@ -1,0 +1,6 @@
+# 실제 모델(BGE-M3 임베딩, BGE reranker)용. CI 가 설치하는 requirements.txt 와 분리했다(torch 는 수 GB).
+# 버전은 고정하지 않았다. 설치 후 `pip freeze` 결과를 확인해 고정한다.
+torch
+sentence-transformers
+huggingface_hub
+psutil
