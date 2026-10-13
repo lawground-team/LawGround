@@ -2,11 +2,33 @@ openapi: 3.1.0
 info:
   title: LawGround 사용자 API
   version: 0.1.0-draft
-  description: 문제 CRUD·제출 목록·검수 조문 조회와 개발 Mock 분석 API를 구현했다. 실제 모델·수집·인증·추천은 후속 범위다. 팀 합의/전체 구현 완료를 뜻하지 않으며 모든 예시는 합성 데이터다.
+  description: 문제 CRUD·제출 목록·OIDC/JDBC 인증·UI 기능 설정 및 검수 조문 조회와 개발 Mock 분석 API를 구현했다. 실제 모델·수집·추천은 후속 범위다. 팀 합의/전체 구현 완료를 뜻하지 않으며 모든 예시는 합성 데이터다.
 servers:
-- url: http://127.0.0.1:8080/api/v1
+- url: http://localhost:8081/api/v1
 x-contract-status: draft-not-team-approved
 paths:
+  /app/config:
+    get:
+      operationId: getAppCapabilities
+      summary: 화면에서 사용할 기능 상태
+      x-implementation-status: implemented
+      security: []
+      responses:
+        '200':
+          description: 공개 기능 플래그만 반환하며 키·회원·토큰은 포함하지 않음
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppCapabilities'
+              example:
+                googleLoginEnabled: true
+                localEnvironment: true
+                analysisAvailable: false
   /questions:
     post:
       operationId: createQuestion
@@ -1238,7 +1260,7 @@ paths:
     get:
       operationId: getCurrentMember
       summary: getCurrentMember
-      x-implementation-status: planned
+      x-implementation-status: implemented-oidc
       security:
       - SessionCookie: []
       responses:
@@ -1279,7 +1301,7 @@ paths:
     get:
       operationId: getCsrfToken
       summary: getCsrfToken
-      x-implementation-status: planned
+      x-implementation-status: implemented-oidc
       security: []
       responses:
         '200':
@@ -1296,7 +1318,7 @@ paths:
     post:
       operationId: logoutCurrentSession
       summary: logoutCurrentSession
-      x-implementation-status: planned
+      x-implementation-status: implemented-oidc
       security:
       - SessionCookie: []
       responses:
@@ -1320,7 +1342,7 @@ paths:
     get:
       operationId: beginGoogleLogin
       summary: beginGoogleLogin
-      x-implementation-status: planned
+      x-implementation-status: implemented-test-oidc-google-unverified
       security: []
       responses:
         '302':
@@ -1331,12 +1353,12 @@ paths:
                 type: string
       description: Google 로그인 시작
       servers:
-      - url: http://127.0.0.1:8080
+      - url: http://localhost:8081
   /login/oauth2/code/google:
     get:
       operationId: googleLoginCallback
       summary: googleLoginCallback
-      x-implementation-status: planned
+      x-implementation-status: implemented-test-oidc-google-unverified
       security: []
       responses:
         '302':
@@ -1347,7 +1369,7 @@ paths:
                 type: string
       description: code/state 검증 후 고정 성공/실패 경로로 이동
       servers:
-      - url: http://127.0.0.1:8080
+      - url: http://localhost:8081
       parameters:
       - name: code
         in: query
@@ -1380,6 +1402,17 @@ components:
       in: cookie
       name: SESSION
   schemas:
+    AppCapabilities:
+      type: object
+      additionalProperties: false
+      required: [googleLoginEnabled, localEnvironment, analysisAvailable]
+      properties:
+        googleLoginEnabled:
+          type: boolean
+        localEnvironment:
+          type: boolean
+        analysisAvailable:
+          type: boolean
     Choice:
       type: object
       additionalProperties: false

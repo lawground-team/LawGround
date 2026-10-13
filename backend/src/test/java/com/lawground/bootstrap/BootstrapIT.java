@@ -52,7 +52,7 @@ class BootstrapIT {
                         jdbc.queryForObject(
                                 "SELECT count(*) FROM flyway_schema_history WHERE success = true",
                                 Integer.class))
-                .isEqualTo(5);
+                .isEqualTo(6);
         assertThat(
                         jdbc.queryForObject(
                                 "SELECT extversion FROM pg_extension WHERE extname = 'vector'",
@@ -100,6 +100,18 @@ class BootstrapIT {
         mvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.info.title").value("LawGround API"))
+                .andExpect(
+                        jsonPath("$.paths['/api/v1/me'].get.operationId").value("getCurrentMember"))
+                .andExpect(
+                        jsonPath("$.paths['/api/v1/auth/csrf'].get.operationId")
+                                .value("getCsrfToken"))
+                .andExpect(
+                        jsonPath("$.paths['/api/v1/auth/logout'].post.operationId")
+                                .value("logoutCurrentSession"))
+                .andExpect(
+                        jsonPath(
+                                        "$.paths['/api/v1/auth/logout'].post.parameters[?(@.name == 'X-CSRF-TOKEN')].required")
+                                .value(true))
                 .andExpect(
                         jsonPath(
                                         "$.paths['/api/v1/questions'].post.parameters[?(@.name == 'X-CSRF-TOKEN')].required")

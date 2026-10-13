@@ -15,13 +15,41 @@ public class OpenApiConfiguration {
                                 .title("LawGround API")
                                 .version("v1")
                                 .description(
-                                        "문제 CRUD·제출 목록·개발 Mock 분석 API. 실제 모델·Google 로그인은 후속 구현입니다."));
+                                        "문제 CRUD·제출 목록·Mock 분석·OIDC/JDBC 인증 API. Google 실계정·실제 AI·프런트 화면은 별도 검증입니다."));
     }
 
     @Bean
     public org.springdoc.core.customizers.OpenApiCustomizer csrfHeaderDocumentation() {
         return api -> {
             if (api.getPaths() == null) return;
+            // Logout is implemented by the security filter, so MVC scanning cannot discover it.
+            api.getPaths()
+                    .addPathItem(
+                            "/api/v1/auth/logout",
+                            new io.swagger.v3.oas.models.PathItem()
+                                    .post(
+                                            new io.swagger.v3.oas.models.Operation()
+                                                    .operationId("logoutCurrentSession")
+                                                    .summary("현재 브라우저 세션 로그아웃")
+                                                    .responses(
+                                                            new io.swagger.v3.oas.models.responses
+                                                                            .ApiResponses()
+                                                                    .addApiResponse(
+                                                                            "204",
+                                                                            new io.swagger.v3.oas
+                                                                                            .models
+                                                                                            .responses
+                                                                                            .ApiResponse()
+                                                                                    .description(
+                                                                                            "현재 세션과 쿠키 삭제, 본문 없음"))
+                                                                    .addApiResponse(
+                                                                            "403",
+                                                                            new io.swagger.v3.oas
+                                                                                            .models
+                                                                                            .responses
+                                                                                            .ApiResponse()
+                                                                                    .description(
+                                                                                            "CSRF 누락 또는 불일치")))));
             api.getPaths()
                     .values()
                     .forEach(

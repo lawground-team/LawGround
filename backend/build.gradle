@@ -25,6 +25,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation 'org.springframework.session:spring-session-jdbc'
     implementation 'org.springframework.boot:spring-boot-starter-amqp'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     // WebClient for the internal Python API; the server remains Spring MVC.
@@ -75,6 +76,11 @@ tasks.register('integrationTest', Test) {
 }
 
 check.dependsOn integrationTest
+
+// Serve the same frontend source in bootRun, tests and the deployable JAR.
+tasks.named('processResources') {
+    from('../frontend/src') { into 'static/app' }
+}
 
 spotless {
     java {

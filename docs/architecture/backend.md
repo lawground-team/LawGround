@@ -2,7 +2,7 @@
 
 ## 구현 범위
 
-문제 CRUD·제출 라이브러리, V003 법령/청크 import 기반, V004 개발 Mock 분석 큐, V005 검색 SQL/RRF를 추가했다. 실제 모델 HTTP·공식 수집·Google 로그인은 후속 범위다. [문제 저장 구조](questions.md)와 [분석·검색 구조](analysis-search.md)를 따른다.
+문제 CRUD·제출 라이브러리, V003 법령/청크 import 기반, V004 개발 Mock 분석 큐, V005 검색 SQL/RRF, V006 OIDC 회원 연결/JDBC 세션을 추가했다. 실제 모델 HTTP·공식 수집·Google 실계정 검증은 별도 범위다. [문제 저장 구조](questions.md), [분석·검색 구조](analysis-search.md), [인증 구조](authentication.md)를 따른다.
 
 ## 디렉터리
 
@@ -39,7 +39,7 @@ backend/
 |---|---|
 | Spring MVC, Validation | HTTP API와 입력 검증 |
 | Data JPA, PostgreSQL JDBC | 데이터 저장, SQL/벡터/FTS 쿼리 준비 |
-| Security, OAuth2 Client | 보안 기본값과 추후 Google OIDC |
+| Security, OAuth2 Client, Spring Session JDBC | OIDC 회원 식별·DB 세션·CSRF·로그아웃 |
 | AMQP | RabbitMQ 작업 큐 |
 | Flyway Core + PostgreSQL 모듈 | 버전별 DB 변경 |
 | Actuator | health/readiness |
@@ -48,7 +48,7 @@ backend/
 | Boot Test, Security Test, Testcontainers 1.21.4 | 단위·웹·실제 PostgreSQL/RabbitMQ 검사 |
 | Spotless 8.10.3 + google-java-format 1.28.0 AOSP | 일관된 Java 포맷, 4칸 들여쓰기 |
 
-Spring 의존성 버전은 Boot 3.5.16 BOM이 관리한다. Gradle은 호환 범위인 8.14.3으로 고정한다. 테스트용 H2로 PostgreSQL·pgvector·FTS를 대체하지 않는다. Spring Session JDBC는 Y11 세션 스키마 설계와 함께 도입한다.
+Spring 의존성 버전은 Boot 3.5.16 BOM이 관리한다. Gradle은 호환 범위인 8.14.3으로 고정한다. 테스트용 H2로 PostgreSQL·pgvector·FTS를 대체하지 않는다. Spring Session JDBC3.5.7과 V006 공식 세션 DDL을 함께 적용한다.
 
 ## 설정과 보안
 

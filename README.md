@@ -2,7 +2,7 @@
 
 공인중개사 기출문제의 정답 근거를 실제 법령에서 역추적·검증하고 유사문제를 추천하는 프로젝트입니다.
 
-현재는 **개발 기반과 문제 등록·단건 조회**를 구현한 상태입니다. V002 회원·문제·선택지 저장, 입력 검증·소유권·CSRF·local 개발 인증을 포함합니다. 목록/수정/삭제·큐·법령 검색·AI·Google 로그인은 후속 범위입니다.
+현재는 **Google 로그인·문제 입력/확인·DB 저장·내 라이브러리·상세/수정/삭제 화면**이 실제 Spring API에 연결되어 있습니다. V002~V006, 입력 검증·소유권·CSRF·JDBC 세션을 포함합니다. 실제 AI 연결·법령 수집/품질은 아직 준비 중이며 화면에서 새 분석은 비활성화했습니다. 개발 Mock 큐·법령 검색 SQL 기반은 실제 AI 결과와 구분합니다. [화면 범위](frontend/README.md)와 [OIDC 실행 안내](docs/runbooks/oauth-preparation.md)를 참고하세요.
 
 ## 기술 기준
 
@@ -15,7 +15,7 @@
 | RabbitMQ | 4.2.9 management |
 | springdoc | 2.8.17, Boot 3.x 계열 |
 
-Spring MVC·Validation·JPA·Security·OAuth2 Client·AMQP·Actuator·WebClient·Flyway·PostgreSQL JDBC를 준비했습니다. 테스트는 JUnit·MockMvc·Spring Security Test·Testcontainers를 사용합니다.
+Spring MVC·Validation·JPA·Security·OAuth2 Client·Spring Session JDBC 3.5.7(Boot BOM)·AMQP·Actuator·WebClient·Flyway·PostgreSQL JDBC를 사용합니다. 테스트는 JUnit·MockMvc·Spring Security Test·Testcontainers 및 실제 HTTP 테스트 OIDC 공급자를 사용합니다.
 
 ## 디렉터리
 
@@ -23,7 +23,7 @@ Spring MVC·Validation·JPA·Security·OAuth2 Client·AMQP·Actuator·WebClient�
 LawGround/
   backend/       Spring 백엔드 (윤영주)
   ai-service/    Python AI 서비스 자리 (임수종)
-  frontend/      화면 구현 자리, 담당·기술 미정
+  frontend/      Spring이 제공하는 ES modules/CSS 사용자 화면
   infra/         DB·프록시 등 인프라 설정
   docs/          팀 공유 설계·API·실행 문서
   scripts/       저장소 제외·비밀값 경계 검사
@@ -47,11 +47,11 @@ Set-Location backend
 .\gradlew.bat bootRun
 ```
 
-이미 `.env`가 있으면 복사로 덮어쓰지 않습니다. local 프로파일은 루트 `.env`를 읽습니다. 기본 주소는 `127.0.0.1:8080`입니다.
+이미 `.env`가 있으면 복사로 덮어쓰지 않습니다. local 프로파일은 루트 `.env`를 읽습니다. 사용자 화면은 [http://localhost:8081](http://localhost:8081)입니다. `.env.example`의8081포트/Google callback과 동일하게 맞춥니다. [프런트 화면/검증](frontend/README.md)을 참고하세요.
 
-- 상태: `http://127.0.0.1:8080/actuator/health`
-- DB·큐 준비: `http://127.0.0.1:8080/actuator/health/readiness`
-- 개발용 Swagger: `http://127.0.0.1:8080/swagger-ui/index.html`
+- 상태: `http://localhost:8081/actuator/health`
+- DB·큐 준비: `http://localhost:8081/actuator/health/readiness`
+- 개발용 Swagger: `http://localhost:8081/swagger-ui/index.html`
 - RabbitMQ 관리: `http://127.0.0.1:15672` (로컬 `.env` 계정)
 
 등록은 활성 회원과 CSRF가 필요하고 단건 조회는 본인/공개만 허용합니다. local 전용 고정 개발 회원·CSRF 사용법은 [실행 안내](docs/runbooks/local-development.md)에 있습니다. 운영은 prod와 필수 환경변수를 명시하며 dev-auth를 금지하고 Swagger를 기본 비활성화합니다.
@@ -61,6 +61,7 @@ Set-Location backend
 ```powershell
 # 저장소 루트 (Python 3 필요)
 python scripts/check_repository.py
+node frontend/scripts/check.mjs
 
 # backend
 .\gradlew.bat test spotlessCheck bootJar --no-daemon
@@ -81,7 +82,7 @@ python -m venv .venv
 
 OpenAPI 초안은 [사용자 계약](docs/api/external-api.md)과 [내부 계약](docs/api/internal-api.md)에 있습니다. 예시 검증 통과는 업무 API 구현 완료나 Python 담당자 합의를 뜻하지 않습니다.
 
-CI는 PR → main, main/codex 브랜치 push에서 실행됩니다. 백엔드 전체 검사·JAR 생성·Compose 문법·파일 제외 경계·독립 계약 검사를 확인하고 `ci-summary`가 최종 상태를 합칩니다. Python 서비스 검사는 `ai-service/requirements.txt`와 테스트가 추가된 뒤 실행합니다.
+CI는 PR → main, main/codex 브랜치 push에서 실행됩니다. 백엔드 전체 검사·JAR 생성·Compose 문법·파일 제외 경계·독립 계약·프런트 검사를 확인하고 `ci-summary`가 최종 상태를 합칩니다. Python 서비스 검사는 `ai-service/requirements.txt`가 있을 때 실행합니다.
 
 ## 파일 관리
 
@@ -93,6 +94,6 @@ IDE 설정(`.vscode/`, `.idea/`, Eclipse 설정 등), 빌드 결과, `.env`, `AI
 
 ## 문제 라이브러리·개발 Mock 분석·검색 기반
 
-문제 목록/수정/삭제, 멱등 분석 접수·작업/결과 조회·취소, RabbitMQ 복구, 법령 fixture import, PostgreSQL cosine/FTS/RRF 기반을 추가했습니다. 개발 Mock은 기본 비활성화이며 실제 법령 판정·모델 연결·Google 로그인은 미완료입니다.
+문제 목록/수정/삭제, 멱등 분석 접수·작업/결과 조회·취소, RabbitMQ 복구, 법령 fixture import, PostgreSQL cosine/FTS/RRF 기반을 추가했습니다. 개발 Mock은 기본 비활성화이며 실제 법령 판정·모델 연결은 미완료입니다. Google 로그인과 기본 문제 관리 화면은 실제 DB에 연결됩니다.
 
 [아키텍처·저장 구조](docs/architecture/analysis-search.md) · [Swagger 검토 순서](docs/runbooks/week-02-03-review.md) · [OAuth 준비](docs/runbooks/oauth-preparation.md). backend 검사 후 `python scripts/check_runtime_responses.py`로 합성 API 응답을 공유 계약과 대조할 수 있습니다.

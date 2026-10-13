@@ -17,6 +17,9 @@ server:
         secure: true
 
 lawground:
+  security:
+    oidc:
+      enabled: ${LAWGROUND_OIDC_ENABLED:true}
   ai:
     base-url: ${AI_SERVICE_BASE_URL}
     api-key: ${AI_SERVICE_API_KEY}
