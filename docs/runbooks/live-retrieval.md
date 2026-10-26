@@ -1,6 +1,6 @@
 # LIVE 색인과 검색·리랭크 내부 연결
 
-이 경로는 검색 후보를 반환하는 내부 Spring service다. 공개 검색/관리 API·사용자 분석 버튼·실제 큐 워커 전환·법률 판정은 포함하지 않는다. Python 요청/응답은 현재 구현한 0.1.0-draft를 사용하며 공동 최종 계약 확정과 구분한다.
+이 경로는 실제 검색 후보를 반환하는 내부 Spring service와 선택적으로 켜는 LIVE 큐 워커다. 공개 검색/관리 API·사용자 분석 버튼·법률 판정은 포함하지 않는다. Python 요청/응답은 현재 구현한 0.1.0-draft를 사용하며 공동 최종 계약 확정과 구분한다.
 
 ## 선행과 사용
 
@@ -36,4 +36,34 @@ Docker와 실제 Python 서버를 먼저 준비한다. 별도 터미널의 프�
 .\gradlew.bat liveModelSmoke -PprobeMode=retrieval --no-daemon
 ```
 
-`LiveModelProbe`는 src/test에만 있고 일회용 Testcontainers DB와 합성 문장을 사용한다. 기존 사용자 DB에는 접속하지 않는다. 원문·키·벡터를 출력하지 않고 성공 시 `LIVE_MODEL_PROBE` 메타데이터만 표시한다. 일반 check/CI는 이 task를 실행하지 않는다. index 모드 성공은 retrieval 모드/동시 모델·전체 성능 검수와 별개이며 둘 다 법률 품질 평가가 아니다.
+`LiveModelProbe`는 src/test에만 있고 일회용 Testcontainers DB와 합성 문장을 사용한다. 기존 사용자 DB에는 접속하지 않는다. 원문·키·벡터를 출력하지 않고 성공 시 `LIVE_MODEL_PROBE` 메타데이터만 표시한다. 일반 check/CI는 이 task를 실행하지 않는다. index/retrieval/worker는 각각 별도 검사다. worker 모드는 실제 RabbitMQ도 격리 생성하고 인증된 합성 회원의 문제 저장→분석 접수→발행→리스너→검색 checkpoint→VERIFIER_NOT_CONFIGURED 실패를 검사한다. 어느 모드도 법률 품질·전체 성능 평가가 아니다.
+
+```powershell
+.\gradlew.bat liveModelSmoke -PprobeMode=worker --no-daemon
+```
+
+
+## 선택적 LIVE 큐 워커
+
+일반 기동은 변경하지 않는다. 검수된 법령과 전체 READY 색인, 실제 모델을 먼저 준비한 뒤 `.env`의 다음 값을 명시한다. 기본 실행 설정이 이 환경변수를 Spring에 전달하는지 확인한다.
+
+```dotenv
+LAWGROUND_ANALYSIS_MOCK_ENABLED=false
+LAWGROUND_ANALYSIS_LIVE_ENABLED=true
+# laws.id를 쉼표로 나열. 비워 두거나 출처 제공자 ID를 넣으면 안 됨.
+LAWGROUND_ANALYSIS_LIVE_LAW_IDS=<첫 법령 UUID>,<두 번째 법령 UUID>
+LAWGROUND_ANALYSIS_LIVE_CANDIDATE_LIMIT=5
+LAWGROUND_ANALYSIS_LIVE_TOP_K=5
+```
+
+Mock와 LIVE를 함께 켜면 시작을 거절한다. LIVE의 법령 범위는 서버 설정이며 사용자 요청에서 임의 corpus/model을 받지 않는다. 공유 exchange `lawground.analysis.v1`에서 LIVE는 routing key `analysis.live`, durable queue `lawground.analysis.live.v1`을 사용한다. 이전 Mock 작업을 LIVE로 자동 전환하지 않는다. 복구 스캔과 선점도 실행 모드를 검사한다.
+
+인증된 사용자가 CSRF 토큰과 함께 문제를 저장한 후 기존 `POST /api/v1/questions/{id}/trace-runs`에 `Idempotency-Key` 및 `{"questionRevision":1}`을 보낸다. 접수 시 revision·지문·5선지·제공 정답·기준일을 저장하고 명시 법령, 모델/토크나이저/리랭커 pin, 후보 예산, 원문/색인 manifest를 고정한다. 전체 법령이 미확보/미색인이면 503이며 작업을 만들지 않는다. 이후 문제 수정은 접수된 snapshot을 바꾸지 않는다. 질의는 지문·선지·문제 유형/부정 표현·제공 정답을 보존한 결정적 표현이며 HyDE는 사용하지 않는다.
+
+워커는 짧은 DB 선점 후 트랜잭션 밖에서 실제 HTTP를 호출한다. 취소·삭제·회원 비활성화·lease 만료·fencing token 변경 시 늦은 검색 결과를 저장하지 않는다. 선택한 corpus나 모델이 접수 후 달라지면 새 값으로 자동 교체하지 않고 안전한 오류 코드로 실패한다. 원문 검수는 별도이며 검색 점수는 법적 타당성이나 확률이 아니다.
+
+`trace_runs.checkpoint.retrieval`은 schemaVersion=1, mode=RETRIEVAL_ONLY, verificationPerformed=false 및 검색 result를 저장한다. SEARCH는 tokenize/embed/Hybrid/rerank 전체 구간이다. RERANK checkpoint는 실제 rerank 수행 시에만 true다. 개별 HTTP 응답을 매번 저장하지 않으므로 검색 기록 저장 전 중단은 검색 전체를 재실행할 수 있다. 저장 후 재선점은 해당 기록과 pin/manifest를 재검사하고 모델 호출을 건너뛴다. 리스너의 수동 ACK는 DB 상태 저장 이후이며 DB 오류는 ACK하지 않는다. 재시도 소유자는 Spring worker이고 HTTP 클라이언트는 자동 재시도하지 않는다. retryable 통신/timeout 또는 429/502/504에 최초 포함 최대3회·5초/20초+jitter를 적용한다. Retry-After(초/HTTP-date)가 더 늦으면 존중하고 10분 deadline을 넘으면 실패한다. off503·버전/입력/프로토콜 오류는 재시도하지 않는다.
+
+현재 `/verify`를 구현하지 않았으므로 검색 성공/정상0건 모두 VERIFY 단계에서 `job=FAILED`, `run=FAILED`, `reasonCode=VERIFIER_NOT_CONFIGURED`, `verdict=null`로 끝난다. COMPLETED나 법적 HOLD를 만들지 않는다. 실패 상태는 기존 작업 조회의 errorCode로 확인하고 결과 endpoint는 409 RESULT_NOT_READY다. 중간 검색 기록은 공개 결과 API로 노출하지 않는다. 사용자 UI의 analysisAvailable=false도 유지한다. 최종 검증·인용 저장·UI 활성화는 별도 작업이다.
+
+검수: `LiveWorkerIT`는 실제 PostgreSQL/pgvector·RabbitMQ·loopback HTTP와 합성 모델 응답으로 정상 리스너, snapshot/멱등, 재시도/Retry-After/deadline, 비활성 모델/불법 후보, 저장 후 재개, 취소/삭제/회원 철회, 고정 pin/manifest, 모드 격리, 권한, 잘못된 메시지 및 DB 실패 ACK 경계를 검사한다. 실제 가중치는 선택 `liveModelSmoke -PprobeMode=worker`에서 별도로 검수한다. 합성 소량 검사로 실제 법령 품질·대규모 속도·동시성 상한을 주장하지 않는다.

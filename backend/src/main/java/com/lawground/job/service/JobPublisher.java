@@ -1,6 +1,8 @@
 package com.lawground.job.service;
 
 import com.lawground.global.config.JsonData;
+import com.lawground.job.config.LiveAnalysisProperties;
+import com.lawground.job.config.LiveQueueConfiguration;
 import com.lawground.job.config.MockQueueConfiguration;
 import com.lawground.trace.service.AnalysisService;
 import java.nio.charset.StandardCharsets;
@@ -11,13 +13,15 @@ import org.springframework.amqp.core.MessageDeliveryMode;
 import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 @Component
-@ConditionalOnProperty(name = "lawground.analysis.mock-enabled", havingValue = "true")
+@ConditionalOnExpression(
+        "${lawground.analysis.mock-enabled:false} or ${lawground.analysis.live.enabled:false}")
 public class JobPublisher {
     private static final org.slf4j.Logger log =
             org.slf4j.LoggerFactory.getLogger(JobPublisher.class);
@@ -27,11 +31,19 @@ public class JobPublisher {
     private final RabbitTemplate rabbit;
     private final JobStore store;
     private final JsonData json;
+    private final boolean mockEnabled, liveEnabled;
 
-    public JobPublisher(RabbitTemplate rabbit, JobStore store, JsonData json) {
+    public JobPublisher(
+            RabbitTemplate rabbit,
+            JobStore store,
+            JsonData json,
+            @Value("${lawground.analysis.mock-enabled:false}") boolean mockEnabled,
+            LiveAnalysisProperties live) {
         this.rabbit = rabbit;
         this.store = store;
         this.json = json;
+        this.mockEnabled = mockEnabled;
+        this.liveEnabled = live.enabled();
     }
 
     @TransactionalEventListener
@@ -47,6 +59,8 @@ public class JobPublisher {
     }
 
     public void publish(UUID id) {
+        String mode = store.publicationMode(id);
+        if (!enabled(mode)) return;
         int attempt = store.publicationAttempt(id);
         if (attempt == 0) return;
         var properties = new MessageProperties();
@@ -56,7 +70,7 @@ public class JobPublisher {
         try {
             rabbit.send(
                     MockQueueConfiguration.EXCHANGE,
-                    MockQueueConfiguration.KEY,
+                    "LIVE".equals(mode) ? LiveQueueConfiguration.KEY : MockQueueConfiguration.KEY,
                     new Message(
                             json.write(new Envelope(1, id, UUID.randomUUID()))
                                     .getBytes(StandardCharsets.UTF_8),
@@ -79,6 +93,11 @@ public class JobPublisher {
 
     @Scheduled(fixedDelayString = "${lawground.analysis.recovery-delay-ms:5000}")
     public void recover() {
-        for (UUID id : store.recoverable()) if (!store.expire(id)) publish(id);
+        for (UUID id : store.recoverable(liveEnabled ? "LIVE" : "MOCK"))
+            if (enabled(store.publicationMode(id)) && !store.expire(id)) publish(id);
+    }
+
+    private boolean enabled(String mode) {
+        return (mockEnabled && "MOCK".equals(mode)) || (liveEnabled && "LIVE".equals(mode));
     }
 }

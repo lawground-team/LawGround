@@ -19,13 +19,24 @@ public final class AiClientException extends RuntimeException {
     private final int httpStatus;
     private final String code;
     private final boolean retryable;
+    private final java.time.Instant retryAfter;
 
     public AiClientException(Kind kind, int httpStatus, String code, boolean retryable) {
+        this(kind, httpStatus, code, retryable, null);
+    }
+
+    public AiClientException(
+            Kind kind,
+            int httpStatus,
+            String code,
+            boolean retryable,
+            java.time.Instant retryAfter) {
         super("Internal AI call failed: " + kind + " (" + code + ")");
         this.kind = kind;
         this.httpStatus = httpStatus;
         this.code = code;
         this.retryable = retryable;
+        this.retryAfter = retryAfter;
     }
 
     public Kind kind() {
@@ -42,5 +53,9 @@ public final class AiClientException extends RuntimeException {
 
     public boolean retryable() {
         return retryable;
+    }
+
+    public java.time.Instant retryAfter() {
+        return retryAfter;
     }
 }

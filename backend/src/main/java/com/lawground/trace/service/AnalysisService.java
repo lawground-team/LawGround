@@ -6,6 +6,7 @@ import com.lawground.global.error.ApiException;
 import com.lawground.global.error.ErrorCode;
 import com.lawground.global.web.PageCursor;
 import com.lawground.global.web.PageResponse;
+import com.lawground.job.service.LiveRunPlan;
 import com.lawground.question.dto.QuestionResponse;
 import com.lawground.question.service.QuestionService;
 import com.lawground.trace.dto.TraceDtos;
@@ -40,6 +41,7 @@ public class AnalysisService {
     private final PageCursor cursors;
     private final ApplicationEventPublisher events;
     private final boolean mockEnabled;
+    private final LiveRunPlan live;
 
     public AnalysisService(
             JdbcTemplate jdbc,
@@ -49,6 +51,7 @@ public class AnalysisService {
             Clock clock,
             PageCursor cursors,
             ApplicationEventPublisher events,
+            LiveRunPlan live,
             @Value("${lawground.analysis.mock-enabled:false}") boolean mockEnabled) {
         this.jdbc = jdbc;
         this.members = members;
@@ -58,6 +61,7 @@ public class AnalysisService {
         this.cursors = cursors;
         this.events = events;
         this.mockEnabled = mockEnabled;
+        this.live = live;
     }
 
     @Transactional
@@ -93,13 +97,14 @@ public class AnalysisService {
         }
         if (owned.get(0) != revision)
             throw conflict(ErrorCode.VERSION_CONFLICT, "문제가 변경되었습니다. 다시 조회해 주세요.");
-        if (!mockEnabled)
+        if (!mockEnabled && !live.enabled())
             throw new ApiException(
                     HttpStatus.SERVICE_UNAVAILABLE,
                     ErrorCode.REQUEST_FAILED,
                     "분석 서비스가 준비되지 않았습니다. 개발 Mock은 별도 활성화가 필요합니다.");
         var question = questions.get(questionId);
         String snapshot = json.write(snapshot(question));
+        var admission = live.enabled() ? live.admit(json.read(snapshot)) : null;
         UUID run = UUID.randomUUID(), job = UUID.randomUUID();
         Instant now = Instant.now(clock);
         var versions = new LinkedHashMap<String, Object>();
@@ -112,10 +117,14 @@ public class AnalysisService {
                         "verifierModelRevision",
                         "corpusManifestHash")) versions.put(field, null);
         versions.put("pipelineVersion", "spring-mock-v1");
+        String mode = admission == null ? "MOCK" : "LIVE";
+        String pipeline = admission == null ? "spring-mock-v1" : LiveRunPlan.PIPELINE;
+        Object config =
+                admission == null ? Map.of("hydeEnabled", false, "mock", true) : admission.config();
         jdbc.update(
                 """
-                INSERT INTO trace_runs(id,question_id,requester_id,question_revision,input_snapshot,input_hash,reference_date,operation,idempotency_key,scope,execution_mode,status,pipeline_version,config_snapshot,versions,created_at)
-                VALUES (?,?,?,?,?::jsonb,?,?,'TRACE_CREATE',?,'USER','MOCK','QUEUED','spring-mock-v1',?::jsonb,?::jsonb,?)
+                INSERT INTO trace_runs(id,question_id,requester_id,question_revision,input_snapshot,input_hash,reference_date,operation,idempotency_key,scope,execution_mode,status,pipeline_version,config_snapshot,versions,corpus_manifest,created_at)
+                VALUES (?,?,?,?,?::jsonb,?,?,'TRACE_CREATE',?,'USER',?,'QUEUED',?,?::jsonb,?::jsonb,?::jsonb,?)
                 """,
                 run,
                 questionId,
@@ -125,8 +134,11 @@ public class AnalysisService {
                 JsonData.hash(snapshot),
                 question.referenceDate(),
                 key,
-                json.write(Map.of("hydeEnabled", false, "mock", true)),
-                json.write(versions),
+                mode,
+                pipeline,
+                json.write(config),
+                json.write(admission == null ? versions : admission.versions()),
+                admission == null ? null : json.write(admission.corpus()),
                 Timestamp.from(now));
         jdbc.update(
                 "INSERT INTO processing_jobs(id,run_id,status,stage,deadline_at,created_at,updated_at) VALUES (?,?,'PENDING','PREPARE',?,?,?)",

@@ -2,13 +2,13 @@
 
 **0.1.0-draft / 2026-10-14 윤영주 선택과 현재 Python 구현을 대조한 연결 기준**이다. 원본은 [internal.openapi.yaml](internal.openapi.yaml). 임수종의 후속 수락을 포함한 공동 최종 합의를 의미하지 않는다. 기존 공유 스키마·합성 예시를 보존하면서 실제 Python 서버의 인증·오류·상한에 맞춘다. Spring 어댑터의 코드 검수와 실제 모델 HTTP smoke 결과는 별도 실행 증거로 확인하며, 이 문서만으로 연결 성공을 판단하지 않는다.
 
-현재 Python은 실제 Kiwi `/tokenize`, BGE-M3 `/embed`, BGE reranker `/rerank` 구현을 제공한다. 모델 기능의 기본값은 off이며 `/hyde`, `/verify`에는 실제 LLM 구현이 없다. `/answer`는 공유 확장 설계만 있고 현재 Python 서버에 경로가 없다. Spring의 기존 큐 워커는 자체 Mock이며 사용자 화면의 최종 분석은 활성화하지 않는다. 모든 예시는 합성 데이터이고 실제 모델 측정값·법률 정답이 아니다.
+현재 Python은 실제 Kiwi `/tokenize`, BGE-M3 `/embed`, BGE reranker `/rerank` 구현을 제공한다. 모델 기능의 기본값은 off이며 `/hyde`, `/verify`에는 실제 LLM 구현이 없다. `/answer`는 공유 확장 설계만 있고 현재 Python 서버에 경로가 없다. Spring은 자체 Mock과 기본 OFF LIVE 검색 워커를 모드별로 제공하며 사용자 화면의 최종 분석은 활성화하지 않는다. 모든 예시는 합성 데이터이고 실제 모델 측정값·법률 정답이 아니다.
 
 ## 역할과 흐름
 
 Spring이 문제·회원·법령·작업/결과 DB와 RabbitMQ 큐를 관리하고 Python이 모델 추론을 제공한다. 현재 Python은 별도 FastAPI 서버다. Spring 워커의 실제 파이프라인 연결과 Python 워커 전환을 구분하며 후자는 결정하지 않았다.
 
-현재 내부 HTTP 클라이언트에 더해 검수된 원문의 LIVE 색인 저장과 질의 tokenize/embed→Hybrid/RRF→rerank 내부 service를 구현했다. 기존 local smoke는 합성 문장만 사용하고 사용자 문제·법령 색인·작업/결과 DB를 쓰지 않는다. 별도 선택 task liveModelSmoke는 일회용 DB에만 합성 원문을 색인해 실제 가중치를 검사한다. 공식 법령 수집·검수 코퍼스의 품질, 사용자 분석 UI/큐 워커, 실제 `/verify`와 아래 최종 분석 흐름은 후속이다. [색인·검색 실행 안내](../runbooks/live-retrieval.md)를 따른다.
+현재 내부 HTTP 클라이언트에 더해 검수된 원문의 LIVE 색인 저장과 질의 tokenize/embed→Hybrid/RRF→rerank 내부 service를 구현했다. 기존 local smoke는 합성 문장만 사용하고 사용자 문제·법령 색인·작업/결과 DB를 쓰지 않는다. 별도 선택 task liveModelSmoke는 일회용 DB에만 합성 원문을 색인해 실제 가중치를 검사한다. 공식 법령 수집·검수 코퍼스의 품질, 사용자 분석 UI와 실제 `/verify`를 포함한 최종 분석 흐름은 후속이다. LIVE 큐 워커는 실제 검색 후 checkpoint를 저장하고 미구성 verify에서 FAILED/VERIFIER_NOT_CONFIGURED·판정 null로 끝난다. [색인·검색 실행 안내](../runbooks/live-retrieval.md)를 따른다.
 
 사전 준비: 법령 원문/버전 저장 → 조건을 보존한 청크 → /tokenize, /embed → Spring이 PostgreSQL tsvector와 pgvector 저장.
 
@@ -72,7 +72,7 @@ POST는 서비스 인증 `X-Internal-Token`, UUID `X-Request-Id`, `X-Contract-Ve
 
 429 RATE_LIMITED·504 MODEL_TIMEOUT은 현재 실제 서버에서 생성하지 않으며 Mock 시나리오와 후속 계약에만 있다. Mock의 not_ready 시나리오는 503/retryable=true이고 실제 off503과 구분한다. `MODEL_OUTPUT_INVALID`, `MODEL_UPSTREAM_ERROR`, `IDEMPOTENCY_CONFLICT`는 Python enum에만 있는 후속 제안이며 실제 경로의 반환 구현을 뜻하지 않는다. Python 모델 출력 스키마 실패는 현재 500 INTERNAL_ERROR가 된다.
 
-HTTP 어댑터는 자동 재시도하지 않는다. 후속 job 정책에서 통신 장애·시간 초과·일시적 과부하와 영구 설정/입력 오류를 구분한다. Python retryable=false를 무시해 재시도하지 않는다. 최초 포함 최대3회·HOLD 의미 재검색 최대1회는 멱등 지원·deadline과 함께 후속 협의한다. 정상 검색 결과가 0개이면 verify를 호출하지 않고 후속 파이프라인에서 HOLD 처리하지만, 네트워크·모델 장애를 법적 HOLD로 바꾸지 않는다. outbox는 현재 필수 범위에서 제외했다.
+HTTP 어댑터는 자동 재시도하지 않는다. LIVE job 정책은 통신 장애·시간 초과·일시적 과부하와 영구 설정/입력 오류를 구분한다. Python retryable=false를 무시해 재시도하지 않는다. 현재 기술 재시도는 단계별 최초 포함 최대3회·5초/20초+jitter·10분 deadline이며 Retry-After를 존중한다. 외부 멱등 키는 실행을 재사용하고 checkpoint는 완료 검색을 건너뛰지만 Python 추론의 exactly-once를 보장하지 않는다. HOLD 의미 재검색은 미구현이다. 현재 LIVE는 정상 검색 0건도 중간 결과로만 저장하고 VERIFY 미구성 실패로 끝낸다. 후속 검증 정책에서 정상 0건과 HOLD의 관계를 확정하며, 네트워크·모델 장애를 법적 HOLD로 바꾸지 않는다. outbox는 현재 필수 범위에서 제외했다.
 
 ## 연결 전 공동 검토
 

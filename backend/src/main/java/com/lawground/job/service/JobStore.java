@@ -2,6 +2,7 @@ package com.lawground.job.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.lawground.global.config.JsonData;
+import com.lawground.law.search.LiveRetrievalService;
 import java.sql.Timestamp;
 import java.time.Clock;
 import java.time.Instant;
@@ -65,8 +66,8 @@ public class JobStore {
         jdbc.queryForList("SELECT id FROM trace_runs WHERE id=? FOR UPDATE", ids.get(0)[1]);
         return jdbc.queryForMap(
                 """
-                SELECT j.*,r.question_id,r.status AS run_status,r.execution_mode,r.cancel_requested_at,r.checkpoint,r.input_snapshot,q.deleted_at
-                FROM processing_jobs j JOIN trace_runs r ON r.id=j.run_id JOIN questions q ON q.id=r.question_id
+                SELECT j.*,r.question_id,r.status AS run_status,r.execution_mode,r.cancel_requested_at,r.checkpoint,r.input_snapshot,r.input_hash,r.pipeline_version,r.config_snapshot,r.requester_id,q.owner_id,q.deleted_at,m.status AS member_status
+                FROM processing_jobs j JOIN trace_runs r ON r.id=j.run_id JOIN questions q ON q.id=r.question_id JOIN members m ON m.id=r.requester_id
                 WHERE j.id=? FOR UPDATE OF j
                 """,
                 id);
@@ -95,8 +96,15 @@ public class JobStore {
 
     @Transactional
     public Claim claim(UUID id, String worker) {
+        return claim(id, worker, "MOCK");
+    }
+
+    @Transactional
+    public Claim claim(UUID id, String worker, String expectedMode) {
         var row = lock(id);
-        if (row == null || FINAL.contains(row.get("status"))) return null;
+        if (row == null
+                || !expectedMode.equals(row.get("execution_mode"))
+                || FINAL.contains(row.get("status"))) return null;
         Instant now = Instant.now(clock);
         if (row.get("deleted_at") != null
                 || row.get("cancel_requested_at") != null
@@ -106,6 +114,10 @@ public class JobStore {
         }
         if (!time(row, "deadline_at").isAfter(now)) {
             terminal(row, "FAILED", "DEADLINE_EXCEEDED");
+            return null;
+        }
+        if ("LIVE".equals(expectedMode) && !authorized(row)) {
+            terminal(row, "FAILED", "ACCESS_DENIED");
             return null;
         }
         if ("RUNNING".equals(row.get("status")) && time(row, "lease_until").isAfter(now))
@@ -138,6 +150,83 @@ public class JobStore {
                 json.read(row.get("input_snapshot").toString()));
     }
 
+    private boolean authorized(Map<String, Object> row) {
+        return "ACTIVE".equals(row.get("member_status"))
+                && row.get("requester_id").equals(row.get("owner_id"));
+    }
+
+    private boolean liveUsable(Map<String, Object> row, Claim claim) {
+        if (!usable(row, claim) || !"LIVE".equals(row.get("execution_mode"))) return false;
+        if (!authorized(row)) {
+            terminal(row, "FAILED", "ACCESS_DENIED");
+            return false;
+        }
+        return true;
+    }
+
+    public record LiveWork(String pipelineVersion, JsonNode config, JsonNode checkpoint) {}
+
+    @Transactional
+    public LiveWork liveWork(Claim claim) {
+        var row = lock(claim.jobId());
+        if (!liveUsable(row, claim)) return null;
+        // JSONB normalizes whitespace/key order; compare the semantic frozen snapshot, never the
+        // current question.
+        if (!json.read(row.get("input_snapshot").toString()).equals(claim.snapshot()))
+            throw new LiveWorkerFailure(LiveWorkerFailure.Code.SNAPSHOT_INVALID);
+        return new LiveWork(
+                row.get("pipeline_version").toString(),
+                json.read(row.get("config_snapshot").toString()),
+                json.read(row.get("checkpoint").toString()));
+    }
+
+    @Transactional
+    public boolean recordLiveRetrieval(Claim claim, LiveRetrievalService.Result result) {
+        var row = lock(claim.jobId());
+        if (!liveUsable(row, claim)) return false;
+        var checkpoint =
+                (com.fasterxml.jackson.databind.node.ObjectNode)
+                        json.read(row.get("checkpoint").toString());
+        checkpoint.put("SEARCH", true);
+        checkpoint.put("RERANK", result.status() == LiveRetrievalService.Status.RETRIEVED);
+        checkpoint.set(
+                "retrieval",
+                json.read(
+                        json.write(
+                                Map.of(
+                                        "schemaVersion",
+                                        1,
+                                        "mode",
+                                        "RETRIEVAL_ONLY",
+                                        "verificationPerformed",
+                                        false,
+                                        "result",
+                                        result))));
+        jdbc.update(
+                "UPDATE trace_runs SET checkpoint=?::jsonb WHERE id=?",
+                json.write(checkpoint),
+                claim.runId());
+        return true;
+    }
+
+    @Transactional
+    public boolean failLive(Claim claim, LiveWorkerFailure.Code code) {
+        var row = lock(claim.jobId());
+        if (!liveUsable(row, claim)) return false;
+        terminal(row, "FAILED", code.name());
+        return true;
+    }
+
+    @Transactional(readOnly = true)
+    public String publicationMode(UUID id) {
+        var rows =
+                jdbc.query(
+                        "SELECT r.execution_mode FROM processing_jobs j JOIN trace_runs r ON r.id=j.run_id WHERE j.id=?",
+                        (rs, n) -> rs.getString(1),
+                        id);
+        return rows.isEmpty() ? null : rows.getFirst();
+    }
+
     @Transactional
     public boolean heartbeat(Claim claim) {
         Instant now = Instant.now(clock),
@@ -161,6 +250,10 @@ public class JobStore {
     public Start beginStage(Claim claim, Stage stage) {
         var row = lock(claim.jobId());
         if (!usable(row, claim)) return Start.LOST;
+        if ("LIVE".equals(row.get("execution_mode")) && !authorized(row)) {
+            terminal(row, "FAILED", "ACCESS_DENIED");
+            return Start.LOST;
+        }
         if (json.read(row.get("checkpoint").toString()).path(stage.name()).asBoolean(false))
             return Start.SKIP;
         int attempt = json.read(row.get("stage_attempts").toString()).path(stage.name()).asInt(0);
@@ -183,6 +276,10 @@ public class JobStore {
     public boolean finishStage(Claim claim, Stage stage) {
         var row = lock(claim.jobId());
         if (!usable(row, claim)) return false;
+        if ("LIVE".equals(row.get("execution_mode")) && !authorized(row)) {
+            terminal(row, "FAILED", "ACCESS_DENIED");
+            return false;
+        }
         jdbc.update(
                 "UPDATE trace_runs SET checkpoint=jsonb_set(checkpoint,ARRAY[?::text],'true'::jsonb,true) WHERE id=?",
                 stage.name(),
@@ -215,6 +312,10 @@ public class JobStore {
                 .contains(errorCode)) throw new IllegalArgumentException("Unknown worker error");
         var row = lock(claim.jobId());
         if (!usable(row, claim)) return false;
+        if ("LIVE".equals(row.get("execution_mode")) && !authorized(row)) {
+            terminal(row, "FAILED", "ACCESS_DENIED");
+            return false;
+        }
         int attempts =
                 json.read(row.get("stage_attempts").toString())
                         .path(row.get("stage").toString())
@@ -272,16 +373,24 @@ public class JobStore {
 
     @Transactional(readOnly = true)
     public List<UUID> recoverable() {
+        return recoverable(null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<UUID> recoverable(String mode) {
         Timestamp now = now();
         return jdbc.query(
                 """
-                SELECT id FROM processing_jobs WHERE status NOT IN ('SUCCEEDED','FAILED','CANCELLED') AND (
-                deadline_at<=? OR (status='PENDING' AND updated_at<=?::timestamptz-interval '5 seconds')
-                OR (status='QUEUED' AND last_published_at<=?::timestamptz-interval '60 seconds')
-                OR (status='RETRY_WAIT' AND next_attempt_at<=?) OR (status='RUNNING' AND lease_until<=?))
-                ORDER BY updated_at,id LIMIT 100
+                SELECT j.id FROM processing_jobs j JOIN trace_runs r ON r.id=j.run_id
+                WHERE (?::text IS NULL OR r.execution_mode=?) AND j.status NOT IN ('SUCCEEDED','FAILED','CANCELLED') AND (
+                deadline_at<=? OR (j.status='PENDING' AND updated_at<=?::timestamptz-interval '5 seconds')
+                OR (j.status='QUEUED' AND last_published_at<=?::timestamptz-interval '60 seconds')
+                OR (j.status='RETRY_WAIT' AND next_attempt_at<=?) OR (j.status='RUNNING' AND lease_until<=?))
+                ORDER BY updated_at,j.id LIMIT 100
                 """,
                 (rs, n) -> rs.getObject(1, UUID.class),
+                mode,
+                mode,
                 now,
                 now,
                 now,

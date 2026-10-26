@@ -8,7 +8,7 @@
 |---|---|---|
 | 문제 입력·저장·조회 | POST /questions, GET /questions/{id} | 2주차 구현 |
 | 제출 라이브러리·수정·삭제 | GET /questions, PUT/DELETE /questions/{id} | 3주차; 인증 통합 6주차 |
-| 분석 접수·상태 확인 | POST /questions/{id}/trace-runs, GET /jobs/{id} | 3주차 Mock 큐 |
+| 분석 접수·상태 확인 | POST /questions/{id}/trace-runs, GET /jobs/{id} | Mock 또는 명시 설정의 LIVE 검색 큐 |
 | 실행 이력·결과·중단 요청 | GET /questions/{id}/trace-runs, GET /trace-runs/{id}, GET /trace-runs/{id}/result, POST /trace-runs/{id}/cancel | 3주차 기반; 실제 AI 연결 6~7주차 |
 | 원문·시행일 확인 | GET /law-articles/{id} | 4주차 기반 |
 | 로그인·내 정보·로그아웃 | OAuth 시작/callback, GET /me, GET /auth/csrf, POST /auth/logout | 통합4/원본5주차 구현; 테스트 OIDC 검증, Google 실계정 미검증 |
@@ -57,3 +57,6 @@ SESSION 쿠키와 쓰기 요청 X-CSRF-TOKEN을 사용한다. 인증용 memberId
 Spring 독립 구현 기준이며 공동 확정 전 초안. Python wire·태그·모델·인용 단위는 [내부 계약](internal-api.md)의 협의 항목이다. 다음 migration/CRUD에서 문서와 스키마를 함께 갱신한다.
 
 Python 3.11+ 가상환경에서 `pip install -r scripts/requirements-contracts.txt`, `python scripts/check_contracts.py`, `python -m unittest discover -s scripts/tests -v`. OpenAPI 3.1 검증기 0.9.0·JSON Schema 형식·왕복 fixture를 검사한다. 등록·단건 조회는 실제 PostgreSQL 통합 검사와 로컬 HTTP 재현으로 확인한다. 미래 기능·실제 모델 품질 검사는 해당 구현 단계에서 추가한다.
+
+
+LIVE 검색 워커를 별도로 활성화한 경우에도 위 입력/응답 DTO는 같다. 접수된 법령·모델/manifest를 고정하고 검색 checkpoint를 저장하지만 실제 verify 미구성으로 FAILED/VERIFIER_NOT_CONFIGURED·verdict null이며 최종 결과는409다. analysisAvailable=false는 유지한다. [LIVE 실행 범위](../runbooks/live-retrieval.md)를 참고한다.
