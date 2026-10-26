@@ -31,7 +31,18 @@ public class VerificationEvidence {
                         .enable(
                                 DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
                                 DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES,
-                                DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES);
+                                DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES,
+                                DeserializationFeature.FAIL_ON_NUMBERS_FOR_ENUMS)
+                        .disable(DeserializationFeature.ACCEPT_FLOAT_AS_INT)
+                        .configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+        for (var shape :
+                List.of(
+                        com.fasterxml.jackson.databind.cfg.CoercionInputShape.Integer,
+                        com.fasterxml.jackson.databind.cfg.CoercionInputShape.Float,
+                        com.fasterxml.jackson.databind.cfg.CoercionInputShape.Boolean))
+            this.mapper
+                    .coercionConfigFor(com.fasterxml.jackson.databind.type.LogicalType.Textual)
+                    .setCoercion(shape, com.fasterxml.jackson.databind.cfg.CoercionAction.Fail);
         this.canonical =
                 this.mapper
                         .copy()

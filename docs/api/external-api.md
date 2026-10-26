@@ -44,7 +44,7 @@ JSON API 기본 경로는 `/api/v1`. OAuth 경로 `/oauth2/authorization/google`
 
 HOLD도 정상 결과이면 job SUCCEEDED + run COMPLETED. 기술 장애를 HOLD로 숨기지 않는다. 완료 전 판정 null, 결과 조회 409 RESULT_NOT_READY. Mock는 executionMode=MOCK로 구분한다.
 
-결과는 inputSnapshot/기준일/판정 이유/원문 인용·시행 기간·공식 링크/실행 버전. quote는 청크 원문 `[start,end)`와 일치해야 한다. 선지 분석은 미제공 시 null, 제공 시 1~5 각각 한 번의 relation/explanation/correctedText/tags/evidenceIds. 근거 없는 정정문은 null. 수집하지 않은 선택률·오답률은 반환하지 않는다.
+결과는 inputSnapshot/기준일/판정 이유/원문 인용·시행 기간·공식 링크/실행 버전. quote는 청크 원문 `[start,end)`와 일치해야 한다. V008에서 선지 분석 저장/응답을 지원한다. 미제공 시 null, 제공 시1~5 각각 한 번의 originalText/relation/explanation/correctedText/tags/evidenceIds이며 원문은 실행 snapshot에서 복사한다. 관계별 근거/정정문을 검사하고 같은 실행의 evidenceIds만 연결한다. 태그는 아직 빈 배열만 지원한다. [선지 분석 지원 경계](../runbooks/choice-analysis.md)를 참고한다. 수집하지 않은 선택률·오답률은 반환하지 않는다.
 
 ## 인증과 오류
 

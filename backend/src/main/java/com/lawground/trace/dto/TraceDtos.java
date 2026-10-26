@@ -50,9 +50,20 @@ public final class TraceDtos {
             String reasonCode,
             String summary,
             List<Evidence> evidences,
-            Object choiceAnalyses,
+            List<ChoiceAnalysis> choiceAnalyses,
             JsonNode versions,
             Instant completedAt) {}
+
+    public record Tag(String code) {}
+
+    public record ChoiceAnalysis(
+            int choiceNumber,
+            String originalText,
+            String relation,
+            String explanation,
+            String correctedText,
+            List<Tag> tags,
+            List<UUID> evidenceIds) {}
 
     public record Evidence(
             UUID evidenceId,

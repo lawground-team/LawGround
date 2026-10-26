@@ -42,6 +42,7 @@ public class AnalysisService {
     private final ApplicationEventPublisher events;
     private final boolean mockEnabled;
     private final LiveRunPlan live;
+    private final ChoiceAnalysisStore choices;
 
     public AnalysisService(
             JdbcTemplate jdbc,
@@ -52,6 +53,7 @@ public class AnalysisService {
             PageCursor cursors,
             ApplicationEventPublisher events,
             LiveRunPlan live,
+            ChoiceAnalysisStore choices,
             @Value("${lawground.analysis.mock-enabled:false}") boolean mockEnabled) {
         this.jdbc = jdbc;
         this.members = members;
@@ -62,6 +64,7 @@ public class AnalysisService {
         this.events = events;
         this.mockEnabled = mockEnabled;
         this.live = live;
+        this.choices = choices;
     }
 
     @Transactional
@@ -253,7 +256,7 @@ public class AnalysisService {
                                 rs.getString("reason_code"),
                                 rs.getString("summary"),
                                 evidences(id),
-                                null,
+                                choices.read(id),
                                 run.versions(),
                                 run.completedAt()),
                 id);

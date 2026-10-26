@@ -763,7 +763,8 @@ class EvaluationIT {
                         context.getBean(Clock.class),
                         context.getBean(VerificationEvidence.class),
                         context.getBean(LiveRunPlan.class),
-                        redeployedAccess());
+                        redeployedAccess(),
+                        context.getBean(com.lawground.trace.service.ChoiceAnalysisStore.class));
         JobStore.Claim redeployedClaim =
                 transaction()
                         .execute(
@@ -855,7 +856,7 @@ class EvaluationIT {
                         sql.queryForObject(
                                 "SELECT count(*) FROM flyway_schema_history WHERE type='SQL'",
                                 Integer.class))
-                .isEqualTo(7);
+                .isEqualTo(8);
         assertThat(
                         sql.queryForObject(
                                 "SELECT display_name FROM members WHERE id=?",

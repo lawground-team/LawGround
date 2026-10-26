@@ -52,7 +52,7 @@ class BootstrapIT {
                         jdbc.queryForObject(
                                 "SELECT count(*) FROM flyway_schema_history WHERE success = true",
                                 Integer.class))
-                .isEqualTo(7);
+                .isEqualTo(8);
         assertThat(
                         jdbc.queryForObject(
                                 "SELECT extversion FROM pg_extension WHERE extname = 'vector'",

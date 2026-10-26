@@ -1,11 +1,10 @@
 package com.lawground.integration.ai.dto;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-/** Existing 0.1.0-draft core subset. Choice analysis persistence is a separate feature. */
+/** Existing 0.1.0-draft with optional choice analyses; no locally invented tag taxonomy. */
 public final class VerifyDtos {
     private VerifyDtos() {}
 
@@ -64,12 +63,33 @@ public final class VerifyDtos {
         }
     }
 
+    public enum Relation {
+        SUPPORTS,
+        CONTRADICTS,
+        INSUFFICIENT
+    }
+
+    public record Tag(String code) {}
+
+    public record ChoiceAnalysis(
+            int choiceNumber,
+            Relation relation,
+            String explanation,
+            String correctedText,
+            List<Tag> tags,
+            List<String> evidenceKeys) {
+        @Override
+        public String toString() {
+            return "VerifyChoiceAnalysis[content omitted]";
+        }
+    }
+
     public record Response(
             Verdict verdict,
             String reasonCode,
             String summary,
             List<Evidence> evidences,
-            JsonNode choiceAnalyses,
+            List<ChoiceAnalysis> choiceAnalyses,
             String tagSetVersion,
             String modelRevision,
             String promptVersion) {

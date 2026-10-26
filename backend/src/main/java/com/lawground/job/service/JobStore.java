@@ -24,6 +24,7 @@ public class JobStore {
     private final com.lawground.trace.service.VerificationEvidence verification;
     private final LiveRunPlan plans;
     private final com.lawground.evaluation.EvaluationAccess evaluations;
+    private final com.lawground.trace.service.ChoiceAnalysisStore choices;
     private static final List<String> FINAL = List.of("SUCCEEDED", "FAILED", "CANCELLED");
 
     public enum Stage {
@@ -55,13 +56,15 @@ public class JobStore {
             Clock clock,
             com.lawground.trace.service.VerificationEvidence verification,
             LiveRunPlan plans,
-            com.lawground.evaluation.EvaluationAccess evaluations) {
+            com.lawground.evaluation.EvaluationAccess evaluations,
+            com.lawground.trace.service.ChoiceAnalysisStore choices) {
         this.jdbc = jdbc;
         this.json = json;
         this.clock = clock;
         this.verification = verification;
         this.plans = plans;
         this.evaluations = evaluations;
+        this.choices = choices;
     }
 
     private Map<String, Object> lock(UUID id) {
@@ -339,6 +342,7 @@ public class JobStore {
                     e.end(),
                     json.write(metadata));
         }
+        choices.persist(claim.runId(), response, request.questionSnapshot(), evidences);
         Timestamp now = now();
         jdbc.update(
                 "UPDATE trace_runs SET status='COMPLETED',verdict=?,reason_code=?,summary=?,completed_at=?,checkpoint=jsonb_set(checkpoint,'{PERSIST}','true'::jsonb,true) WHERE id=?",
