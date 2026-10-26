@@ -4,6 +4,9 @@ package com.lawground.job.service;
 public final class LiveWorkerFailure extends RuntimeException {
     public enum Code {
         VERIFIER_NOT_CONFIGURED,
+        VERIFICATION_CANDIDATES_UNAVAILABLE,
+        VERIFICATION_EXTENSION_UNSUPPORTED,
+        PROMPT_VERSION_MISMATCH,
         MODEL_NOT_READY,
         MODEL_REVISION_MISMATCH,
         AI_CONFIGURATION_INVALID,

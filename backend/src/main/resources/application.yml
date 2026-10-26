@@ -77,6 +77,11 @@ springdoc:
 lawground:
   analysis:
     mock-enabled: ${LAWGROUND_ANALYSIS_MOCK_ENABLED:false}
+    verification:
+      enabled: ${LAWGROUND_VERIFICATION_ENABLED:false}
+      model-name: ${AI_VERIFIER_MODEL_NAME:}
+      model-revision: ${AI_VERIFIER_MODEL_REVISION:}
+      prompt-version: ${AI_VERIFIER_PROMPT_VERSION:}
     live:
       enabled: ${LAWGROUND_ANALYSIS_LIVE_ENABLED:false}
       law-ids: ${LAWGROUND_ANALYSIS_LIVE_LAW_IDS:}

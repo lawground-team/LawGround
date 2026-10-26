@@ -569,7 +569,7 @@ class LiveWorkerIT {
                 .thenThrow(
                         new org.springframework.dao.DataAccessResourceFailureException(
                                 "synthetic"));
-        var instance = new LiveJobWorker(broken, plan, retrieval, JSON);
+        var instance = new LiveJobWorker(broken, plan, retrieval, JSON, null);
         var valid =
                 new Message(
                         JSON.writeValueAsBytes(

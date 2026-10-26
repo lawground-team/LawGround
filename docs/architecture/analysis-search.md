@@ -1,6 +1,6 @@
 # 문제 라이브러리·분석 큐·법령 검색 기반
 
-현재 구현은 문제 CRUD·Google 로그인/세션·기본 화면, Spring 개발 Mock 큐, 법령 import·PostgreSQL 검색 기반 및 실제 AI를 호출하는 LIVE 색인/검색 내부 service다. 실제 검색을 수행하는 LIVE 큐 워커는 명시 설정에서만 켜며, 공식 API 수집·실제 검수 코퍼스의 품질·verify는 후속이다. Mock 완료나 검색 후보 반환은 법령 판정 성공을 의미하지 않는다.
+현재 구현은 문제 CRUD·Google 로그인/세션·기본 화면, Spring 개발 Mock 큐, 법령 import·PostgreSQL 검색 기반 및 실제 AI를 호출하는 LIVE 색인/검색 내부 service다. 실제 검색을 수행하는 LIVE 큐 워커는 명시 설정에서만 켜며, 공식 API 수집·실제 검수 코퍼스의 품질·Python 실제 LLM verifier는 후속이다. Spring 검증 core·원문 검사·최종 저장은 별도 기본OFF 설정에서 제공한다. Mock 완료나 검색 후보 반환은 법령 판정 성공을 의미하지 않는다.
 
 ```mermaid
 flowchart LR
@@ -16,7 +16,12 @@ flowchart LR
   C --> F[Mock: MOCK_ONLY / HOLD 저장]
   C --> L[LIVE: tokenize·embed·Hybrid·rerank]
   L --> CP[검색 checkpoint 저장]
-  CP --> V[verify 미구성: FAILED / 판정 null]
+  CP --> V[검증 OFF: FAILED / 판정 null]
+  CP --> VERIFY[검증 ON: 고정 verifier readiness / HTTP]
+  VERIFY --> CHECK[원문 / 버전 / 요청 hash 검증]
+  CHECK --> SAVE[근거와 최종 판정 원자 저장]
+  SAVE --> DB
+  SAVE --> A
   V --> DB
   V --> A
   F --> DB
@@ -76,7 +81,7 @@ FIXTURE는 synthetic 표시와 별도 공급자다. VERIFIED fixture와 수작�
 4. 양쪽에 같은 토큰 처리 결과를 사용한다. `to_tsvector('simple', joinedTokens)`와 `plainto_tsquery('simple', joinedTokens)`의 AND 검색, `ts_rank_cd DESC`로 lexical 30개를 찾는다. 값은 파라미터로 바인딩한다. BM25나 임베딩 코사인 계산이라고 부르지 않는다.
 5. 채널 안 chunk 중복 제거 후 `1/(60+rank)`를 합산하고 상위30을 반환한다. 같은 점수는 PostgreSQL UUID와 같은 문자열 오름차순이다. 빈 채널은 다른 채널로 진행한다. 오류를 빈 결과로 바꾸지 않는다.
 
-초기에는 exact 검색과 GIN FTS를 사용한다. HNSW는 측정 후 신규 migration으로 검토한다. HyDE는 OFF 기준이다. 내부 검색 경로는 rerank까지이며 실제 verify·최종 판정은 아직 없다.
+초기에는 exact 검색과 GIN FTS를 사용한다. HNSW는 측정 후 신규 migration으로 검토한다. HyDE는 OFF 기준이다. 내부 검색 service는 rerank까지다. 선택적 Spring verifier core가 그 다음 HTTP/원문 검사/저장을 담당하며 Python 실제 검증 모델은 아직 없다.
 
 `FixtureIndexWriter`는 test + FIXTURE 공급자 + fixture revision을 모두 요구한다. `LiveLawIndexService`는 LAW_GO_KR + VERIFIED 원문만 받고 고정 실제 모델/토큰 버전으로 한 청크씩 색인한다. HTTP는 트랜잭션 밖에서 호출하고 원문을 재검사한 짧은 저장 트랜잭션에서 두 채널을 원자 READY로 만든다. 실패 시 반쪽 READY를 만들지 않으며 같은 입력 재호출은 완성 행을 재사용한다. 실제/Mock 구분은 readiness의 backend 이름과 승인 pin으로 검사하며 접두사만 사용하지 않는다.
 

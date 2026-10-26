@@ -22,7 +22,8 @@ class LiveWorkerTest {
                         store,
                         mock(LiveRunPlan.class),
                         mock(LiveRetrievalService.class),
-                        new ObjectMapper());
+                        new ObjectMapper(),
+                        null);
         var props = new org.springframework.amqp.core.MessageProperties();
         props.setDeliveryTag(9);
         try {
@@ -63,7 +64,7 @@ class LiveWorkerTest {
                 .thenThrow(
                         new AiClientException(
                                 AiClientException.Kind.TIMEOUT, 0, "DEADLINE_EXCEEDED", true));
-        var worker = new LiveJobWorker(store, plan, retrieval, json);
+        var worker = new LiveJobWorker(store, plan, retrieval, json, null);
         try {
             worker.process(id);
             verify(store).retry(claim, "AI_UNAVAILABLE", null);
