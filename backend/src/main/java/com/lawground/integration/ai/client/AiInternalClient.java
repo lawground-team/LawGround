@@ -299,7 +299,10 @@ public class AiInternalClient {
                                                     throw remote(
                                                             status,
                                                             decode(bytes, ErrorOutput.class),
-                                                            requestId);
+                                                            requestId,
+                                                            response.headers()
+                                                                    .asHttpHeaders()
+                                                                    .getFirst("Retry-After"));
                                                 });
                             })
                     .timeout(timeout)
@@ -330,7 +333,8 @@ public class AiInternalClient {
         }
     }
 
-    private AiClientException remote(int status, ErrorOutput error, UUID expectedId) {
+    private AiClientException remote(
+            int status, ErrorOutput error, UUID expectedId, String retryAfter) {
         if (!expectedId.equals(error.requestId())
                 || error.timestamp() == null
                 || !text(error.code(), 80)
@@ -351,7 +355,28 @@ public class AiInternalClient {
                 };
         if (!allowed.contains(error.code())) throw protocol();
         boolean retryable = error.retryable() && (status == 429 || status == 502 || status == 504);
-        return new AiClientException(REMOTE_ERROR, status, error.code(), retryable);
+        return new AiClientException(
+                REMOTE_ERROR,
+                status,
+                error.code(),
+                retryable,
+                retryable ? retryAfter(retryAfter) : null);
+    }
+
+    // Safe metadata only. Worker owns scheduling and the overall deadline.
+    static java.time.Instant retryAfter(String value) {
+        if (value == null || value.length() > 100) return null;
+        try {
+            var now = java.time.Instant.now();
+            if (value.matches("[0-9]{1,9}")) return now.plusSeconds(Long.parseLong(value));
+            var date =
+                    java.time.ZonedDateTime.parse(
+                                    value, java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME)
+                            .toInstant();
+            return date.isAfter(now) ? date : null;
+        } catch (java.time.DateTimeException | NumberFormatException ignored) {
+            return null;
+        }
     }
 
     private void validReady(ReadyOutput output) {

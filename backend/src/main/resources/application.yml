@@ -77,6 +77,11 @@ springdoc:
 lawground:
   analysis:
     mock-enabled: ${LAWGROUND_ANALYSIS_MOCK_ENABLED:false}
+    live:
+      enabled: ${LAWGROUND_ANALYSIS_LIVE_ENABLED:false}
+      law-ids: ${LAWGROUND_ANALYSIS_LIVE_LAW_IDS:}
+      candidate-limit: ${LAWGROUND_ANALYSIS_LIVE_CANDIDATE_LIMIT:5}
+      top-k: ${LAWGROUND_ANALYSIS_LIVE_TOP_K:5}
   security:
     dev-auth-enabled: ${LAWGROUND_DEV_AUTH_ENABLED:false}
     oidc:

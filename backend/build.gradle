@@ -80,7 +80,7 @@ check.dependsOn integrationTest
 // Explicit actual-model acceptance probe. Uses a disposable PG container, never the user's DB.
 tasks.register('liveModelSmoke', JavaExec) {
     group = 'verification'
-    description = 'Checks real AI indexing (or retrieval with -PprobeMode=retrieval) in an isolated DB.'
+    description = 'Checks real AI indexing/retrieval/worker (-PprobeMode=worker) with isolated infrastructure.'
     dependsOn testClasses
     classpath = sourceSets.test.runtimeClasspath
     mainClass = 'com.lawground.law.search.LiveModelProbe'

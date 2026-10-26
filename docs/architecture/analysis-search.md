@@ -1,6 +1,6 @@
 # 문제 라이브러리·분석 큐·법령 검색 기반
 
-현재 구현은 문제 CRUD·Google 로그인/세션·기본 화면, Spring 개발 Mock 큐, 법령 import·PostgreSQL 검색 기반 및 실제 AI를 호출하는 LIVE 색인/검색 내부 service다. 공식 API 수집·실제 검수 코퍼스의 품질·실제 분석 워커/verify는 후속이다. Mock 완료나 검색 후보 반환은 법령 판정 성공을 의미하지 않는다.
+현재 구현은 문제 CRUD·Google 로그인/세션·기본 화면, Spring 개발 Mock 큐, 법령 import·PostgreSQL 검색 기반 및 실제 AI를 호출하는 LIVE 색인/검색 내부 service다. 실제 검색을 수행하는 LIVE 큐 워커는 명시 설정에서만 켜며, 공식 API 수집·실제 검수 코퍼스의 품질·verify는 후속이다. Mock 완료나 검색 후보 반환은 법령 판정 성공을 의미하지 않는다.
 
 ```mermaid
 flowchart LR
@@ -11,9 +11,14 @@ flowchart LR
   S --> DB
   S --> P[커밋 후 발행]
   P --> R[RabbitMQ]
-  R --> W[Spring Mock Worker]
+  R --> W[모드별 Spring Worker]
   W --> C[DB 선점·lease·fencing]
-  C --> F[MOCK / HOLD 결과 저장]
+  C --> F[Mock: MOCK_ONLY / HOLD 저장]
+  C --> L[LIVE: tokenize·embed·Hybrid·rerank]
+  L --> CP[검색 checkpoint 저장]
+  CP --> V[verify 미구성: FAILED / 판정 null]
+  V --> DB
+  V --> A
   F --> DB
   F --> A[커밋 후 ACK]
   DB --> REC[작업 복구 스캐너]
@@ -38,7 +43,7 @@ flowchart LR
 
 아웃박스 테이블은 없다. durable exchange/queue, persistent 메시지 `{schemaVersion,jobId,requestId}`, publisher confirm 및 mandatory return을 사용한다. AFTER_COMMIT 발행 기록은 별도의 짧은 트랜잭션에서 저장한다. 브로커 장애가 접수된 작업을 삭제하지 않는다.
 
-5초 복구 주기에서 미발행 PENDING, QUEUED 60초 경과, due RETRY_WAIT, lease 만료 RUNNING을 재발행한다. 중복 발행을 허용하고 DB 선점으로 실행을 제어한다. 한 번만 전달된다고 보장하지 않는다. 스캔당 100개를 처리하고 오래된 작업부터 선택한다.
+5초 복구 주기에서 미발행 PENDING, QUEUED 60초 경과, due RETRY_WAIT, lease 만료 RUNNING을 재발행한다. 중복 발행을 허용하고 DB 선점으로 실행을 제어한다. 한 번만 전달된다고 보장하지 않는다. 활성 모드를 SQL에서 먼저 제한한 뒤 스캔당 100개를 처리하고 오래된 작업부터 선택한다. 비활성 모드의 미완료 작업이 활성 모드를 굶기지 않는다.
 
 lease 180초, heartbeat 30초, 접수 후 deadline 10분이다. 선점할 때 fencing token을 증가시킨다. 결과 저장은 현재 token·유효 lease·미취소·미삭제 조건을 모두 검사한다. 모든 경합 경로의 잠금 순서는 question → run → job이다. 늦은 발행 확인은 RUNNING/최종 상태를 덮지 않는다. 발행 시도 번호도 조건으로 검사해 이전 콜백이 새 기록을 덮지 못하게 한다.
 
@@ -53,7 +58,7 @@ lease 180초, heartbeat 30초, 접수 후 deadline 10분이다. 선점할 때 fe
 | V004 | trace_runs, processing_jobs, evidence_results | 입력 스냅샷·멱등·작업 복구·근거 저장 자리 |
 | V005 | law_chunk_indexes, question_embeddings | 모델/토큰 버전별 색인·질문 추천 벡터 저장 자리 |
 
-기존 migration은 수정하지 않는다. Flyway가 V003→V004→V005 순으로 추가한다. 인증 세션·골든셋 저장·선지 분석 테이블은 이번에 생성하지 않는다.
+기존 migration은 수정하지 않는다. 현재 V001~V006(회원 OIDC 연결·JDBC 세션 포함)을 사용한다. LIVE 워커는 V004 checkpoint를 재사용하므로 신규 migration이 없다. 골든셋 저장·선지 분석 테이블은 후속이다.
 
 `LawImportService`는 제한된 내부 service이며 공개 import HTTP가 없다. 같은 공급자 키/hash는 재사용하고 다른 hash나 VERIFIED 기간 겹침은 `SOURCE_CONFLICT`로 거절한다. 신규 법령 생성부터 advisory lock, 이후 법령 row lock으로 동시 수집을 직렬화한다. 원문을 덮어쓰지 않는다.
 
@@ -63,7 +68,7 @@ FIXTURE는 synthetic 표시와 별도 공급자다. VERIFIED fixture와 수작�
 
 ## 독립 검색 계산
 
-`HybridSearchService`는 내부 Spring service다. 호출자가 고정 법령 ID·기준일·정확한 모델/tokenizer/chunker 버전·질의 벡터/토큰을 제공한다. `LiveRetrievalService`가 고정된 실제 Python HTTP 어댑터로 질의 토큰/벡터를 만들어 이 service를 호출하고 RRF 후보를 리랭크한다. 사용자 분석 Mock 큐와는 아직 연결하지 않았다.
+`HybridSearchService`는 내부 Spring service다. 호출자가 고정 법령 ID·기준일·정확한 모델/tokenizer/chunker 버전·질의 벡터/토큰을 제공한다. `LiveRetrievalService`가 고정된 실제 Python HTTP 어댑터로 질의 토큰/벡터를 만들어 이 service를 호출하고 RRF 후보를 리랭크한다. 이 검색 경로를 명시 설정의 LIVE 큐 워커에서도 사용한다. Mock 큐는 모의 처리만 수행한다.
 
 1. 같은 법령 corpus의 VERIFIED `[effectiveFrom,effectiveTo)` 버전을 선택한다. 필요한 법령 버전이 없으면 `LAW_VERSION_UNAVAILABLE`이며 현재 법령으로 대체하지 않는다.
 2. source hash와 chunker/model/tokenizer 버전, 채널 READY 상태를 검사한다. Mock fixture는 test 외 검색에서 제외한다.

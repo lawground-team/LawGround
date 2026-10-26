@@ -20,7 +20,7 @@ public class AppConfigController {
 
     @GetMapping("/api/v1/app/config")
     public ResponseEntity<Config> config() {
-        // The implemented worker is Mock-only. The user UI never offers fake AI analysis.
+        // LIVE retrieval has no legal verifier yet; keep final analysis unavailable in the UI.
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.noStore())
                 .body(
