@@ -12,7 +12,7 @@
 | 실행 이력·결과·중단 요청 | GET /questions/{id}/trace-runs, GET /trace-runs/{id}, GET /trace-runs/{id}/result, POST /trace-runs/{id}/cancel | 3주차 기반; 실제 AI 연결 6~7주차 |
 | 원문·시행일 확인 | GET /law-articles/{id} | 4주차 기반 |
 | 로그인·내 정보·로그아웃 | OAuth 시작/callback, GET /me, GET /auth/csrf, POST /auth/logout | 통합4/원본5주차 구현; 테스트 OIDC 검증, Google 실계정 미검증 |
-| 관련 문제 추천 | GET /trace-runs/{id}/recommendations | 8주차 |
+| 관련 문제 추천 | GET /trace-runs/{id}/recommendations | 기본 API 구현·화면 후속 |
 
 JSON API 기본 경로는 `/api/v1`. OAuth 경로 `/oauth2/authorization/google`, `/login/oauth2/code/google`에는 이 접두사를 붙이지 않는다. 수집·평가는 권한이 제한된 서비스/CLI 명령의 스키마만 정의했고 HTTP 관리 API는 보류했다.
 
@@ -32,7 +32,7 @@ JSON API 기본 경로는 `/api/v1`. OAuth 경로 `/oauth2/authorization/google`
 
 등록은 201 + Location + ETag, 단건 조회/수정은 200 + ETag, 삭제는 204. 수정/삭제의 `If-Match: "1"`은 question revision이며 누락 428, 버전 충돌 409다. 실행은 입력 스냅샷을 저장해 문제 수정 후에도 과거 분석을 재현한다.
 
-목록은 `{items:[],nextCursor:null}`. limit 기본20/1~50, createdAt DESC/id DESC 정렬, 검증 가능한 불투명 cursor. scope 기본 mine이며 공개 목록도 이 초안에서는 로그인 후 조회한다. 공개 단건과 검수된 법령 원문은 익명 조회 가능. 비공개/타인 자원은 404로 가리고 이력·결과·중단 요청은 소유권을 확인한다. 추천 limit 기본5/최대10, 검증된 LIVE 완료·SUPPORTED 실행에서만 조회한다.
+목록은 `{items:[],nextCursor:null}`. limit 기본20/1~50, createdAt DESC/id DESC 정렬, 검증 가능한 불투명 cursor. scope 기본 mine이며 공개 목록도 이 초안에서는 로그인 후 조회한다. 공개 단건과 검수된 법령 원문은 익명 조회 가능. 비공개/타인 자원은 404로 가리고 이력·결과·중단 요청은 소유권을 확인한다. 추천은 limit 기본5/최대10인 고정 top-N/nextCursor=null이며 현재 revision의 본인 USER/LIVE 검증 완료·SUPPORTED 실행을 기준으로 한다. 미완료·이전 revision은409, Mock/HOLD/REJECTED는빈목록이다. [후보·순위·시행일과 색인 정책](../runbooks/recommendations.md)을 참고한다.
 
 분석 접수는 `{"questionRevision":1}`과 UUID Idempotency-Key로 202 + runId/jobId/statusUrl/resultUrl을 받는다. 동일 소유자·키·payload는 같은 결과, 다른 payload는 409. 중단 요청 202는 완료가 아니며 실제 CANCELLED 여부는 상태 조회로 확인한다.
 

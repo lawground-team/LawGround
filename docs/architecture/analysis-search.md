@@ -61,7 +61,7 @@ lease 180초, heartbeat 30초, 접수 후 deadline 10분이다. 선점할 때 fe
 | V001/V002 기존 | members, questions, question_choices, vector 확장 | 회원·문제·선지 |
 | V003 | laws, law_versions, law_articles, law_chunks | 공급자 식별·시행 기간·불변 원문·연속 청크 |
 | V004 | trace_runs, processing_jobs, evidence_results | 입력 스냅샷·멱등·작업 복구·근거 저장 자리 |
-| V005 | law_chunk_indexes, question_embeddings | 모델/토큰 버전별 색인·질문 추천 벡터 저장 자리 |
+| V005 | law_chunk_indexes, question_embeddings | 모델/토큰 버전별 법령 색인·현재 문제 revision/hash별 추천 벡터 |
 
 기존 migration은 수정하지 않는다. V001~V007을 사용하며 V007은 골든셋5테이블과 EVALUATION trace 연결을 추가한다. LIVE 워커의 검색/검증 checkpoint는 기존 V004를 재사용한다. 선지 분석 테이블은 후속이다. [평가 서비스](../runbooks/evaluation.md)는 관리자 allowlist·소유자를 확인하는 내부 서비스로, 사용자 실행과 다른 scope/operation을 사용하며 정답 라벨을 모델/사용자 API에 전달하지 않는다.
 
@@ -87,6 +87,6 @@ FIXTURE는 synthetic 표시와 별도 공급자다. VERIFIED fixture와 수작�
 
 `LiveIndexStore`는 명시 법령/기준일의 전체 조문·청크 범위, source/검색문 hash, chunker·model·tokenizer와 모든 색인의 READY를 확인한다. 미확보 버전과 미완료 색인을 검색 0건으로 숨기지 않는다. 원문·버전·색인 ID/갱신 시각을 포함한 manifest를 검색 전, 질의 추론 후 DB snapshot 안, rerank 후 재검사한다. 변경 시 결과를 거절한다. 이 manifest는 현재 범위의 재현 fingerprint이며 별도 영구 corpus manifest 등록/승인 시스템을 구현한 것은 아니다. source/parser 자체의 정확성 검수는 별도다.
 
-검색 결과는 `verificationPerformed=false`이며 SUPPORTED/HOLD/REJECTED를 생성하지 않는다. rerank 후보 수1~30과 topK1~5는 내부 호출자가 명시하고 실제 전송 후보 수도 결과에 남긴다. CPU 초기 검수는 소량부터 하며 이 내부 예산을 양쪽 최종 성능 계약으로 표시하지 않는다. `question_embeddings`는 추천용 저장 기반이며 이번 질의 캐시로 사용하지 않는다. [실행·검수](../runbooks/live-retrieval.md)를 참고한다.
+검색 결과는 `verificationPerformed=false`이며 SUPPORTED/HOLD/REJECTED를 생성하지 않는다. rerank 후보 수1~30과 topK1~5는 내부 호출자가 명시하고 실제 전송 후보 수도 결과에 남긴다. CPU 초기 검수는 소량부터 하며 이 내부 예산을 양쪽 최종 성능 계약으로 표시하지 않는다. `question_embeddings`는 법령 검색 질의 캐시와 별개인 문제 추천 벡터다. [검색 실행·검수](../runbooks/live-retrieval.md), [추천 API·권한/시행일·내부 문제 색인](../runbooks/recommendations.md)을 참고한다.
 
 평가 계산은 사람이 준 기대 조문과 순위를 article 단위로 중복 제거한 top5로 대조한다. Recall은 사례별 비율 평균, Hit는 하나 이상 일치 비율이다. 정답 조문 없는 HOLD는 검색 분모에서 제외하고 판정 분모에는 포함한다. 기술 실패는 0점, 빈 셋은 null, Mock은 실제 평가에서 제외한다. 골든셋 저장·격리 평가 서비스는 V007로 제공하며, 실제 사람 검수 라벨 확보·실제 품질 비교는 미완료다.

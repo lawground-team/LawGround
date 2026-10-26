@@ -1125,7 +1125,8 @@ paths:
     get:
       operationId: listRecommendations
       summary: listRecommendations
-      x-implementation-status: planned
+      x-implementation-status: implemented-week-08-basic
+      description: 본인의 현재 USER/LIVE 검증 완료 SUPPORTED 실행에 대한 고정 top-N. 기본5/최대10, nextCursor=null. 미완료/이전 revision은409, Mock/HOLD/REJECTED는빈목록. 공개 승인/본인 검증완료 후보와 근거 시행일을 검사하며 모델 호출 없이 DB만 조회한다.
       security:
       - SessionCookie: []
       responses:
