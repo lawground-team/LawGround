@@ -23,6 +23,7 @@ public class JobStore {
     private final Clock clock;
     private final com.lawground.trace.service.VerificationEvidence verification;
     private final LiveRunPlan plans;
+    private final com.lawground.evaluation.EvaluationAccess evaluations;
     private static final List<String> FINAL = List.of("SUCCEEDED", "FAILED", "CANCELLED");
 
     public enum Stage {
@@ -53,12 +54,14 @@ public class JobStore {
             JsonData json,
             Clock clock,
             com.lawground.trace.service.VerificationEvidence verification,
-            LiveRunPlan plans) {
+            LiveRunPlan plans,
+            com.lawground.evaluation.EvaluationAccess evaluations) {
         this.jdbc = jdbc;
         this.json = json;
         this.clock = clock;
         this.verification = verification;
         this.plans = plans;
+        this.evaluations = evaluations;
     }
 
     private Map<String, Object> lock(UUID id) {
@@ -75,8 +78,9 @@ public class JobStore {
         jdbc.queryForList("SELECT id FROM trace_runs WHERE id=? FOR UPDATE", ids.get(0)[1]);
         return jdbc.queryForMap(
                 """
-                SELECT j.*,r.question_id,r.status AS run_status,r.execution_mode,r.cancel_requested_at,r.checkpoint,r.input_snapshot,r.input_hash,r.pipeline_version,r.config_snapshot,r.requester_id,q.owner_id,q.deleted_at,m.status AS member_status
+                SELECT j.*,r.question_id,r.scope,r.operation,r.evaluation_run_id,e.versions->>'sourceCommit' AS evaluation_build_revision,r.status AS run_status,r.execution_mode,r.cancel_requested_at,r.checkpoint,r.input_snapshot,r.input_hash,r.pipeline_version,r.config_snapshot,r.requester_id,q.owner_id,q.deleted_at,m.status AS member_status
                 FROM processing_jobs j JOIN trace_runs r ON r.id=j.run_id JOIN questions q ON q.id=r.question_id JOIN members m ON m.id=r.requester_id
+                LEFT JOIN evaluation_runs e ON e.id=r.evaluation_run_id
                 WHERE j.id=? FOR UPDATE OF j
                 """,
                 id);
@@ -129,6 +133,10 @@ public class JobStore {
             terminal(row, "FAILED", "ACCESS_DENIED");
             return null;
         }
+        if ("LIVE".equals(expectedMode) && !evaluationVersionMatches(row)) {
+            terminal(row, "FAILED", "EVALUATION_VERSION_MISMATCH");
+            return null;
+        }
         if ("RUNNING".equals(row.get("status")) && time(row, "lease_until").isAfter(now))
             return null;
         if ("RETRY_WAIT".equals(row.get("status")) && time(row, "next_attempt_at").isAfter(now))
@@ -160,14 +168,38 @@ public class JobStore {
     }
 
     private boolean authorized(Map<String, Object> row) {
+        if ("EVALUATION".equals(row.get("scope"))) {
+            UUID actor = (UUID) row.get("requester_id");
+            return "ACTIVE".equals(row.get("member_status"))
+                    && evaluations.allowed(actor)
+                    && "EVALUATION_TRACE_CREATE".equals(row.get("operation"))
+                    && row.get("evaluation_run_id") != null
+                    && Boolean.TRUE.equals(
+                            jdbc.queryForObject(
+                                    "SELECT EXISTS(SELECT 1 FROM evaluation_runs e JOIN golden_sets s ON s.id=e.set_id WHERE e.id=? AND e.requested_by=? AND e.status='RUNNING' AND s.status='FROZEN' AND s.created_by=?)",
+                                    Boolean.class,
+                                    row.get("evaluation_run_id"),
+                                    actor,
+                                    actor));
+        }
         return "ACTIVE".equals(row.get("member_status"))
                 && row.get("requester_id").equals(row.get("owner_id"));
+    }
+
+    private boolean evaluationVersionMatches(Map<String, Object> row) {
+        return !"EVALUATION".equals(row.get("scope"))
+                || java.util.Objects.equals(
+                        evaluations.buildRevision(), row.get("evaluation_build_revision"));
     }
 
     private boolean liveUsable(Map<String, Object> row, Claim claim) {
         if (!usable(row, claim) || !"LIVE".equals(row.get("execution_mode"))) return false;
         if (!authorized(row)) {
             terminal(row, "FAILED", "ACCESS_DENIED");
+            return false;
+        }
+        if (!evaluationVersionMatches(row)) {
+            terminal(row, "FAILED", "EVALUATION_VERSION_MISMATCH");
             return false;
         }
         return true;
@@ -357,8 +389,7 @@ public class JobStore {
     public Start beginStage(Claim claim, Stage stage) {
         var row = lock(claim.jobId());
         if (!usable(row, claim)) return Start.LOST;
-        if ("LIVE".equals(row.get("execution_mode")) && !authorized(row)) {
-            terminal(row, "FAILED", "ACCESS_DENIED");
+        if ("LIVE".equals(row.get("execution_mode")) && !liveUsable(row, claim)) {
             return Start.LOST;
         }
         if (json.read(row.get("checkpoint").toString()).path(stage.name()).asBoolean(false))
@@ -383,8 +414,7 @@ public class JobStore {
     public boolean finishStage(Claim claim, Stage stage) {
         var row = lock(claim.jobId());
         if (!usable(row, claim)) return false;
-        if ("LIVE".equals(row.get("execution_mode")) && !authorized(row)) {
-            terminal(row, "FAILED", "ACCESS_DENIED");
+        if ("LIVE".equals(row.get("execution_mode")) && !liveUsable(row, claim)) {
             return false;
         }
         jdbc.update(
@@ -419,8 +449,7 @@ public class JobStore {
                 .contains(errorCode)) throw new IllegalArgumentException("Unknown worker error");
         var row = lock(claim.jobId());
         if (!usable(row, claim)) return false;
-        if ("LIVE".equals(row.get("execution_mode")) && !authorized(row)) {
-            terminal(row, "FAILED", "ACCESS_DENIED");
+        if ("LIVE".equals(row.get("execution_mode")) && !liveUsable(row, claim)) {
             return false;
         }
         int attempts =

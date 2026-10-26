@@ -159,15 +159,7 @@ public class AnalysisService {
     }
 
     private Map<String, Object> snapshot(QuestionResponse q) {
-        var data = new LinkedHashMap<String, Object>();
-        data.put("subject", q.subject());
-        data.put("stem", q.stem());
-        data.put("questionType", q.questionType());
-        data.put("choices", q.choices());
-        data.put("providedAnswerNumber", q.providedAnswerNumber());
-        data.put("referenceDate", q.referenceDate());
-        data.put("revision", q.revision());
-        return data;
+        return com.lawground.question.service.QuestionSnapshots.from(q);
     }
 
     @Transactional(readOnly = true)

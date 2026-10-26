@@ -8,7 +8,7 @@
 4. `cd backend` 후 Windows는 `.\gradlew.bat bootRun`, Linux/macOS는 `./gradlew bootRun`을 실행한다.
 5. `.env`의 `SERVER_PORT=8081`을 확인하고 `http://localhost:8081/actuator/health/readiness`가 UP인지 확인한다. 사용자 화면은 `http://localhost:8081`, Swagger는 `/swagger-ui/index.html`이다. Google callback도 같은 localhost:8081을 사용한다.
 
-V001~V006이 적용된다. 사용자 화면에서 Google 로그인·문제 입력/확인·DB 저장·내 라이브러리·상세/수정/삭제를 사용할 수 있다. 프런트는 Spring에 포함되며 별도 서버가 필요 없다. 실제 검색 큐 워커는 별도 명시 설정에서만 켜며 최종 verify는 미구현이므로 화면의 분석은 비활성 상태이고 가짜 결과를 생성하지 않는다. 개발 Mock 분석·검색 계산 기반은 별도 검수 기능이다. 기존 볼륨을 유지한다. [프런트 범위](../../frontend/README.md), [기존 기능 검토](week-02-03-review.md), [인증 설정·검증](oauth-preparation.md)을 따른다.
+V001~V007이 적용된다. 사용자 화면에서 Google 로그인·문제 입력/확인·DB 저장·내 라이브러리·상세/수정/삭제를 사용할 수 있다. 프런트는 Spring에 포함되며 별도 서버가 필요 없다. 검색 워커·Spring 검증 core는 별도 설정이며 실제 Python LLM이 미구현이므로 화면 분석은 비활성 상태이고 가짜 결과를 생성하지 않는다. 골든셋/평가 내부 서비스도 기본 OFF다. 기존 볼륨을 유지한다. [평가 범위](evaluation.md), [프런트 범위](../../frontend/README.md), [인증 설정·검증](oauth-preparation.md)을 따른다.
 
 Python 실제 모델의 내부 HTTP 호출은 [AI 연결 검사](ai-connection.md)를 따른다. 사용자 분석 워커 전체 연결과 별도로 검수하며 기본 기동에서 진단 호출을 실행하지 않는다.
 
