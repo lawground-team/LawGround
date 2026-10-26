@@ -21,6 +21,8 @@ public class JobStore {
     private final JdbcTemplate jdbc;
     private final JsonData json;
     private final Clock clock;
+    private final com.lawground.trace.service.VerificationEvidence verification;
+    private final LiveRunPlan plans;
     private static final List<String> FINAL = List.of("SUCCEEDED", "FAILED", "CANCELLED");
 
     public enum Stage {
@@ -46,10 +48,17 @@ public class JobStore {
             Instant deadline,
             JsonNode snapshot) {}
 
-    public JobStore(JdbcTemplate jdbc, JsonData json, Clock clock) {
+    public JobStore(
+            JdbcTemplate jdbc,
+            JsonData json,
+            Clock clock,
+            com.lawground.trace.service.VerificationEvidence verification,
+            LiveRunPlan plans) {
         this.jdbc = jdbc;
         this.json = json;
         this.clock = clock;
+        this.verification = verification;
+        this.plans = plans;
     }
 
     private Map<String, Object> lock(UUID id) {
@@ -214,6 +223,104 @@ public class JobStore {
         var row = lock(claim.jobId());
         if (!liveUsable(row, claim)) return false;
         terminal(row, "FAILED", code.name());
+        return true;
+    }
+
+    private void verifiedRun(
+            Map<String, Object> row, Claim claim, LiveRunPlan.VerifiedConfig config) {
+        if (!LiveRunPlan.VERIFIED_PIPELINE.equals(row.get("pipeline_version"))
+                || !plans.readVerified(json.read(row.get("config_snapshot").toString()))
+                        .equals(config)
+                || !json.read(row.get("input_snapshot").toString()).equals(claim.snapshot()))
+            throw new LiveWorkerFailure(LiveWorkerFailure.Code.CHECKPOINT_INVALID);
+    }
+
+    @Transactional
+    public boolean recordVerification(
+            Claim claim,
+            LiveRunPlan.VerifiedConfig config,
+            LiveRetrievalService.Result retrieval,
+            com.lawground.trace.service.LiveVerifierService.Attempt attempt) {
+        var row = lock(claim.jobId());
+        if (!liveUsable(row, claim)) return false;
+        verifiedRun(row, claim, config);
+        if (!"VERIFY".equals(row.get("stage")))
+            throw new LiveWorkerFailure(LiveWorkerFailure.Code.CHECKPOINT_INVALID);
+        var request =
+                verification.prepareLocked(
+                        UUID.randomUUID(), claim.snapshot(), config.retrieval(), retrieval.hits());
+        if (attempt == null || !verification.fingerprint(request).equals(attempt.requestHash()))
+            throw new LiveWorkerFailure(LiveWorkerFailure.Code.CORPUS_CHANGED);
+        var checkpoint =
+                (com.fasterxml.jackson.databind.node.ObjectNode)
+                        json.read(row.get("checkpoint").toString());
+        checkpoint.put("VERIFY", true);
+        checkpoint.set(
+                "verification",
+                json.read(
+                        json.write(
+                                verification.checkpoint(
+                                        attempt.response(), request, config.verification()))));
+        jdbc.update(
+                "UPDATE trace_runs SET checkpoint=?::jsonb WHERE id=?",
+                json.write(checkpoint),
+                claim.runId());
+        return true;
+    }
+
+    @Transactional
+    public boolean completeVerified(
+            Claim claim, LiveRunPlan.VerifiedConfig config, LiveRetrievalService.Result retrieval) {
+        var row = lock(claim.jobId());
+        if (!liveUsable(row, claim)) return false;
+        verifiedRun(row, claim, config);
+        var checkpoint = json.read(row.get("checkpoint").toString());
+        if (!"PERSIST".equals(row.get("stage"))
+                || !checkpoint.path("VERIFY").asBoolean(false)
+                || checkpoint.path("PERSIST").asBoolean(false))
+            throw new LiveWorkerFailure(LiveWorkerFailure.Code.CHECKPOINT_INVALID);
+        var request =
+                verification.prepareLocked(
+                        UUID.randomUUID(), claim.snapshot(), config.retrieval(), retrieval.hits());
+        var response =
+                verification.fromCheckpoint(
+                        checkpoint.path("verification"), request, config.verification());
+        var evidences = verification.resolve(response, request, config.retrieval());
+        int ordinal = 0;
+        for (var e : evidences) {
+            var metadata = new java.util.LinkedHashMap<String, Object>();
+            metadata.put("articleId", e.articleId());
+            metadata.put("lawVersionId", e.lawVersionId());
+            metadata.put("lawTitle", e.lawTitle());
+            metadata.put("articleLabel", e.articleLabel());
+            metadata.put("sourceUrl", e.sourceUrl());
+            metadata.put("effectiveFrom", e.effectiveFrom());
+            metadata.put("effectiveTo", e.effectiveTo());
+            jdbc.update(
+                    "INSERT INTO evidence_results(id,run_id,chunk_id,ordinal,quote,start_offset,end_offset,metadata_snapshot) VALUES (?,?,?,?,?,?,?,?::jsonb)",
+                    e.evidenceId(),
+                    claim.runId(),
+                    e.chunkId(),
+                    ordinal++,
+                    e.quote(),
+                    e.start(),
+                    e.end(),
+                    json.write(metadata));
+        }
+        Timestamp now = now();
+        jdbc.update(
+                "UPDATE trace_runs SET status='COMPLETED',verdict=?,reason_code=?,summary=?,completed_at=?,checkpoint=jsonb_set(checkpoint,'{PERSIST}','true'::jsonb,true) WHERE id=?",
+                response.verdict().name(),
+                response.reasonCode(),
+                response.summary(),
+                now,
+                claim.runId());
+        jdbc.update(
+                "UPDATE processing_jobs SET status='SUCCEEDED',finished_at=?,updated_at=?,lease_owner=NULL,lease_until=NULL,last_error_code=NULL WHERE id=? AND fencing_token=?",
+                now,
+                now,
+                claim.jobId(),
+                claim.fencingToken());
         return true;
     }
 

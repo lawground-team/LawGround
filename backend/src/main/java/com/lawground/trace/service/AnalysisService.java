@@ -118,7 +118,7 @@ public class AnalysisService {
                         "corpusManifestHash")) versions.put(field, null);
         versions.put("pipelineVersion", "spring-mock-v1");
         String mode = admission == null ? "MOCK" : "LIVE";
-        String pipeline = admission == null ? "spring-mock-v1" : LiveRunPlan.PIPELINE;
+        String pipeline = admission == null ? "spring-mock-v1" : admission.pipelineVersion();
         Object config =
                 admission == null ? Map.of("hydeEnabled", false, "mock", true) : admission.config();
         jdbc.update(

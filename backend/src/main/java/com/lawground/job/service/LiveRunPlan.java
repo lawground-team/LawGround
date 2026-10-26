@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.lawground.global.error.ApiException;
 import com.lawground.global.error.ErrorCode;
 import com.lawground.integration.ai.config.AiProperties;
+import com.lawground.integration.ai.config.VerificationProperties;
 import com.lawground.job.config.LiveAnalysisProperties;
 import com.lawground.law.search.LiveIndexStore;
 import com.lawground.law.search.LiveRetrievalService;
@@ -20,14 +21,21 @@ import org.springframework.stereotype.Service;
 @Service
 public class LiveRunPlan {
     public static final String PIPELINE = "spring-live-retrieval-v1";
+    public static final String VERIFIED_PIPELINE = "spring-live-verify-v1";
     private final LiveAnalysisProperties settings;
     private final AiProperties ai;
     private final LiveIndexStore indexes;
+    private final VerificationProperties verification;
 
-    public LiveRunPlan(LiveAnalysisProperties settings, AiProperties ai, LiveIndexStore indexes) {
+    public LiveRunPlan(
+            LiveAnalysisProperties settings,
+            AiProperties ai,
+            LiveIndexStore indexes,
+            VerificationProperties verification) {
         this.settings = settings;
         this.ai = ai;
         this.indexes = indexes;
+        this.verification = verification;
     }
 
     public boolean enabled() {
@@ -72,8 +80,14 @@ public class LiveRunPlan {
         }
     }
 
+    public record VerifiedConfig(
+            int schemaVersion, Config retrieval, VerificationProperties.Pin verification) {}
+
     public record Admission(
-            Config config, Map<String, Object> versions, Map<String, Object> corpus) {}
+            Object config,
+            Map<String, Object> versions,
+            Map<String, Object> corpus,
+            String pipelineVersion) {}
 
     public void validateConfiguration() {
         LiveSearchProfile.from(ai, LawImportService.CHUNKER);
@@ -108,17 +122,52 @@ public class LiveRunPlan {
                         corpus.manifestHash(),
                         corpus.versionIds());
         var versions = new LinkedHashMap<String, Object>();
-        versions.put("pipelineVersion", PIPELINE);
+        versions.put("pipelineVersion", verification.enabled() ? VERIFIED_PIPELINE : PIPELINE);
         versions.put("embeddingModelRevision", profile.model());
         versions.put("tokenizerVersion", profile.tokenizer());
         // Public Versions has six fixed fields. Reranker pin remains in config and checkpoint.
-        versions.put("promptVersion", null);
-        versions.put("verifierModelRevision", null);
+        versions.put("promptVersion", verification.enabled() ? verification.promptVersion() : null);
+        versions.put(
+                "verifierModelRevision",
+                verification.enabled() ? verification.modelRevision() : null);
         versions.put("corpusManifestHash", corpus.manifestHash());
         return new Admission(
-                config,
+                verification.enabled() ? new VerifiedConfig(2, config, verification.pin()) : config,
                 versions,
-                Map.of("hash", corpus.manifestHash(), "lawVersionIds", corpus.versionIds()));
+                Map.of("hash", corpus.manifestHash(), "lawVersionIds", corpus.versionIds()),
+                verification.enabled() ? VERIFIED_PIPELINE : PIPELINE);
+    }
+
+    public VerifiedConfig readVerified(JsonNode value) {
+        try {
+            if (!value.isObject()
+                    || value.size() != 3
+                    || !value.path("schemaVersion").isInt()
+                    || value.path("schemaVersion").intValue() != 2)
+                throw new IllegalArgumentException();
+            var node = value.path("verification");
+            if (!node.isObject()
+                    || node.size() != 3
+                    || !node.path("modelName").isTextual()
+                    || !node.path("modelRevision").isTextual()
+                    || !node.path("promptVersion").isTextual())
+                throw new IllegalArgumentException();
+            var pin =
+                    new VerificationProperties.Pin(
+                            node.path("modelName").textValue(),
+                            node.path("modelRevision").textValue(),
+                            node.path("promptVersion").textValue());
+            if (!verification.enabled()) throw new LiveWorkerFailure(VERIFIER_NOT_CONFIGURED);
+            var current = verification.pin();
+            if (!pin.modelName().equals(current.modelName())
+                    || !pin.modelRevision().equals(current.modelRevision()))
+                throw new LiveWorkerFailure(MODEL_REVISION_MISMATCH);
+            if (!pin.promptVersion().equals(current.promptVersion()))
+                throw new LiveWorkerFailure(PROMPT_VERSION_MISMATCH);
+            return new VerifiedConfig(2, read(value.path("retrieval")), pin);
+        } catch (IllegalArgumentException | NullPointerException invalid) {
+            throw new LiveWorkerFailure(CHECKPOINT_INVALID);
+        }
     }
 
     public Config read(JsonNode value) {

@@ -59,4 +59,4 @@ Spring 독립 구현 기준이며 공동 확정 전 초안. Python wire·태그�
 Python 3.11+ 가상환경에서 `pip install -r scripts/requirements-contracts.txt`, `python scripts/check_contracts.py`, `python -m unittest discover -s scripts/tests -v`. OpenAPI 3.1 검증기 0.9.0·JSON Schema 형식·왕복 fixture를 검사한다. 등록·단건 조회는 실제 PostgreSQL 통합 검사와 로컬 HTTP 재현으로 확인한다. 미래 기능·실제 모델 품질 검사는 해당 구현 단계에서 추가한다.
 
 
-LIVE 검색 워커를 별도로 활성화한 경우에도 위 입력/응답 DTO는 같다. 접수된 법령·모델/manifest를 고정하고 검색 checkpoint를 저장하지만 실제 verify 미구성으로 FAILED/VERIFIER_NOT_CONFIGURED·verdict null이며 최종 결과는409다. analysisAvailable=false는 유지한다. [LIVE 실행 범위](../runbooks/live-retrieval.md)를 참고한다.
+LIVE 검색 워커를 별도로 활성화한 경우에도 위 입력/응답 DTO는 같다. 접수된 법령·모델/manifest를 고정하고 검색 checkpoint를 저장하지만 기본 검증 OFF는 FAILED/VERIFIER_NOT_CONFIGURED·verdict null이며 최종 결과는409다. 선택적 검증 core가 준비된 응답을 받아 인용 검사를 통과한 실행만 COMPLETED/결과200이 가능하다. 실제 Python LLM은 아직 미구현이며 [지원 범위](../runbooks/verification.md)를 따른다. analysisAvailable=false는 유지한다. [LIVE 실행 범위](../runbooks/live-retrieval.md)를 참고한다.

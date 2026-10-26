@@ -26,6 +26,7 @@ public class LiveJobWorker {
     private final LiveRunPlan plan;
     private final LiveRetrievalService retrieval;
     private final ObjectMapper mapper;
+    private final com.lawground.trace.service.LiveVerifierService verifier;
     private final String worker = "spring-live-" + UUID.randomUUID();
     private final ScheduledExecutorService heartbeats =
             Executors.newSingleThreadScheduledExecutor(
@@ -36,11 +37,16 @@ public class LiveJobWorker {
                     });
 
     public LiveJobWorker(
-            JobStore store, LiveRunPlan plan, LiveRetrievalService retrieval, ObjectMapper mapper) {
+            JobStore store,
+            LiveRunPlan plan,
+            LiveRetrievalService retrieval,
+            ObjectMapper mapper,
+            com.lawground.trace.service.LiveVerifierService verifier) {
         this.store = store;
         this.plan = plan;
         this.retrieval = retrieval;
         this.mapper = mapper;
+        this.verifier = verifier;
     }
 
     @PreDestroy
@@ -86,9 +92,11 @@ public class LiveJobWorker {
         try {
             var work = store.liveWork(claim);
             if (work == null) return;
-            if (!LiveRunPlan.PIPELINE.equals(work.pipelineVersion()))
+            boolean verified = LiveRunPlan.VERIFIED_PIPELINE.equals(work.pipelineVersion());
+            if (!verified && !LiveRunPlan.PIPELINE.equals(work.pipelineVersion()))
                 throw new LiveWorkerFailure(PIPELINE_VERSION_MISMATCH);
-            var config = plan.read(work.config());
+            var verificationPlan = verified ? plan.readVerified(work.config()) : null;
+            var config = verified ? verificationPlan.retrieval() : plan.read(work.config());
             var query = plan.query(config, claim.snapshot());
             plan.requireCorpus(config, claim.snapshot());
             var start = store.beginStage(claim, JobStore.Stage.PREPARE);
@@ -97,8 +105,9 @@ public class LiveJobWorker {
                             && !store.finishStage(claim, JobStore.Stage.PREPARE))) return;
             start = store.beginStage(claim, JobStore.Stage.SEARCH);
             if (start == JobStore.Start.LOST) return;
+            LiveRetrievalService.Result result;
             if (start == JobStore.Start.STARTED) {
-                var result = retrieval.search(query); // No open DB transaction during model calls.
+                result = retrieval.search(query); // No open DB transaction during model calls.
                 validate(result, config);
                 if (!store.recordLiveRetrieval(claim, result)) return;
             } else {
@@ -112,10 +121,10 @@ public class LiveJobWorker {
                         || saved.path("verificationPerformed").booleanValue())
                     throw new LiveWorkerFailure(CHECKPOINT_INVALID);
                 try {
-                    validate(
+                    result =
                             mapper.treeToValue(
-                                    saved.path("result"), LiveRetrievalService.Result.class),
-                            config);
+                                    saved.path("result"), LiveRetrievalService.Result.class);
+                    validate(result, config);
                 } catch (com.fasterxml.jackson.core.JsonProcessingException
                         | IllegalArgumentException invalid) {
                     throw new LiveWorkerFailure(CHECKPOINT_INVALID);
@@ -123,8 +132,23 @@ public class LiveJobWorker {
             }
             plan.requireCorpus(config, claim.snapshot());
             var verify = store.beginStage(claim, JobStore.Stage.VERIFY);
-            if (verify == JobStore.Start.SKIP) throw new LiveWorkerFailure(CHECKPOINT_INVALID);
-            if (verify == JobStore.Start.STARTED) store.failLive(claim, VERIFIER_NOT_CONFIGURED);
+            if (verificationPlan == null) {
+                if (verify == JobStore.Start.SKIP) throw new LiveWorkerFailure(CHECKPOINT_INVALID);
+                if (verify == JobStore.Start.STARTED)
+                    store.failLive(claim, VERIFIER_NOT_CONFIGURED);
+                return;
+            }
+            if (verify == JobStore.Start.LOST) return;
+            if (verify == JobStore.Start.STARTED) {
+                if (result.hits().isEmpty())
+                    throw new LiveWorkerFailure(VERIFICATION_CANDIDATES_UNAVAILABLE);
+                var response = verifier.verify(claim.snapshot(), verificationPlan, result);
+                if (!store.recordVerification(claim, verificationPlan, result, response)) return;
+            }
+            var persist = store.beginStage(claim, JobStore.Stage.PERSIST);
+            if (persist == JobStore.Start.SKIP) throw new LiveWorkerFailure(CHECKPOINT_INVALID);
+            if (persist == JobStore.Start.STARTED)
+                store.completeVerified(claim, verificationPlan, result);
         } catch (DataAccessException infrastructure) {
             throw infrastructure;
         } catch (AiClientException failure) {
@@ -135,12 +159,17 @@ public class LiveJobWorker {
                         switch (failure.kind()) {
                             case CONFIGURATION -> AI_CONFIGURATION_INVALID;
                             case INPUT_INVALID -> AI_INPUT_INVALID;
-                            case VERSION_MISMATCH -> MODEL_REVISION_MISMATCH;
+                            case VERSION_MISMATCH ->
+                                    "PROMPT_VERSION_MISMATCH".equals(failure.code())
+                                            ? PROMPT_VERSION_MISMATCH
+                                            : MODEL_REVISION_MISMATCH;
                             case NOT_READY -> MODEL_NOT_READY;
                             default ->
-                                    "MODEL_NOT_READY".equals(failure.code())
-                                            ? MODEL_NOT_READY
-                                            : AI_CONTRACT_INVALID;
+                                    "VERIFICATION_EXTENSION_UNSUPPORTED".equals(failure.code())
+                                            ? VERIFICATION_EXTENSION_UNSUPPORTED
+                                            : "MODEL_NOT_READY".equals(failure.code())
+                                                    ? MODEL_NOT_READY
+                                                    : AI_CONTRACT_INVALID;
                         });
         } catch (LiveWorkerFailure failure) {
             store.failLive(claim, failure.code());

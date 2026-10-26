@@ -4,7 +4,7 @@
 
 현재는 **Google 로그인·문제 입력/확인·DB 저장·내 라이브러리·상세/수정/삭제 화면**이 실제 Spring API에 연결되어 있습니다. V002~V006, 입력 검증·소유권·CSRF·JDBC 세션을 포함합니다. 실제 검색·리랭크 큐 연결은 별도 설정으로 제공하며 최종 법령 검증·수집/품질은 준비 중이어서 화면에서 새 분석은 비활성화했습니다. 개발 Mock 큐·법령 검색 SQL 기반은 실제 AI 결과와 구분합니다. [화면 범위](frontend/README.md)와 [OIDC 실행 안내](docs/runbooks/oauth-preparation.md)를 참고하세요.
 
-Spring의 내부 AI 클라이언트와 검수된 법령의 LIVE 색인 저장·Hybrid/RRF·리랭크 내부 경로를 추가했습니다. [색인·검색 연결과 검수](docs/runbooks/live-retrieval.md), [실제 모델 로컬 검사](docs/runbooks/ai-connection.md)를 참고하세요. 일반 테스트/기동은 모델 다운로드를 요구하지 않습니다. 공식 법령 수집·검수 코퍼스 확보, 최종 `/verify`·사용자 분석 화면 연결은 후속입니다. 기본 OFF LIVE 워커는 검색 checkpoint 저장 후 `FAILED/VERIFIER_NOT_CONFIGURED`로 끝나며 최종 판정을 만들지 않습니다.
+Spring의 내부 AI 클라이언트와 검수된 법령의 LIVE 색인 저장·Hybrid/RRF·리랭크 내부 경로를 추가했습니다. [색인·검색 연결과 검수](docs/runbooks/live-retrieval.md), [실제 모델 로컬 검사](docs/runbooks/ai-connection.md)를 참고하세요. 일반 테스트/기동은 모델 다운로드를 요구하지 않습니다. 공식 법령 수집·검수 코퍼스 확보, 최종 `/verify`·사용자 분석 화면 연결은 후속입니다. 기본 OFF LIVE 워커에 Spring 검증 core 어댑터·원문 검사·판정 저장을 추가했습니다. 검증 설정 OFF는 검색 checkpoint 후 `FAILED/VERIFIER_NOT_CONFIGURED`로 끝납니다. 실제 Python LLM은 아직 없어 기본 설정과 분석 UI는 계속 OFF이며, [검증 연결 안내](docs/runbooks/verification.md)의 실제 verifier/prompt 준비가 필요합니다.
 
 ## 기술 기준
 

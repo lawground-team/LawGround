@@ -50,6 +50,10 @@ public class AiInternalClient {
     public AiInternalClient(AiProperties properties, ObjectMapper mapper) {
         this.properties = properties;
         this.mapper = mapper.copy();
+        this.mapper.disable(
+                com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        this.mapper.setSerializationInclusion(
+                com.fasterxml.jackson.annotation.JsonInclude.Include.ALWAYS);
         this.mapper.enable(
                 DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
                 DeserializationFeature.FAIL_ON_TRAILING_TOKENS,
@@ -229,6 +233,37 @@ public class AiInternalClient {
         return output;
     }
 
+    public com.lawground.integration.ai.dto.VerifyDtos.Response verify(
+            com.lawground.integration.ai.dto.VerifyDtos.Request request,
+            com.lawground.integration.ai.config.VerificationProperties.Pin pin) {
+        VerificationWire.request(request);
+        if (pin == null || properties.timeouts() == null) throw configuration();
+        Duration timeout = properties.timeouts().verify();
+        if (timeout == null
+                || timeout.isZero()
+                || timeout.isNegative()
+                || timeout.compareTo(Duration.ofMinutes(30)) > 0) throw configuration();
+        long deadline = deadline(timeout);
+        var readiness = ready(request.requestId(), remaining(deadline));
+        var model =
+                readiness.models().stream()
+                        .filter(m -> pin.modelName().equals(m.name()))
+                        .findFirst()
+                        .orElse(null);
+        if (model == null || !model.ready()) throw failure(NOT_READY, "VERIFIER_NOT_READY", false);
+        if (!pin.modelRevision().equals(model.revision()))
+            throw failure(VERSION_MISMATCH, "MODEL_REVISION_MISMATCH", false);
+        var response =
+                call(
+                        "verify",
+                        request.requestId(),
+                        request,
+                        com.lawground.integration.ai.dto.VerifyDtos.Response.class,
+                        remaining(deadline));
+        VerificationWire.response(response, request, pin);
+        return response;
+    }
+
     private <T> T call(String path, UUID requestId, Object body, Class<T> type, Duration timeout) {
         return exchange(path, requestId, body, type, timeout, false);
     }
@@ -394,7 +429,7 @@ public class AiInternalClient {
                     || !names.add(model.name())
                     || model.revision() != null && !text(model.revision(), 160)) throw protocol();
             String prefix = model.name().split(":", 2)[0];
-            if (Set.of("tokenizer", "embed", "rerank").contains(prefix)
+            if (Set.of("tokenizer", "embed", "rerank", "verify").contains(prefix)
                     && !capabilities.add(prefix)) throw protocol();
             if (model.ready() && model.revision() == null) throw protocol();
             allReady &= model.ready();

@@ -20,7 +20,7 @@ public class AppConfigController {
 
     @GetMapping("/api/v1/app/config")
     public ResponseEntity<Config> config() {
-        // LIVE retrieval has no legal verifier yet; keep final analysis unavailable in the UI.
+        // No real Python LLM verifier is accepted yet; the core adapter does not activate the UI.
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.noStore())
                 .body(

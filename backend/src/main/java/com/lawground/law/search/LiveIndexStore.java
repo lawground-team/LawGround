@@ -296,6 +296,39 @@ public class LiveIndexStore {
         unchanged(inspect(laws, date, profile), manifest);
     }
 
+    /** Hold source/index rows only for checkpoint/final DB commits, never for model calls. */
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
+    public void lockUnchanged(
+            Set<UUID> laws, java.time.LocalDate date, LiveSearchProfile profile, String manifest) {
+        String selected = ids(laws);
+        // Import serializes through the law row. Lock laws first, in deterministic order.
+        jdbc.queryForList(
+                "SELECT id FROM laws WHERE id=ANY(?::uuid[]) ORDER BY id FOR SHARE", selected);
+        jdbc.queryForList(
+                "SELECT v.id FROM law_versions v WHERE v.law_id=ANY(?::uuid[]) AND v.effective_from<=? AND (v.effective_to IS NULL OR v.effective_to>?) ORDER BY v.id FOR SHARE",
+                selected,
+                date,
+                date);
+        jdbc.queryForList(
+                "SELECT a.id FROM law_articles a JOIN law_versions v ON v.id=a.law_version_id WHERE v.law_id=ANY(?::uuid[]) AND v.effective_from<=? AND (v.effective_to IS NULL OR v.effective_to>?) ORDER BY a.id FOR SHARE OF a",
+                selected,
+                date,
+                date);
+        jdbc.queryForList(
+                "SELECT c.id FROM law_chunks c JOIN law_articles a ON a.id=c.article_id JOIN law_versions v ON v.id=a.law_version_id WHERE v.law_id=ANY(?::uuid[]) AND v.effective_from<=? AND (v.effective_to IS NULL OR v.effective_to>?) ORDER BY c.id FOR SHARE OF c",
+                selected,
+                date,
+                date);
+        jdbc.queryForList(
+                "SELECT i.id FROM law_chunk_indexes i JOIN law_chunks c ON c.id=i.chunk_id JOIN law_articles a ON a.id=c.article_id JOIN law_versions v ON v.id=a.law_version_id WHERE v.law_id=ANY(?::uuid[]) AND v.effective_from<=? AND (v.effective_to IS NULL OR v.effective_to>?) AND i.embedding_model_revision=? AND i.tokenizer_version=? ORDER BY i.id FOR SHARE OF i",
+                selected,
+                date,
+                date,
+                profile.model(),
+                profile.tokenizer());
+        unchanged(inspect(laws, date, profile), manifest);
+    }
+
     private static void unchanged(Corpus corpus, String manifest) {
         if (corpus.availability() != Availability.READY
                 || !Objects.equals(manifest, corpus.manifestHash()))
