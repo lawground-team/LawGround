@@ -568,7 +568,7 @@ class AuthFlowIT {
         Flyway.configure().dataSource(source).defaultSchema("auth_upgrade").load().migrate();
         assertThat(
                         sql.queryForList(
-                                "SELECT version,checksum FROM flyway_schema_history WHERE type='SQL' AND version<>'006' AND version<>'6' ORDER BY installed_rank"))
+                                "SELECT version,checksum FROM flyway_schema_history WHERE type='SQL' AND installed_rank<=5 ORDER BY installed_rank"))
                 .isEqualTo(checksums);
         assertThat(sql.queryForObject("SELECT count(*) FROM auth_identities", Integer.class))
                 .isZero();

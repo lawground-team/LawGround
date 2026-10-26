@@ -75,6 +75,11 @@ springdoc:
     enabled: false
 
 lawground:
+  evaluation:
+    enabled: ${LAWGROUND_EVALUATION_ENABLED:false}
+    managers: ${LAWGROUND_EVALUATION_MANAGERS:}
+    max-cases-per-run: ${LAWGROUND_EVALUATION_MAX_CASES:20}
+    build-revision: ${LAWGROUND_EVALUATION_BUILD_REVISION:}
   analysis:
     mock-enabled: ${LAWGROUND_ANALYSIS_MOCK_ENABLED:false}
     verification:

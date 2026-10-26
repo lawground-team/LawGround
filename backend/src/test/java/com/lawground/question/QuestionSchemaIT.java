@@ -89,15 +89,20 @@ class QuestionSchemaIT {
                         jdbc.queryForObject(
                                 "SELECT count(*) FROM flyway_schema_history WHERE success AND type='SQL'",
                                 Integer.class))
-                .isEqualTo(6);
+                .isEqualTo(7);
         assertThat(
                         jdbc.queryForList(
                                 "SELECT table_name FROM information_schema.tables WHERE table_schema='public' ORDER BY table_name",
                                 String.class))
                 .containsExactly(
                         "auth_identities",
+                        "evaluation_results",
+                        "evaluation_runs",
                         "evidence_results",
                         "flyway_schema_history",
+                        "golden_case_evidences",
+                        "golden_cases",
+                        "golden_sets",
                         "law_articles",
                         "law_chunk_indexes",
                         "law_chunks",
@@ -143,7 +148,7 @@ class QuestionSchemaIT {
                         sql.queryForObject(
                                 "SELECT count(*) FROM flyway_schema_history WHERE success AND type='SQL'",
                                 Integer.class))
-                .isEqualTo(6);
+                .isEqualTo(7);
         assertThat(
                         sql.queryForObject(
                                 "SELECT checksum FROM flyway_schema_history WHERE version='001' OR version='1'",

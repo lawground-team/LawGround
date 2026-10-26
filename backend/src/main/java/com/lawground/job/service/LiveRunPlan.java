@@ -42,6 +42,10 @@ public class LiveRunPlan {
         return settings.enabled();
     }
 
+    public boolean verificationEnabled() {
+        return verification.enabled();
+    }
+
     public record Config(
             int schemaVersion,
             List<UUID> lawIds,
