@@ -53,6 +53,11 @@ public class AnalysisController {
         return analysis.result(ApiParameters.uuid(id));
     }
 
+    @GetMapping("/trace-runs/{id}/job")
+    public TraceDtos.Job jobForRun(@PathVariable String id) {
+        return analysis.jobForRun(ApiParameters.uuid(id));
+    }
+
     @PostMapping("/trace-runs/{id}/cancel")
     public ResponseEntity<TraceDtos.Cancel> cancel(
             @PathVariable String id, jakarta.servlet.http.HttpServletRequest request)

@@ -1209,6 +1209,58 @@ paths:
           minimum: 1
           maximum: 10
           default: 5
+  /trace-runs/{id}/job:
+    get:
+      operationId: getJobForRun
+      summary: 실행 ID로 작업 상태 복구
+      x-implementation-status: implemented-week-08
+      security:
+      - SessionCookie: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: 소유한 USER 실행의 작업 상태
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Job'}
+              example:
+                id: 00000000-0000-4000-8000-000000000001
+                runId: 00000000-0000-4000-8000-000000000002
+                status: RUNNING
+                stage: VERIFY
+                stageAttempt: 1
+                nextAttemptAt: null
+                errorCode: null
+                createdAt: '2026-10-26T00:00:00Z'
+                updatedAt: '2026-10-26T00:00:01Z'
+        '400':
+          description: 요청 거절
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {code: VALIDATION_FAILED, message: 요청을 확인해 주세요, requestId: synthetic-example, timestamp: '2026-10-26T00:00:00Z', fieldErrors: []}
+        '401':
+          description: 요청 거절
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {code: AUTHENTICATION_REQUIRED, message: 요청을 확인해 주세요, requestId: synthetic-example, timestamp: '2026-10-26T00:00:00Z', fieldErrors: []}
+        '403':
+          description: 요청 거절
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {code: ACCESS_DENIED, message: 요청을 확인해 주세요, requestId: synthetic-example, timestamp: '2026-10-26T00:00:00Z', fieldErrors: []}
+        '404':
+          description: 요청 거절
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {code: RESOURCE_NOT_FOUND, message: 요청을 확인해 주세요, requestId: synthetic-example, timestamp: '2026-10-26T00:00:00Z', fieldErrors: []}
   /law-articles/{id}:
     get:
       operationId: getLawArticle

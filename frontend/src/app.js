@@ -1,10 +1,12 @@
 import {ApiClient} from './api.js';
+import {AnalysisRequests,activeRun,pollDelay,stageLabel,failureMessage,resultMarkup,recommendationsMarkup} from './analysis.js';
 import {escapeHtml as e, koreaToday, displayTime, emptyQuestion, questionPayload, validateQuestion, statusInfo, shouldPoll, safeLawLink, filterQuestions, errorMessage} from './domain.js';
 
 const root = document.querySelector('#app');
 const state = {me:null, config:null, draft:null, editing:null, dirty:false, busy:false, items:[], cursor:null, query:'', filter:'all', errors:{}, epoch:0, authEpoch:0};
 let controller = new AbortController(), pollTimer;
 const api = new ApiClient({onUnauthorized:expireSession});
+const analysisRequests=new AnalysisRequests(api);
 
 const icons = {
   arrow:'M5 12h14m-6-6 6 6-6 6', plus:'M12 5v14M5 12h14', document:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M8 13h8 M8 17h6',
@@ -17,7 +19,7 @@ const icons = {
 function icon(name, className='') { return `<svg class="icon ${className}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${icons[name] ?? icons.document}"/></svg>`; }
 function badge(run) { const s = statusInfo(run); return `<span class="badge ${s.tone}">${icon(s.icon)}${s.text}</span>`; }
 function link(path, text, className='button secondary', glyph) { return `<a href="${e(path)}" data-nav class="${className}">${glyph ? icon(glyph) : ''}${text}</a>`; }
-const analysisNotice = () => `<div class="notice subtle">${icon('info')}<div><strong>지금은 문제 저장과 라이브러리를 사용할 수 있어요.</strong><p>AI 근거 분석은 연결 준비 중이에요. 저장한 문제로 나중에 이어서 분석할 수 있어요.</p></div></div>`;
+const analysisNotice = () => state.config?.analysisAvailable ? '' : `<div class="notice subtle">${icon('info')}<div><strong>지금은 문제 저장과 라이브러리를 사용할 수 있어요.</strong><p>AI 근거 분석은 연결 준비 중이에요. 저장한 문제로 나중에 이어서 분석할 수 있어요.</p></div></div>`;
 function header() {
   const active = location.pathname === '/' ? 'home' : location.pathname === '/library' ? 'library' : location.pathname === '/login' ? '' : 'new';
   return `<header class="site-header"><div class="header-inner"><a href="/" data-nav class="brand" aria-label="LawGround 홈">LawGround<span></span></a>${state.config?.localEnvironment?'<span class="environment">로컬</span>':''}<nav aria-label="주 메뉴">${[['/','홈','home'],['/questions/new','문제 등록','new'],['/library','내 라이브러리','library']].map(([path,label,id]) => `<a href="${path}" data-nav class="${id===active?'active':''}" ${id===active?'aria-current="page"':''}>${label}</a>`).join('')}</nav><div class="account">${state.me ? `<span class="avatar" aria-hidden="true">${e([...state.me.displayName][0] || 'L')}</span><span class="member-name">${e(state.me.displayName)}</span><button class="icon-button" data-action="logout" aria-label="로그아웃" title="로그아웃">${icon('logout')}</button>` : link('/login','로그인','button small')}</div></div></header>`;
@@ -30,8 +32,8 @@ function frame(content, title='LawGround', {focus=true}={}) {
 function loading(title='내용을 불러오고 있어요') { frame(`<div class="loading-state" aria-busy="true"><span class="spinner"></span><p>${title}</p></div>`); }
 function notify(text) { const el=document.querySelector('#toast'); el.textContent=text; el.hidden=false; clearTimeout(notify.timer); notify.timer=setTimeout(()=>el.hidden=true,4500); }
 function errorBlock(error) { return `<div class="notice error" role="alert">${icon('alert')}<div><strong>${e(errorMessage(error))}</strong>${error.requestId ? `<p>문의용 요청 번호: ${e(error.requestId)}</p>` : ''}</div></div>`; }
-function stopReads() { controller.abort(); controller=new AbortController(); clearTimeout(pollTimer); state.epoch++; }
-function clearPrivateState() { stopReads(); state.authEpoch++; Object.assign(state,{me:null,draft:null,editing:null,dirty:false,busy:false,items:[],cursor:null,query:'',filter:'all',errors:{}}); document.querySelector('#confirm-dialog').close(); }
+function stopReads() { controller.abort(); controller=new AbortController(); clearTimeout(pollTimer); state.activeRun=null;state.activeQuestion=null;state.epoch++; }
+function clearPrivateState() { stopReads();analysisRequests.clear(); state.authEpoch++; Object.assign(state,{me:null,draft:null,editing:null,dirty:false,busy:false,items:[],cursor:null,query:'',filter:'all',errors:{}}); document.querySelector('#confirm-dialog').close(); }
 function expireSession() { clearPrivateState(); go('/login?expired=1',true); }
 function go(path, replace=false) { history[replace?'replaceState':'pushState']({},'',path); window.scrollTo(0,0); void route(); }
 async function ensureUser() {
@@ -91,19 +93,67 @@ function reviewView() {
 
 async function detailView(id, epoch) {
   const [q,runs]=await Promise.all([api.get(`/questions/${id}`,{signal:controller.signal}),api.get(`/questions/${id}/trace-runs?limit=20`,{signal:controller.signal})]);
-  if(epoch!==state.epoch)return;
-  const saved=new URLSearchParams(location.search).has('saved');
-  frame(`<div class="breadcrumb">${link('/library','내 라이브러리','plain-link')}<span>/</span> 문제 상세</div>${saved?`<div class="notice success" role="status">${icon('check')}<div><strong>문제를 저장했어요.</strong><p>새로고침하거나 다시 로그인해도 라이브러리에서 확인할 수 있어요.</p></div></div>`:''}<div class="page-heading"><div><h1>저장한 문제</h1><p>${e(displayTime(q.createdAt))} 저장 · 나에게만 공개</p></div><div class="heading-actions"><button class="button secondary" data-edit="${q.id}">${icon('edit')}수정</button><button class="icon-button danger" data-delete="${q.id}" data-revision="${q.revision}" aria-label="문제 삭제" title="문제 삭제">${icon('trash')}</button></div></div><div class="detail-layout"><section class="panel question-review">${questionBody(q)}</section><aside><div class="panel detail-summary"><span class="round-icon">${icon('book')}</span><h2>내 라이브러리에 보관 중</h2><p>문제와 제공된 정답이 저장됐어요.</p><dl><div><dt>법령 기준일</dt><dd>${e(q.referenceDate)}</dd></div><div><dt>마지막 수정</dt><dd>${e(displayTime(q.updatedAt))}</dd></div></dl><button class="button full" disabled>AI 분석 연결 준비 중</button><p class="helper">실제 분석 서비스가 연결되면 저장한 문제로 분석을 요청할 수 있어요.</p>${link('/library','내 라이브러리로','button secondary full','book')}</div></aside></div><section class="history-section"><div class="section-heading"><h2>이 문제의 실행 이력</h2><span class="helper">각 실행은 당시 문제 내용을 보관해요.</span></div>${runs.items.length?`<div class="history-list">${runs.items.map(run=>`<article><div>${badge(run)}<span>${e(displayTime(run.createdAt))}</span></div>${link(`/runs/${run.id}`,'실행 상세','text-link','arrow')}</article>`).join('')}</div>`:`<div class="empty-history">${icon('clock')}아직 분석 실행 이력이 없어요. 문제 저장은 정상적으로 완료됐어요.</div>`}</section>`,'문제 상세');
+  if(epoch!==state.epoch)return;state.activeQuestion=q;
+  const saved=new URLSearchParams(location.search).has('saved'), isPublic=q.visibility==='PUBLIC';
+  const pending=analysisRequests.pending(state.me.id,q), enabled=state.config?.analysisAvailable;
+  frame(`<div class="breadcrumb">${link('/library','내 라이브러리','plain-link')}<span>/</span> 문제 상세</div>${saved?`<div class="notice success" role="status"><div><strong>문제를 저장했어요.</strong><p>다시 로그인해도 라이브러리에서 확인할 수 있어요.</p></div></div>`:''}<div class="page-heading"><div><h1>${isPublic?'공개 기출문제':'저장한 문제'}</h1><p>${e(displayTime(q.createdAt))} 저장 · ${isPublic?'검수·승인된 공개 문제':'나에게만 공개'}</p></div>${!isPublic?`<div class="heading-actions"><button class="button secondary" data-edit="${q.id}">${icon('edit')}수정</button><button class="icon-button danger" data-delete="${q.id}" data-revision="${q.revision}" aria-label="문제 삭제">${icon('trash')}</button></div>`:''}</div><div class="detail-layout"><section class="panel question-review">${questionBody(q)}</section><aside><div class="panel detail-summary"><span class="round-icon">${icon('book')}</span><h2>${isPublic?'이 문제의 근거 확인':'내 라이브러리에 보관 중'}</h2><p>제공된 정답과 법령 기준일을 확인해 주세요.</p><dl><div><dt>법령 기준일</dt><dd>${e(q.referenceDate)}</dd></div><div><dt>문제 버전</dt><dd>revision ${q.revision}</dd></div></dl><div id="analysis-error" role="alert">${pending?'<p class="notice warning">이전에 접수 결과를 확인하지 못한 요청이 있어요. 같은 요청 확인으로 중복 없이 이어갈 수 있어요.</p>':''}</div><button class="button full" data-action="analyze" ${enabled?'':'disabled'}>${enabled?(pending?'같은 분석 요청 확인':'근거 분석하기'):'AI 분석 연결 준비 중'}</button><p class="helper">${enabled?'접수 후 라이브러리로 이동해도 서버 작업은 계속돼요.':'분석 서비스 연결 후 저장한 문제로 이어서 요청할 수 있어요.'}</p>${link('/library','내 라이브러리로','button secondary full','book')}</div></aside></div><section class="history-section"><div class="section-heading"><h2>이 문제의 실행 이력</h2><span class="helper">각 실행은 당시 입력을 보관해요.</span></div>${runs.items.length?`<div class="history-list">${runs.items.map(run=>`<article><div>${badge(run)}<span>${e(displayTime(run.createdAt))}</span><span class="helper">revision ${run.questionRevision}</span></div>${link(`/runs/${run.id}`,'실행 상세','text-link','arrow')}</article>`).join('')}</div>`:'<div class="empty-history">아직 분석 실행 이력이 없어요.</div>'}</section>`,'문제 상세');
 }
-async function runView(id, epoch) {
-  const run=await api.get(`/trace-runs/${id}`,{signal:controller.signal});
-  let result=null;
-  if(run.status==='COMPLETED') result=await api.get(`/trace-runs/${id}/result`,{signal:controller.signal});
-  if(epoch!==state.epoch)return;
-  const mock=run.executionMode==='MOCK';
-  frame(`<div class="breadcrumb">${link('/library','내 라이브러리','plain-link')}<span>/</span> 실행 상세</div><div class="page-heading"><div><h1>${mock?'개발용 테스트 실행':'분석 실행 상세'}</h1><p>${e(displayTime(run.createdAt))} 접수 · 기준일 ${e(run.referenceDate)}</p></div>${badge(run)}</div>${mock?`<div class="notice warning">${icon('info')}이 기록은 개발용 테스트 실행이에요. 실제 법령 근거 확인 결과가 아니에요.</div>`:''}<section class="panel run-panel">${result?`<h2>${mock?'실제 분석 결과가 없는 기록이에요':e(statusInfo(run).text)}</h2><p>${mock?'이 테스트에서 만들어진 내용을 법령의 근거나 정답 검증으로 표시하지 않아요.':e(result.summary)}</p>${!mock && result.evidences.length?result.evidences.map(ev=>`<article class="evidence-card"><h3>${e(ev.lawTitle)} · ${e(ev.articleLabel)}</h3><blockquote>${e(ev.quote)}</blockquote>${link(`/evidence/${ev.articleId}`,'법령 원문 보기','text-link','arrow')}</article>`).join(''):''}`:`<span class="round-icon">${icon(shouldPoll(run)?'loader':'clock',shouldPoll(run)?'spinning':'')}</span><h2>${e(statusInfo(run).text)}</h2><p>${shouldPoll(run)?'서버에 저장된 실행 상태를 확인하고 있어요. 라이브러리로 이동해도 작업은 유지돼요.':'현재 저장된 실행 상태예요.'}</p>`}<div class="form-actions">${link(`/questions/${run.questionId}`,'문제로 돌아가기','button secondary')}${link('/library','내 라이브러리','button','book')}</div></section>`,'실행 상세');
-  if(shouldPoll(run)) pollTimer=setTimeout(()=>{if(epoch===state.epoch)void runView(id,epoch).catch(showRouteError);},document.hidden?10000:2500);
+
+async function submitAnalysis() {
+  if(state.busy || !state.activeQuestion || !state.config?.analysisAvailable)return;
+  const q=state.activeQuestion, auth=state.authEpoch;state.busy=true;
+  const button=document.querySelector('[data-action="analyze"]');if(button){button.disabled=true;button.textContent='접수 확인 중…';}
+  try {
+    const accepted=await analysisRequests.submit(state.me.id,q);
+    if(auth!==state.authEpoch)return;
+    state.busy=false;go(`/runs/${accepted.runId}`);
+  } catch(error) {
+    if(auth!==state.authEpoch)return;
+    const host=document.querySelector('#analysis-error');if(host)host.innerHTML=errorBlock(error)+(error.network?'<p class="helper">접수 결과가 불확실해요. 같은 요청 확인을 누르거나 실행 이력을 먼저 확인해 주세요.</p>':'');
+  } finally {if(auth===state.authEpoch){state.busy=false;const b=document.querySelector('[data-action="analyze"]');if(b){b.disabled=false;b.textContent=analysisRequests.pending(state.me?.id,q)?'같은 분석 요청 확인':'근거 분석하기';}}}
 }
+
+async function runView(id, epoch, attempt=0) {
+  if(epoch!==state.epoch)return;state.activeRun=id;
+  try {
+    const run=await api.get(`/trace-runs/${id}`,{signal:controller.signal});
+    let result=null,job=null,related=[],relatedError=null;
+    if(run.status==='COMPLETED')result=await api.get(`/trace-runs/${id}/result`,{signal:controller.signal});
+    else job=await api.get(`/trace-runs/${id}/job`,{signal:controller.signal});
+    if(result?.executionMode==='LIVE' && result.verdict==='SUPPORTED') {
+      try {
+        const recommendations=await api.get(`/trace-runs/${id}/recommendations?limit=5`,{signal:controller.signal});
+        const details=await Promise.allSettled(recommendations.items.map(async item=>{
+          const q=await api.get(`/questions/${item.questionId}`,{signal:controller.signal});
+          return {...item,stemPreview:[...q.stem].slice(0,140).join(''),referenceDate:q.referenceDate};
+        }));related=details.filter(v=>v.status==='fulfilled').map(v=>v.value);
+      } catch(error){if(error.status===401 || error.name==='AbortError')throw error;relatedError=error;}
+    }
+    if(epoch!==state.epoch)return;
+    const mock=run.executionMode==='MOCK';
+    let content;
+    if(mock)content='<section class="panel"><h2>개발용 테스트 실행</h2><p>실제 법령 근거나 정답 검증으로 표시하지 않는 기록이에요.</p></section>';
+    else if(result)content=resultMarkup(result)+(result.verdict==='SUPPORTED'?recommendationsMarkup(related,relatedError):'');
+    else if(run.status==='FAILED')content=`<section class="panel"><h2>분석을 완료하지 못했어요</h2><p>${e(failureMessage(job?.errorCode))}</p><p class="helper">저장한 문제는 유지돼요. 문제 화면에서 내용을 확인하고 새 분석을 요청할 수 있어요.</p></section>`;
+    else if(run.status==='CANCELLED')content='<section class="panel"><h2>분석이 취소됐어요</h2><p>문제는 라이브러리에 그대로 보관돼요.</p></section>';
+    else content=`<section class="panel run-panel" aria-live="polite"><span class="round-icon">${icon('loader','spinning')}</span><h2>${run.status==='QUEUED'?'분석 대기 중':'근거를 확인하고 있어요'}</h2><p>${job?.status==='RETRY_WAIT'?'연결을 확인하고 다시 시도할 예정이에요.':job?`현재 단계: ${e(stageLabel(job.stage))}`:'서버에 저장된 실행 상태를 확인하고 있어요.'}</p>${job?.nextAttemptAt?`<p class="helper">다음 시도 ${e(displayTime(job.nextAttemptAt))}</p>`:''}<p class="helper">라이브러리로 이동하거나 새로고침해도 작업은 유지돼요.</p><button class="button secondary" data-action="cancel-analysis">분석 취소</button></section>`;
+    frame(`<div class="breadcrumb">${link('/library','내 라이브러리','plain-link')}<span>/</span> 실행 상세</div><div class="page-heading"><div><h1>분석 실행 상세</h1><p>${e(displayTime(run.createdAt))} 접수 · 기준일 ${e(run.referenceDate)}</p></div>${badge(run)}</div><div id="poll-notice" role="status"></div>${content}<div class="form-actions">${link(`/questions/${run.questionId}`,'문제 확인하기','button secondary')}${link('/library','내 라이브러리','button','book')}</div>`,'실행 상세',{focus:attempt===0});
+    if(activeRun(run))pollTimer=setTimeout(()=>void runView(id,epoch,attempt+1),pollDelay(attempt,document.hidden));
+  } catch(error) {
+    if(epoch!==state.epoch || error.name==='AbortError')return;
+    if(error.network || error.status>=500){const host=document.querySelector('#poll-notice');if(host)host.innerHTML='<p class="notice warning">연결이 불안정해 상태를 다시 확인하고 있어요. 서버 작업을 새로 제출하지 않아요.</p>';else showRouteError(error);pollTimer=setTimeout(()=>void runView(id,epoch,attempt+1),pollDelay(attempt+5,document.hidden));}
+    else showRouteError(error);
+  }
+}
+
+async function cancelAnalysis() {
+  if(state.busy || !state.activeRun)return;state.busy=true;
+  const id=state.activeRun, epoch=state.epoch, auth=state.authEpoch;
+  try {await api.mutate(`/trace-runs/${id}/cancel`);if(epoch===state.epoch){clearTimeout(pollTimer);await runView(id,epoch);}}
+  catch(error){if(epoch===state.epoch)notify(errorMessage(error));}
+  finally{if(auth===state.authEpoch)state.busy=false;}
+}
+
 async function evidenceView(id, epoch) {
   const law=await api.get(`/law-articles/${id}`,{signal:controller.signal}); if(epoch!==state.epoch)return;
   const url=safeLawLink(law.sourceUrl);
@@ -165,6 +215,7 @@ function deleteQuestion(id,revision) {
 }
 
 document.addEventListener('click',event=>{
+  const quote=event.target.closest('[data-quote-ref]');if(quote){event.preventDefault();const el=document.getElementById('quote-'+quote.dataset.quoteRef);el?.scrollIntoView({block:'center',behavior:'smooth'});el?.focus({preventScroll:true});return;}
   const nav=event.target.closest('a[data-nav]');
   if(nav && !event.ctrlKey && !event.metaKey && !event.shiftKey && event.button===0){event.preventDefault();if(state.busy)return;go(nav.getAttribute('href'));return;}
   const button=event.target.closest('button');if(!button || button.disabled)return;
@@ -172,6 +223,9 @@ document.addEventListener('click',event=>{
   if(button.dataset.delete){deleteQuestion(button.dataset.delete,button.dataset.revision);return;}
   if(button.dataset.filter){state.filter=button.dataset.filter;document.querySelectorAll('[data-filter]').forEach(b=>{b.classList.toggle('selected',b.dataset.filter===state.filter);b.setAttribute('aria-pressed',b.dataset.filter===state.filter);});renderLibraryRows();return;}
   const action=button.dataset.action;
+  if(action==='analyze')void submitAnalysis();
+  if(action==='cancel-analysis')void cancelAnalysis();
+  if(action==='refresh-run' && state.activeRun){clearTimeout(pollTimer);void runView(state.activeRun,state.epoch);}
   if(action==='save')void saveQuestion();
   if(action==='back-editor')editorView();
   if(action==='logout')void logout();
@@ -197,8 +251,9 @@ document.addEventListener('submit',event=>{
 window.addEventListener('popstate',()=>void route());
 window.addEventListener('beforeunload',event=>{if(state.dirty){event.preventDefault();event.returnValue='';}});
 document.addEventListener('visibilitychange',()=>{
-  if(document.hidden || !state.me || state.busy)return;
-  void api.get('/me',{anonymous:true}).then(member=>{if(member.id!==state.me?.id){clearPrivateState();state.me=member;notify('로그인 계정이 변경됐어요.');go('/library',true);}}).catch(error=>{if(error.status===401)expireSession();});
+  if(document.hidden){if(state.activeRun){clearTimeout(pollTimer);const id=state.activeRun,epoch=state.epoch;pollTimer=setTimeout(()=>void runView(id,epoch,10),10000);}return;}
+  if(!state.me || state.busy)return;
+  void api.get('/me',{anonymous:true}).then(member=>{if(member.id!==state.me?.id){clearPrivateState();state.me=member;notify('로그인 계정이 변경됐어요.');go('/library',true);}else if(state.activeRun){clearTimeout(pollTimer);void runView(state.activeRun,state.epoch,1);}}).catch(error=>{if(error.status===401)expireSession();});
 });
 async function bootstrap() {
   stopReads();loading('로그인과 연결 상태를 확인하고 있어요');

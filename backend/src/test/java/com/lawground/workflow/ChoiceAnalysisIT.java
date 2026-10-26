@@ -236,6 +236,13 @@ class ChoiceAnalysisIT {
             throws Exception {
         HTTP.transform = n -> choices(n).put("verdict", verdict);
         var r = submit();
+        assertThat(
+                        api(get("/api/v1/trace-runs/" + r.run() + "/job"), 200, "Job")
+                                .path("runId")
+                                .asText())
+                .isEqualTo(r.run().toString());
+        mvc.perform(get("/api/v1/trace-runs/" + r.run() + "/job").with(user(other.toString())))
+                .andExpect(status().isNotFound());
         worker.process(r.job());
         var body = result(r);
         var list = body.path("choiceAnalyses");
@@ -501,7 +508,7 @@ class ChoiceAnalysisIT {
                         sql.queryForObject(
                                 "SELECT count(*) FROM flyway_schema_history WHERE type='SQL'",
                                 Integer.class))
-                .isEqualTo(8);
+                .isEqualTo(9);
         assertThat(
                         sql.queryForObject(
                                 "SELECT display_name FROM members WHERE id=?", String.class, id))

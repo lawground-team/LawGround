@@ -25,6 +25,7 @@ public class JobStore {
     private final LiveRunPlan plans;
     private final com.lawground.evaluation.EvaluationAccess evaluations;
     private final com.lawground.trace.service.ChoiceAnalysisStore choices;
+    private final com.lawground.batch.BatchAccess batches;
     private static final List<String> FINAL = List.of("SUCCEEDED", "FAILED", "CANCELLED");
 
     public enum Stage {
@@ -57,7 +58,8 @@ public class JobStore {
             com.lawground.trace.service.VerificationEvidence verification,
             LiveRunPlan plans,
             com.lawground.evaluation.EvaluationAccess evaluations,
-            com.lawground.trace.service.ChoiceAnalysisStore choices) {
+            com.lawground.trace.service.ChoiceAnalysisStore choices,
+            com.lawground.batch.BatchAccess batches) {
         this.jdbc = jdbc;
         this.json = json;
         this.clock = clock;
@@ -65,6 +67,7 @@ public class JobStore {
         this.plans = plans;
         this.evaluations = evaluations;
         this.choices = choices;
+        this.batches = batches;
     }
 
     private Map<String, Object> lock(UUID id) {
@@ -81,9 +84,10 @@ public class JobStore {
         jdbc.queryForList("SELECT id FROM trace_runs WHERE id=? FOR UPDATE", ids.get(0)[1]);
         return jdbc.queryForMap(
                 """
-                SELECT j.*,r.question_id,r.scope,r.operation,r.evaluation_run_id,e.versions->>'sourceCommit' AS evaluation_build_revision,r.status AS run_status,r.execution_mode,r.cancel_requested_at,r.checkpoint,r.input_snapshot,r.input_hash,r.pipeline_version,r.config_snapshot,r.requester_id,q.owner_id,q.deleted_at,m.status AS member_status
+                SELECT j.*,r.question_id,r.question_revision,r.scope,r.operation,r.batch_run_id,b.config_snapshot->>'sourceCommit' AS batch_build_revision,r.evaluation_run_id,e.versions->>'sourceCommit' AS evaluation_build_revision,r.status AS run_status,r.execution_mode,r.cancel_requested_at,r.checkpoint,r.input_snapshot,r.input_hash,r.pipeline_version,r.config_snapshot,r.requester_id,q.owner_id,q.deleted_at,q.revision AS current_question_revision,q.visibility AS question_visibility,q.source_kind AS question_source_kind,q.answer_source AS question_answer_source,m.status AS member_status
                 FROM processing_jobs j JOIN trace_runs r ON r.id=j.run_id JOIN questions q ON q.id=r.question_id JOIN members m ON m.id=r.requester_id
                 LEFT JOIN evaluation_runs e ON e.id=r.evaluation_run_id
+                LEFT JOIN batch_runs b ON b.id=r.batch_run_id
                 WHERE j.id=? FOR UPDATE OF j
                 """,
                 id);
@@ -137,7 +141,12 @@ public class JobStore {
             return null;
         }
         if ("LIVE".equals(expectedMode) && !evaluationVersionMatches(row)) {
-            terminal(row, "FAILED", "EVALUATION_VERSION_MISMATCH");
+            terminal(
+                    row,
+                    "FAILED",
+                    "BATCH".equals(row.get("scope"))
+                            ? "BATCH_VERSION_MISMATCH"
+                            : "EVALUATION_VERSION_MISMATCH");
             return null;
         }
         if ("RUNNING".equals(row.get("status")) && time(row, "lease_until").isAfter(now))
@@ -171,6 +180,21 @@ public class JobStore {
     }
 
     private boolean authorized(Map<String, Object> row) {
+        if ("BATCH".equals(row.get("scope"))) {
+            UUID actor = (UUID) row.get("requester_id");
+            return "ACTIVE".equals(row.get("member_status"))
+                    && batches.allowed(actor)
+                    && approvedPublic(row)
+                    && "BATCH_TRACE_CREATE".equals(row.get("operation"))
+                    && row.get("batch_run_id") != null
+                    && Boolean.TRUE.equals(
+                            jdbc.queryForObject(
+                                    "SELECT EXISTS(SELECT 1 FROM batch_runs b JOIN batch_items i ON i.batch_run_id=b.id WHERE b.id=? AND b.requested_by=? AND b.status='RUNNING' AND i.status='PENDING' AND i.trace_run_id=?)",
+                                    Boolean.class,
+                                    row.get("batch_run_id"),
+                                    actor,
+                                    row.get("run_id")));
+        }
         if ("EVALUATION".equals(row.get("scope"))) {
             UUID actor = (UUID) row.get("requester_id");
             return "ACTIVE".equals(row.get("member_status"))
@@ -186,10 +210,20 @@ public class JobStore {
                                     actor));
         }
         return "ACTIVE".equals(row.get("member_status"))
-                && row.get("requester_id").equals(row.get("owner_id"));
+                && (row.get("requester_id").equals(row.get("owner_id")) || approvedPublic(row));
+    }
+
+    private boolean approvedPublic(Map<String, Object> row) {
+        return "PUBLIC".equals(row.get("question_visibility"))
+                && "EXAM_IMPORT".equals(row.get("question_source_kind"))
+                && "OFFICIAL_VERIFIED".equals(row.get("question_answer_source"))
+                && row.get("question_revision").equals(row.get("current_question_revision"));
     }
 
     private boolean evaluationVersionMatches(Map<String, Object> row) {
+        if ("BATCH".equals(row.get("scope")))
+            return java.util.Objects.equals(
+                    batches.buildRevision(), row.get("batch_build_revision"));
         return !"EVALUATION".equals(row.get("scope"))
                 || java.util.Objects.equals(
                         evaluations.buildRevision(), row.get("evaluation_build_revision"));
@@ -202,7 +236,12 @@ public class JobStore {
             return false;
         }
         if (!evaluationVersionMatches(row)) {
-            terminal(row, "FAILED", "EVALUATION_VERSION_MISMATCH");
+            terminal(
+                    row,
+                    "FAILED",
+                    "BATCH".equals(row.get("scope"))
+                            ? "BATCH_VERSION_MISMATCH"
+                            : "EVALUATION_VERSION_MISMATCH");
             return false;
         }
         return true;

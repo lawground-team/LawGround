@@ -242,11 +242,27 @@ class RecommendationIT {
         var problem = actor(actor, () -> questions.get(q));
         var snapshot = json.writeValueAsString(QuestionSnapshots.from(problem));
         UUID id = UUID.randomUUID();
+        UUID batchId = null;
+        if (scope.equals("BATCH")) {
+            batchId = UUID.randomUUID();
+            jdbc.update(
+                    "INSERT INTO batch_runs(id,requested_by,request_hash,status,config_snapshot) VALUES (?,?,?,'RUNNING','{}'::jsonb)",
+                    batchId,
+                    actor,
+                    "a".repeat(64));
+            jdbc.update(
+                    "INSERT INTO batch_items(batch_run_id,question_id,question_revision,input_snapshot,input_hash,status) VALUES (?,?,?,?::jsonb,?,'PENDING')",
+                    batchId,
+                    q,
+                    problem.revision(),
+                    snapshot,
+                    JsonData.hash(snapshot));
+        }
         var versions = new LinkedHashMap<String, Object>();
         versions.put("pipelineVersion", LiveRunPlan.VERIFIED_PIPELINE);
         versions.put("embeddingModelRevision", MODEL);
         jdbc.update(
-                "INSERT INTO trace_runs(id,question_id,requester_id,question_revision,input_snapshot,input_hash,reference_date,operation,idempotency_key,scope,execution_mode,status,verdict,pipeline_version,config_snapshot,versions,created_at,completed_at) VALUES (?,?,?,?,?::jsonb,?,?,'TRACE_CREATE',?,?,?,'COMPLETED',?,?, '{}'::jsonb,?::jsonb,now(),now())",
+                "INSERT INTO trace_runs(id,question_id,requester_id,question_revision,input_snapshot,input_hash,reference_date,operation,idempotency_key,scope,execution_mode,status,verdict,pipeline_version,config_snapshot,versions,created_at,completed_at,batch_run_id) VALUES (?,?,?,?,?::jsonb,?,?,?, ?,?,?,'COMPLETED',?,?, '{}'::jsonb,?::jsonb,now(),now(),?)",
                 id,
                 q,
                 actor,
@@ -254,12 +270,14 @@ class RecommendationIT {
                 snapshot,
                 JsonData.hash(snapshot),
                 problem.referenceDate(),
+                scope.equals("BATCH") ? "BATCH_TRACE_CREATE" : "TRACE_CREATE",
                 UUID.randomUUID(),
                 scope,
                 mode,
                 verdict,
                 LiveRunPlan.VERIFIED_PIPELINE,
-                json.writeValueAsString(versions));
+                json.writeValueAsString(versions),
+                batchId);
         if (evidence)
             jdbc.update(
                     "INSERT INTO evidence_results(id,run_id,chunk_id,ordinal,quote,start_offset,end_offset,metadata_snapshot) VALUES (?,?,?,0,'합성 원문',0,5,'{}'::jsonb)",

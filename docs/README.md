@@ -19,6 +19,9 @@
 - [골든셋 고정과 격리된 평가 실행](runbooks/evaluation.md)
 - [근거 조문·문제 임베딩 기반 추천 API](runbooks/recommendations.md)
 - [선지별 분석 검증·원자 저장·결과 응답](runbooks/choice-analysis.md)
+- [사용자 분석 화면과 실제 브라우저 검수](runbooks/analysis-ui.md)
+- [승인 기출 배치 실행·재개·집계](runbooks/exam-batches.md)
+- [윤영주 통합8주차 구현 보고서](reports/youngju-integrated-week-08.md)
 - [법령·기출·로그인 연결 준비](runbooks/data-sources.md)
 
 이 디렉터리는 팀과 공유한다. 개인 AI 프롬프트와 주차별 실행 계획은 커밋에서 제외한 루트 `AI/`에만 보관한다.

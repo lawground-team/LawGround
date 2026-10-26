@@ -7,13 +7,14 @@ export class ApiClient {
     this.fetcher = fetcher;
     this.onUnauthorized = onUnauthorized;
   }
-  async request(path, {method='GET', body, headers={}, signal, anonymous=false} = {}) {
+  async request(path, {method='GET', body, headers={}, signal, anonymous=false, timeoutMs=15000} = {}) {
     const writing = !['GET','HEAD'].includes(method);
-    const options = {method, credentials:'same-origin', cache:'no-store', headers:{Accept:'application/json',...headers}, signal};
+    const timeout=AbortSignal.timeout(timeoutMs);
+    const options = {method, credentials:'same-origin', cache:'no-store', headers:{Accept:'application/json',...headers}, signal:signal?AbortSignal.any([signal,timeout]):timeout};
     if (body !== undefined) { options.headers['Content-Type'] = 'application/json'; options.body = JSON.stringify(body); }
     let response;
     try { response = await this.fetcher(`/api/v1${path}`, options); }
-    catch (error) { if (error.name === 'AbortError') throw error; error.network = true; error.writing = writing; throw error; }
+    catch (error) { if (signal?.aborted) throw error; error.network = true; error.writing = writing; throw error; }
     const json = response.status === 204 ? null : await response.json().catch(() => null);
     if (!response.ok) {
       const error = new ApiError(response.status, json ?? {});
