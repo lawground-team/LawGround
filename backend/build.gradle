@@ -77,6 +77,17 @@ tasks.register('integrationTest', Test) {
 
 check.dependsOn integrationTest
 
+// Explicit actual-model acceptance probe. Uses a disposable PG container, never the user's DB.
+tasks.register('liveModelSmoke', JavaExec) {
+    group = 'verification'
+    description = 'Checks real AI indexing (or retrieval with -PprobeMode=retrieval) in an isolated DB.'
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.lawground.law.search.LiveModelProbe'
+    args providers.gradleProperty('probeMode').getOrElse('index')
+    jvmArgs '-Xmx384m', '-Dfile.encoding=COMPAT'
+}
+
 // Serve the same frontend source in bootRun, tests and the deployable JAR.
 tasks.named('processResources') {
     from('../frontend/src') { into 'static/app' }

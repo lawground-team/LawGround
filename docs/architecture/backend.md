@@ -2,7 +2,7 @@
 
 ## 구현 범위
 
-문제 CRUD·제출 라이브러리, V003 법령/청크 import 기반, V004 개발 Mock 분석 큐, V005 검색 SQL/RRF, V006 OIDC 회원 연결/JDBC 세션을 추가했다. 실제 모델 HTTP·공식 수집·Google 실계정 검증은 별도 범위다. [문제 저장 구조](questions.md), [분석·검색 구조](analysis-search.md), [인증 구조](authentication.md)를 따른다.
+문제 CRUD·제출 라이브러리, V003 법령/청크 import, V004 개발 Mock 분석 큐, V005 검색 SQL/RRF, V006 OIDC 회원 연결/JDBC 세션과 실제 AI HTTP·LIVE 색인/검색 내부 service를 추가했다. 공식 수집·실제 코퍼스 품질·최종 검증 워커는 별도 범위다. Google 실계정과 테스트 공급자 검수도 구분한다. [문제 저장 구조](questions.md), [분석·검색 구조](analysis-search.md), [색인·검색 검수](../runbooks/live-retrieval.md), [인증 구조](authentication.md)를 따른다.
 
 ## 디렉터리
 

@@ -87,6 +87,12 @@ lawground:
   ai:
     base-url: ${AI_SERVICE_BASE_URL:http://127.0.0.1:8001/internal/v1}
     api-key: ${AI_SERVICE_API_KEY:}
+    embedding-model-revision: ${AI_EMBEDDING_MODEL_REVISION:}
+    tokenizer-version: ${AI_TOKENIZER_VERSION:}
+    reranker-model-revision: ${AI_RERANKER_MODEL_REVISION:}
+    max-response-bytes: 4194304
+    smoke-enabled: false
+    smoke-capabilities: TOKENIZE,EMBED,RERANK
     connect-timeout: 3s
     timeouts:
       embed: 30s

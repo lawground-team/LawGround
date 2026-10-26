@@ -2,16 +2,22 @@ openapi: 3.1.0
 info:
   title: LawGround Spring ↔ Python 내부 API 제안
   version: 0.1.0-draft
-  description: 1주차 검토용 제품 계약. 업무 API/서버 구현 완료를 뜻하지 않는다. 모든 예시는 합성 데이터다.
+  description: 2026-10-14 윤영주 선택과 현재 Python 구현의 연결 기준. 공동 최종 합의는 아니며 Python 후속 수락 대기. 모든 예시는 합성 데이터이고 실제 모델 실행 증거가 아니다.
 servers:
 - url: http://127.0.0.1:8001/internal/v1
-x-contract-status: proposal-awaiting-python-review
+x-contract-status: python-runtime-compatibility-awaiting-ack
+x-current-python-error-codes: [UNAUTHORIZED, UNSUPPORTED_CONTRACT_VERSION, INVALID_REQUEST, MODEL_REVISION_MISMATCH, INPUT_TOO_LONG, PAYLOAD_TOO_LARGE, MODEL_NOT_READY, INTERNAL_ERROR]
+x-proposed-or-mock-error-codes: [RATE_LIMITED, MODEL_TIMEOUT, MODEL_OUTPUT_INVALID, MODEL_UPSTREAM_ERROR, IDEMPOTENCY_CONFLICT]
+x-request-body-max-bytes: 8388608
+x-model-token-limit: backend-specific-422-without-truncation
+x-revision-policy: pinned-no-automatic-refresh-or-retry
 paths:
   /embed:
     post:
       operationId: embed
       summary: embed
-      x-implementation-status: planned
+      description: 현재 BGE-M3/off/Mock. 요청 revision 고정, 모델 토큰 초과는 422이며 임의 절단하지 않는다.
+      x-implementation-status: python-real-backend-available
       security:
       - InternalToken: []
       responses:
@@ -80,8 +86,47 @@ paths:
                     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
                 dim: 1024
                 modelRevision: fixture-embedding-v1
+        '401':
+          description: 내부 서비스 토큰 누락·불일치. retryable=false.
+          x-runtime-support: implemented
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: UNAUTHORIZED
+                message: 합성 오류
+                requestId: 00000000-0000-4000-8000-000000000009
+                timestamp: '2026-10-03T13:00:00Z'
+                retryable: false
+        '409':
+          description: 요청 버전 불일치. 최신 revision 자동 대입·재시도 금지.
+          x-runtime-support: implemented
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: MODEL_REVISION_MISMATCH
+                message: 합성 오류
+                requestId: 00000000-0000-4000-8000-000000000009
+                timestamp: '2026-10-03T13:00:00Z'
+                retryable: false
+        '413':
+          description: 현재 요청 본문 8 MiB 초과. retryable=false.
+          x-runtime-support: implemented
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: PAYLOAD_TOO_LARGE
+                message: 합성 오류
+                requestId: 00000000-0000-4000-8000-000000000009
+                timestamp: '2026-10-03T13:00:00Z'
+                retryable: false
         '400':
-          description: 요청을 처리하지 못함
+          description: INVALID_REQUEST(JSON·헤더/본문 ID) 또는 UNSUPPORTED_CONTRACT_VERSION. retryable=false.
           content:
             application/json:
               schema:
@@ -93,7 +138,7 @@ paths:
                 timestamp: '2026-10-03T13:00:00Z'
                 retryable: false
         '422':
-          description: 요청을 처리하지 못함
+          description: 스키마 위반 또는 모델별 입력 한도 초과. retryable=false, 임의 절단·부분 성공 없음.
           content:
             application/json:
               schema:
@@ -105,7 +150,8 @@ paths:
                 timestamp: '2026-10-03T13:00:00Z'
                 retryable: false
         '429':
-          description: 요청을 처리하지 못함
+          description: 실제 서버 미구현. Mock 시나리오·후속 계약만 제공.
+          x-runtime-support: mock-or-future
           content:
             application/json:
               schema:
@@ -121,7 +167,7 @@ paths:
               schema:
                 type: string
         '503':
-          description: 요청을 처리하지 못함
+          description: 현재 off·모델 미로드는 retryable=false. Mock not_ready의 true와 구분.
           content:
             application/json:
               schema:
@@ -131,9 +177,10 @@ paths:
                 message: 합성 오류
                 requestId: 00000000-0000-4000-8000-000000000009
                 timestamp: '2026-10-03T13:00:00Z'
-                retryable: true
+                retryable: false
         '504':
-          description: 요청을 처리하지 못함
+          description: 실제 서버의 모델 timeout 미구현. Mock 시나리오·후속 계약만 제공.
+          x-runtime-support: mock-or-future
           content:
             application/json:
               schema:
@@ -145,7 +192,7 @@ paths:
                 timestamp: '2026-10-03T13:00:00Z'
                 retryable: true
         '500':
-          description: 요청을 처리하지 못함
+          description: 현재 예상하지 못한 내부 오류. retryable=false.
           content:
             application/json:
               schema:
@@ -155,7 +202,7 @@ paths:
                 message: 합성 오류
                 requestId: 00000000-0000-4000-8000-000000000009
                 timestamp: '2026-10-03T13:00:00Z'
-                retryable: true
+                retryable: false
       requestBody:
         required: true
         content:
@@ -174,9 +221,8 @@ paths:
         required: true
         schema:
           type: string
-          minLength: 1
-          maxLength: 64
-          pattern: \S
+          format: uuid
+          description: POST 본문 requestId와 같은 UUID 문자열.
       - name: X-Contract-Version
         in: header
         required: true
@@ -185,12 +231,16 @@ paths:
       - name: X-Job-Id
         in: header
         required: false
+        description: 후속 제안. 현재 Python은 이 헤더를 처리하지 않는다.
+        x-runtime-support: ignored-proposal
         schema: &id001
           type: string
           format: uuid
       - name: Idempotency-Key
         in: header
         required: false
+        description: 후속 제안. 현재 Python은 멱등 처리나 중복 비용 방지를 보장하지 않는다.
+        x-runtime-support: ignored-proposal
         schema: *id001
       x-timeout-seconds: 30
       x-scope: core
@@ -198,7 +248,8 @@ paths:
     post:
       operationId: tokenize
       summary: tokenize
-      x-implementation-status: planned
+      description: 현재 실제 Kiwi. text 30,000 code points와 출력 10,000토큰은 별도 한도이며 초과 시 전체 배치를 422로 거절한다.
+      x-implementation-status: python-real-backend-available
       security:
       - InternalToken: []
       responses:
@@ -215,8 +266,47 @@ paths:
                   - 합성
                   - 입력
                 tokenizerVersion: fixture-tokenizer-v1
+        '401':
+          description: 내부 서비스 토큰 누락·불일치. retryable=false.
+          x-runtime-support: implemented
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: UNAUTHORIZED
+                message: 합성 오류
+                requestId: 00000000-0000-4000-8000-000000000009
+                timestamp: '2026-10-03T13:00:00Z'
+                retryable: false
+        '409':
+          description: 요청 버전 불일치. 최신 revision 자동 대입·재시도 금지.
+          x-runtime-support: implemented
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: MODEL_REVISION_MISMATCH
+                message: 합성 오류
+                requestId: 00000000-0000-4000-8000-000000000009
+                timestamp: '2026-10-03T13:00:00Z'
+                retryable: false
+        '413':
+          description: 현재 요청 본문 8 MiB 초과. retryable=false.
+          x-runtime-support: implemented
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: PAYLOAD_TOO_LARGE
+                message: 합성 오류
+                requestId: 00000000-0000-4000-8000-000000000009
+                timestamp: '2026-10-03T13:00:00Z'
+                retryable: false
         '400':
-          description: 요청을 처리하지 못함
+          description: INVALID_REQUEST(JSON·헤더/본문 ID) 또는 UNSUPPORTED_CONTRACT_VERSION. retryable=false.
           content:
             application/json:
               schema:
@@ -228,7 +318,7 @@ paths:
                 timestamp: '2026-10-03T13:00:00Z'
                 retryable: false
         '422':
-          description: 요청을 처리하지 못함
+          description: 스키마 위반 또는 모델별 입력 한도 초과. retryable=false, 임의 절단·부분 성공 없음.
           content:
             application/json:
               schema:
@@ -240,7 +330,8 @@ paths:
                 timestamp: '2026-10-03T13:00:00Z'
                 retryable: false
         '429':
-          description: 요청을 처리하지 못함
+          description: 실제 서버 미구현. Mock 시나리오·후속 계약만 제공.
+          x-runtime-support: mock-or-future
           content:
             application/json:
               schema:
@@ -256,7 +347,8 @@ paths:
               schema:
                 type: string
         '503':
-          description: 요청을 처리하지 못함
+          description: 현재 실제 tokenize에서는 생성하지 않음. Mock·후속 계약만 제공.
+          x-runtime-support: mock-or-future
           content:
             application/json:
               schema:
@@ -268,7 +360,8 @@ paths:
                 timestamp: '2026-10-03T13:00:00Z'
                 retryable: true
         '504':
-          description: 요청을 처리하지 못함
+          description: 실제 서버의 모델 timeout 미구현. Mock 시나리오·후속 계약만 제공.
+          x-runtime-support: mock-or-future
           content:
             application/json:
               schema:
@@ -280,7 +373,7 @@ paths:
                 timestamp: '2026-10-03T13:00:00Z'
                 retryable: true
         '500':
-          description: 요청을 처리하지 못함
+          description: 현재 예상하지 못한 내부 오류. retryable=false.
           content:
             application/json:
               schema:
@@ -290,7 +383,7 @@ paths:
                 message: 합성 오류
                 requestId: 00000000-0000-4000-8000-000000000009
                 timestamp: '2026-10-03T13:00:00Z'
-                retryable: true
+                retryable: false
       requestBody:
         required: true
         content:
@@ -309,9 +402,8 @@ paths:
         required: true
         schema:
           type: string
-          minLength: 1
-          maxLength: 64
-          pattern: \S
+          format: uuid
+          description: POST 본문 requestId와 같은 UUID 문자열.
       - name: X-Contract-Version
         in: header
         required: true
@@ -320,10 +412,14 @@ paths:
       - name: X-Job-Id
         in: header
         required: false
+        description: 후속 제안. 현재 Python은 이 헤더를 처리하지 않는다.
+        x-runtime-support: ignored-proposal
         schema: *id001
       - name: Idempotency-Key
         in: header
         required: false
+        description: 후속 제안. 현재 Python은 멱등 처리나 중복 비용 방지를 보장하지 않는다.
+        x-runtime-support: ignored-proposal
         schema: *id001
       x-timeout-seconds: 30
       x-scope: core
@@ -331,7 +427,8 @@ paths:
     post:
       operationId: hyde
       summary: hyde
-      x-implementation-status: planned
+      description: 실제 LLM 미구현. 현재 Mock 또는 off503만 제공하며 Spring 실제 연결 범위 밖이다.
+      x-implementation-status: python-mock-or-off-only
       security:
       - InternalToken: []
       responses:
@@ -347,8 +444,34 @@ paths:
                 - 합성
                 modelRevision: fixture-generator-v1
                 promptVersion: fixture-prompt-v1
+        '401':
+          description: 내부 서비스 토큰 누락·불일치. retryable=false.
+          x-runtime-support: implemented
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: UNAUTHORIZED
+                message: 합성 오류
+                requestId: 00000000-0000-4000-8000-000000000009
+                timestamp: '2026-10-03T13:00:00Z'
+                retryable: false
+        '413':
+          description: 현재 요청 본문 8 MiB 초과. retryable=false.
+          x-runtime-support: implemented
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: PAYLOAD_TOO_LARGE
+                message: 합성 오류
+                requestId: 00000000-0000-4000-8000-000000000009
+                timestamp: '2026-10-03T13:00:00Z'
+                retryable: false
         '400':
-          description: 요청을 처리하지 못함
+          description: INVALID_REQUEST(JSON·헤더/본문 ID) 또는 UNSUPPORTED_CONTRACT_VERSION. retryable=false.
           content:
             application/json:
               schema:
@@ -360,7 +483,7 @@ paths:
                 timestamp: '2026-10-03T13:00:00Z'
                 retryable: false
         '422':
-          description: 요청을 처리하지 못함
+          description: 스키마 위반. retryable=false.
           content:
             application/json:
               schema:
@@ -372,7 +495,8 @@ paths:
                 timestamp: '2026-10-03T13:00:00Z'
                 retryable: false
         '429':
-          description: 요청을 처리하지 못함
+          description: 실제 서버 미구현. Mock 시나리오·후속 계약만 제공.
+          x-runtime-support: mock-or-future
           content:
             application/json:
               schema:
@@ -388,7 +512,7 @@ paths:
               schema:
                 type: string
         '503':
-          description: 요청을 처리하지 못함
+          description: 현재 off·모델 미로드는 retryable=false. Mock not_ready의 true와 구분.
           content:
             application/json:
               schema:
@@ -398,9 +522,10 @@ paths:
                 message: 합성 오류
                 requestId: 00000000-0000-4000-8000-000000000009
                 timestamp: '2026-10-03T13:00:00Z'
-                retryable: true
+                retryable: false
         '504':
-          description: 요청을 처리하지 못함
+          description: 실제 서버의 모델 timeout 미구현. Mock 시나리오·후속 계약만 제공.
+          x-runtime-support: mock-or-future
           content:
             application/json:
               schema:
@@ -412,7 +537,7 @@ paths:
                 timestamp: '2026-10-03T13:00:00Z'
                 retryable: true
         '500':
-          description: 요청을 처리하지 못함
+          description: 현재 예상하지 못한 내부 오류. retryable=false.
           content:
             application/json:
               schema:
@@ -422,7 +547,7 @@ paths:
                 message: 합성 오류
                 requestId: 00000000-0000-4000-8000-000000000009
                 timestamp: '2026-10-03T13:00:00Z'
-                retryable: true
+                retryable: false
       requestBody:
         required: true
         content:
@@ -456,9 +581,8 @@ paths:
         required: true
         schema:
           type: string
-          minLength: 1
-          maxLength: 64
-          pattern: \S
+          format: uuid
+          description: POST 본문 requestId와 같은 UUID 문자열.
       - name: X-Contract-Version
         in: header
         required: true
@@ -467,10 +591,14 @@ paths:
       - name: X-Job-Id
         in: header
         required: false
+        description: 후속 제안. 현재 Python은 이 헤더를 처리하지 않는다.
+        x-runtime-support: ignored-proposal
         schema: *id001
       - name: Idempotency-Key
         in: header
         required: false
+        description: 후속 제안. 현재 Python은 멱등 처리나 중복 비용 방지를 보장하지 않는다.
+        x-runtime-support: ignored-proposal
         schema: *id001
       x-timeout-seconds: 60
       x-scope: core
@@ -478,7 +606,8 @@ paths:
     post:
       operationId: rerank
       summary: rerank
-      x-implementation-status: planned
+      description: 현재 BGE reranker/off/Mock. 질의+후보 토큰 한도와 응답 revision을 검사하며 점수는 확률이 아니다.
+      x-implementation-status: python-real-backend-available
       security:
       - InternalToken: []
       responses:
@@ -493,8 +622,34 @@ paths:
                 - chunkId: 00000000-0000-4000-8000-000000000004
                   score: -1.5
                 modelRevision: fixture-reranker-v1
+        '401':
+          description: 내부 서비스 토큰 누락·불일치. retryable=false.
+          x-runtime-support: implemented
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: UNAUTHORIZED
+                message: 합성 오류
+                requestId: 00000000-0000-4000-8000-000000000009
+                timestamp: '2026-10-03T13:00:00Z'
+                retryable: false
+        '413':
+          description: 현재 요청 본문 8 MiB 초과. retryable=false.
+          x-runtime-support: implemented
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: PAYLOAD_TOO_LARGE
+                message: 합성 오류
+                requestId: 00000000-0000-4000-8000-000000000009
+                timestamp: '2026-10-03T13:00:00Z'
+                retryable: false
         '400':
-          description: 요청을 처리하지 못함
+          description: INVALID_REQUEST(JSON·헤더/본문 ID) 또는 UNSUPPORTED_CONTRACT_VERSION. retryable=false.
           content:
             application/json:
               schema:
@@ -506,7 +661,7 @@ paths:
                 timestamp: '2026-10-03T13:00:00Z'
                 retryable: false
         '422':
-          description: 요청을 처리하지 못함
+          description: 스키마 위반 또는 모델별 입력 한도 초과. retryable=false, 임의 절단·부분 성공 없음.
           content:
             application/json:
               schema:
@@ -518,7 +673,8 @@ paths:
                 timestamp: '2026-10-03T13:00:00Z'
                 retryable: false
         '429':
-          description: 요청을 처리하지 못함
+          description: 실제 서버 미구현. Mock 시나리오·후속 계약만 제공.
+          x-runtime-support: mock-or-future
           content:
             application/json:
               schema:
@@ -534,7 +690,7 @@ paths:
               schema:
                 type: string
         '503':
-          description: 요청을 처리하지 못함
+          description: 현재 off·모델 미로드는 retryable=false. Mock not_ready의 true와 구분.
           content:
             application/json:
               schema:
@@ -544,9 +700,10 @@ paths:
                 message: 합성 오류
                 requestId: 00000000-0000-4000-8000-000000000009
                 timestamp: '2026-10-03T13:00:00Z'
-                retryable: true
+                retryable: false
         '504':
-          description: 요청을 처리하지 못함
+          description: 실제 서버의 모델 timeout 미구현. Mock 시나리오·후속 계약만 제공.
+          x-runtime-support: mock-or-future
           content:
             application/json:
               schema:
@@ -558,7 +715,7 @@ paths:
                 timestamp: '2026-10-03T13:00:00Z'
                 retryable: true
         '500':
-          description: 요청을 처리하지 못함
+          description: 현재 예상하지 못한 내부 오류. retryable=false.
           content:
             application/json:
               schema:
@@ -568,7 +725,7 @@ paths:
                 message: 합성 오류
                 requestId: 00000000-0000-4000-8000-000000000009
                 timestamp: '2026-10-03T13:00:00Z'
-                retryable: true
+                retryable: false
       requestBody:
         required: true
         content:
@@ -588,9 +745,8 @@ paths:
         required: true
         schema:
           type: string
-          minLength: 1
-          maxLength: 64
-          pattern: \S
+          format: uuid
+          description: POST 본문 requestId와 같은 UUID 문자열.
       - name: X-Contract-Version
         in: header
         required: true
@@ -599,10 +755,14 @@ paths:
       - name: X-Job-Id
         in: header
         required: false
+        description: 후속 제안. 현재 Python은 이 헤더를 처리하지 않는다.
+        x-runtime-support: ignored-proposal
         schema: *id001
       - name: Idempotency-Key
         in: header
         required: false
+        description: 후속 제안. 현재 Python은 멱등 처리나 중복 비용 방지를 보장하지 않는다.
+        x-runtime-support: ignored-proposal
         schema: *id001
       x-timeout-seconds: 60
       x-scope: core
@@ -610,7 +770,8 @@ paths:
     post:
       operationId: verify
       summary: verify
-      x-implementation-status: planned
+      description: 실제 LLM 미구현. 현재 Mock 또는 off503만 제공하며 최종 법령 판정 준비 완료를 뜻하지 않는다.
+      x-implementation-status: python-mock-or-off-only
       security:
       - InternalToken: []
       responses:
@@ -634,8 +795,34 @@ paths:
                 tagSetVersion: null
                 modelRevision: fixture-verifier-v1
                 promptVersion: fixture-prompt-v1
+        '401':
+          description: 내부 서비스 토큰 누락·불일치. retryable=false.
+          x-runtime-support: implemented
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: UNAUTHORIZED
+                message: 합성 오류
+                requestId: 00000000-0000-4000-8000-000000000009
+                timestamp: '2026-10-03T13:00:00Z'
+                retryable: false
+        '413':
+          description: 현재 요청 본문 8 MiB 초과. retryable=false.
+          x-runtime-support: implemented
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: PAYLOAD_TOO_LARGE
+                message: 합성 오류
+                requestId: 00000000-0000-4000-8000-000000000009
+                timestamp: '2026-10-03T13:00:00Z'
+                retryable: false
         '400':
-          description: 요청을 처리하지 못함
+          description: INVALID_REQUEST(JSON·헤더/본문 ID) 또는 UNSUPPORTED_CONTRACT_VERSION. retryable=false.
           content:
             application/json:
               schema:
@@ -647,7 +834,7 @@ paths:
                 timestamp: '2026-10-03T13:00:00Z'
                 retryable: false
         '422':
-          description: 요청을 처리하지 못함
+          description: 스키마 위반. retryable=false.
           content:
             application/json:
               schema:
@@ -659,7 +846,8 @@ paths:
                 timestamp: '2026-10-03T13:00:00Z'
                 retryable: false
         '429':
-          description: 요청을 처리하지 못함
+          description: 실제 서버 미구현. Mock 시나리오·후속 계약만 제공.
+          x-runtime-support: mock-or-future
           content:
             application/json:
               schema:
@@ -675,7 +863,7 @@ paths:
               schema:
                 type: string
         '503':
-          description: 요청을 처리하지 못함
+          description: 현재 off·모델 미로드는 retryable=false. Mock not_ready의 true와 구분.
           content:
             application/json:
               schema:
@@ -685,9 +873,10 @@ paths:
                 message: 합성 오류
                 requestId: 00000000-0000-4000-8000-000000000009
                 timestamp: '2026-10-03T13:00:00Z'
-                retryable: true
+                retryable: false
         '504':
-          description: 요청을 처리하지 못함
+          description: 실제 서버의 모델 timeout 미구현. Mock 시나리오·후속 계약만 제공.
+          x-runtime-support: mock-or-future
           content:
             application/json:
               schema:
@@ -699,7 +888,7 @@ paths:
                 timestamp: '2026-10-03T13:00:00Z'
                 retryable: true
         '500':
-          description: 요청을 처리하지 못함
+          description: 현재 예상하지 못한 내부 오류. retryable=false.
           content:
             application/json:
               schema:
@@ -709,7 +898,7 @@ paths:
                 message: 합성 오류
                 requestId: 00000000-0000-4000-8000-000000000009
                 timestamp: '2026-10-03T13:00:00Z'
-                retryable: true
+                retryable: false
       requestBody:
         required: true
         content:
@@ -755,9 +944,8 @@ paths:
         required: true
         schema:
           type: string
-          minLength: 1
-          maxLength: 64
-          pattern: \S
+          format: uuid
+          description: POST 본문 requestId와 같은 UUID 문자열.
       - name: X-Contract-Version
         in: header
         required: true
@@ -766,10 +954,14 @@ paths:
       - name: X-Job-Id
         in: header
         required: false
+        description: 후속 제안. 현재 Python은 이 헤더를 처리하지 않는다.
+        x-runtime-support: ignored-proposal
         schema: *id001
       - name: Idempotency-Key
         in: header
         required: false
+        description: 후속 제안. 현재 Python은 멱등 처리나 중복 비용 방지를 보장하지 않는다.
+        x-runtime-support: ignored-proposal
         schema: *id001
       x-timeout-seconds: 120
       x-scope: core
@@ -777,12 +969,13 @@ paths:
     post:
       operationId: answer
       summary: answer
-      x-implementation-status: planned
+      description: 공유 후속 확장 설계. 현재 Python 서버에 경로가 없으며 응답 예시는 구현 보장이 아니다.
+      x-implementation-status: unimplemented-extension
       security:
       - InternalToken: []
       responses:
         '200':
-          description: 조회/처리 성공
+          description: 후속 확장 예시(현재 Python에 경로 없음). 조회/처리 성공
           content:
             application/json:
               schema:
@@ -795,8 +988,34 @@ paths:
                   outputTokens: 1
                 modelRevision: fixture-generator-v1
                 promptVersion: fixture-prompt-v1
+        '401':
+          description: 후속 확장 예시(현재 Python에 경로 없음). 내부 서비스 토큰 누락·불일치. retryable=false.
+          x-runtime-support: unimplemented-extension
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: UNAUTHORIZED
+                message: 합성 오류
+                requestId: 00000000-0000-4000-8000-000000000009
+                timestamp: '2026-10-03T13:00:00Z'
+                retryable: false
+        '413':
+          description: 후속 확장 예시(현재 Python에 경로 없음). 현재 요청 본문 8 MiB 초과. retryable=false.
+          x-runtime-support: unimplemented-extension
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: PAYLOAD_TOO_LARGE
+                message: 합성 오류
+                requestId: 00000000-0000-4000-8000-000000000009
+                timestamp: '2026-10-03T13:00:00Z'
+                retryable: false
         '400':
-          description: 요청을 처리하지 못함
+          description: 후속 확장 예시(현재 Python에 경로 없음). INVALID_REQUEST(JSON·헤더/본문 ID) 또는 UNSUPPORTED_CONTRACT_VERSION. retryable=false.
           content:
             application/json:
               schema:
@@ -808,7 +1027,7 @@ paths:
                 timestamp: '2026-10-03T13:00:00Z'
                 retryable: false
         '422':
-          description: 요청을 처리하지 못함
+          description: 후속 확장 예시(현재 Python에 경로 없음). 스키마 위반. retryable=false.
           content:
             application/json:
               schema:
@@ -820,7 +1039,8 @@ paths:
                 timestamp: '2026-10-03T13:00:00Z'
                 retryable: false
         '429':
-          description: 요청을 처리하지 못함
+          description: 후속 확장 예시(현재 Python에 경로 없음). 실제 서버 미구현. Mock 시나리오·후속 계약만 제공.
+          x-runtime-support: unimplemented-extension
           content:
             application/json:
               schema:
@@ -836,7 +1056,7 @@ paths:
               schema:
                 type: string
         '503':
-          description: 요청을 처리하지 못함
+          description: 후속 확장 예시(현재 Python에 경로 없음). 현재 off·모델 미로드는 retryable=false. Mock not_ready의 true와 구분.
           content:
             application/json:
               schema:
@@ -846,9 +1066,10 @@ paths:
                 message: 합성 오류
                 requestId: 00000000-0000-4000-8000-000000000009
                 timestamp: '2026-10-03T13:00:00Z'
-                retryable: true
+                retryable: false
         '504':
-          description: 요청을 처리하지 못함
+          description: 후속 확장 예시(현재 Python에 경로 없음). 실제 서버의 모델 timeout 미구현. Mock 시나리오·후속 계약만 제공.
+          x-runtime-support: unimplemented-extension
           content:
             application/json:
               schema:
@@ -860,7 +1081,7 @@ paths:
                 timestamp: '2026-10-03T13:00:00Z'
                 retryable: true
         '500':
-          description: 요청을 처리하지 못함
+          description: 후속 확장 예시(현재 Python에 경로 없음). 현재 예상하지 못한 내부 오류. retryable=false.
           content:
             application/json:
               schema:
@@ -870,7 +1091,7 @@ paths:
                 message: 합성 오류
                 requestId: 00000000-0000-4000-8000-000000000009
                 timestamp: '2026-10-03T13:00:00Z'
-                retryable: true
+                retryable: false
       requestBody:
         required: true
         content:
@@ -889,9 +1110,8 @@ paths:
         required: true
         schema:
           type: string
-          minLength: 1
-          maxLength: 64
-          pattern: \S
+          format: uuid
+          description: 후속 확장 예시(현재 Python에 경로 없음). POST 본문 requestId와 같은 UUID 문자열.
       - name: X-Contract-Version
         in: header
         required: true
@@ -900,10 +1120,14 @@ paths:
       - name: X-Job-Id
         in: header
         required: false
+        description: 후속 제안. 현재 Python은 이 헤더를 처리하지 않는다.
+        x-runtime-support: ignored-proposal
         schema: *id001
       - name: Idempotency-Key
         in: header
         required: false
+        description: 후속 제안. 현재 Python은 멱등 처리나 중복 비용 방지를 보장하지 않는다.
+        x-runtime-support: ignored-proposal
         schema: *id001
       x-timeout-seconds: 120
       x-scope: extension
@@ -911,12 +1135,21 @@ paths:
     get:
       operationId: ready
       summary: ready
-      x-implementation-status: planned
+      description: tokenizer/embed/rerank만 포함. 200/503 모두 ReadyOutput이며 Mock도 READY가 가능하다. HyDE/verify 준비를 뜻하지 않는다.
+      x-implementation-status: python-implemented
       security:
       - InternalToken: []
+      parameters:
+      - name: X-Request-Id
+        in: header
+        required: false
+        description: Spring은 UUID 추적값을 보낸다. 현재 Python GET은 본문/계약 버전 검사를 하지 않는다.
+        schema:
+          type: string
+          format: uuid
       responses:
         '200':
-          description: 조회/처리 성공
+          description: tokenizer/embed/rerank 모두 ready. 실제 backend와 고정 revision을 추가 검사한다.
           content:
             application/json:
               schema:
@@ -924,11 +1157,30 @@ paths:
               example:
                 status: READY
                 models:
-                - name: embedding
-                  revision: fixture-embedding-v1
+                - name: tokenizer:kiwipiepy
+                  revision: kiwipiepy-0.24.0+rules-1
                   ready: true
+                - name: embed:BAAI/bge-m3
+                  revision: 5617a9f61b028005a4858fdac845db406aefb181
+                  ready: true
+                - name: rerank:BAAI/bge-reranker-v2-m3
+                  revision: 953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e
+                  ready: true
+        '401':
+          description: 내부 서비스 인증 실패는 Error DTO. 재시도하지 않는다.
+          x-runtime-support: implemented
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: UNAUTHORIZED
+                message: 합성 오류
+                requestId: 00000000-0000-4000-8000-000000000009
+                timestamp: '2026-10-03T13:00:00Z'
+                retryable: false
         '503':
-          description: 요청을 처리하지 못함
+          description: 미준비 기능 존재. Error가 아닌 ReadyOutput.
           content:
             application/json:
               schema:
@@ -936,8 +1188,14 @@ paths:
               example:
                 status: NOT_READY
                 models:
-                - name: embedding
-                  revision: fixture-embedding-v1
+                - name: tokenizer:kiwipiepy
+                  revision: kiwipiepy-0.24.0+rules-1
+                  ready: true
+                - name: embed:off
+                  revision: null
+                  ready: false
+                - name: rerank:off
+                  revision: null
                   ready: false
 components:
   securitySchemes:
@@ -1160,6 +1418,14 @@ components:
           - RATE_LIMITED
           - MODEL_TIMEOUT
           - INTERNAL_ERROR
+          - UNAUTHORIZED
+          - UNSUPPORTED_CONTRACT_VERSION
+          - MODEL_REVISION_MISMATCH
+          - INPUT_TOO_LONG
+          - PAYLOAD_TOO_LARGE
+          - MODEL_OUTPUT_INVALID
+          - MODEL_UPSTREAM_ERROR
+          - IDEMPOTENCY_CONFLICT
         message:
           type: string
           minLength: 1
@@ -1623,7 +1889,7 @@ components:
               name:
                 type: string
                 minLength: 1
-                maxLength: 80
+                maxLength: 200
                 pattern: \S
               revision:
                 anyOf:

@@ -1,6 +1,6 @@
 # 문제 라이브러리·분석 큐·법령 검색 기반
 
-현재 구현은 문제 CRUD, Spring 개발 Mock 큐, 법령 fixture import, PostgreSQL 검색 계산 기반이다. Python 실제 모델 연결, 공식 API 수집, Google 로그인, 검색 품질 평가는 후속 검증 대상이다. Mock 완료는 법령 판정 성공을 의미하지 않는다.
+현재 구현은 문제 CRUD·Google 로그인/세션·기본 화면, Spring 개발 Mock 큐, 법령 import·PostgreSQL 검색 기반 및 실제 AI를 호출하는 LIVE 색인/검색 내부 service다. 공식 API 수집·실제 검수 코퍼스의 품질·실제 분석 워커/verify는 후속이다. Mock 완료나 검색 후보 반환은 법령 판정 성공을 의미하지 않는다.
 
 ```mermaid
 flowchart LR
@@ -63,7 +63,7 @@ FIXTURE는 synthetic 표시와 별도 공급자다. VERIFIED fixture와 수작�
 
 ## 독립 검색 계산
 
-`HybridSearchService`는 내부 Spring service다. 호출자가 고정 법령 ID·기준일·정확한 모델/tokenizer/chunker 버전·질의 벡터/토큰을 제공한다. HTTP 모델 어댑터가 아직 없으므로 사용자 분석 Mock과 검색 service를 연결하지 않았다.
+`HybridSearchService`는 내부 Spring service다. 호출자가 고정 법령 ID·기준일·정확한 모델/tokenizer/chunker 버전·질의 벡터/토큰을 제공한다. `LiveRetrievalService`가 고정된 실제 Python HTTP 어댑터로 질의 토큰/벡터를 만들어 이 service를 호출하고 RRF 후보를 리랭크한다. 사용자 분석 Mock 큐와는 아직 연결하지 않았다.
 
 1. 같은 법령 corpus의 VERIFIED `[effectiveFrom,effectiveTo)` 버전을 선택한다. 필요한 법령 버전이 없으면 `LAW_VERSION_UNAVAILABLE`이며 현재 법령으로 대체하지 않는다.
 2. source hash와 chunker/model/tokenizer 버전, 채널 READY 상태를 검사한다. Mock fixture는 test 외 검색에서 제외한다.
@@ -71,8 +71,12 @@ FIXTURE는 synthetic 표시와 별도 공급자다. VERIFIED fixture와 수작�
 4. 양쪽에 같은 토큰 처리 결과를 사용한다. `to_tsvector('simple', joinedTokens)`와 `plainto_tsquery('simple', joinedTokens)`의 AND 검색, `ts_rank_cd DESC`로 lexical 30개를 찾는다. 값은 파라미터로 바인딩한다. BM25나 임베딩 코사인 계산이라고 부르지 않는다.
 5. 채널 안 chunk 중복 제거 후 `1/(60+rank)`를 합산하고 상위30을 반환한다. 같은 점수는 PostgreSQL UUID와 같은 문자열 오름차순이다. 빈 채널은 다른 채널로 진행한다. 오류를 빈 결과로 바꾸지 않는다.
 
-초기에는 exact 검색과 GIN FTS를 사용한다. HNSW는 측정 후 신규 migration으로 검토한다. HyDE는 OFF 기준이고 rerank·verify는 아직 연결하지 않았다.
+초기에는 exact 검색과 GIN FTS를 사용한다. HNSW는 측정 후 신규 migration으로 검토한다. HyDE는 OFF 기준이다. 내부 검색 경로는 rerank까지이며 실제 verify·최종 판정은 아직 없다.
 
-`FixtureIndexWriter`는 test + FIXTURE 공급자 + fixture revision을 모두 요구한다. 접두사만으로 실제 모델을 판별하는 수단이 아니다. LIVE 색인 writer·실제 manifest 확인은 후속 구현이다. `question_embeddings`는 추천용 저장 기반이며 이번 분석 질의 캐시로 사용하지 않는다.
+`FixtureIndexWriter`는 test + FIXTURE 공급자 + fixture revision을 모두 요구한다. `LiveLawIndexService`는 LAW_GO_KR + VERIFIED 원문만 받고 고정 실제 모델/토큰 버전으로 한 청크씩 색인한다. HTTP는 트랜잭션 밖에서 호출하고 원문을 재검사한 짧은 저장 트랜잭션에서 두 채널을 원자 READY로 만든다. 실패 시 반쪽 READY를 만들지 않으며 같은 입력 재호출은 완성 행을 재사용한다. 실제/Mock 구분은 readiness의 backend 이름과 승인 pin으로 검사하며 접두사만 사용하지 않는다.
+
+`LiveIndexStore`는 명시 법령/기준일의 전체 조문·청크 범위, source/검색문 hash, chunker·model·tokenizer와 모든 색인의 READY를 확인한다. 미확보 버전과 미완료 색인을 검색 0건으로 숨기지 않는다. 원문·버전·색인 ID/갱신 시각을 포함한 manifest를 검색 전, 질의 추론 후 DB snapshot 안, rerank 후 재검사한다. 변경 시 결과를 거절한다. 이 manifest는 현재 범위의 재현 fingerprint이며 별도 영구 corpus manifest 등록/승인 시스템을 구현한 것은 아니다. source/parser 자체의 정확성 검수는 별도다.
+
+검색 결과는 `verificationPerformed=false`이며 SUPPORTED/HOLD/REJECTED를 생성하지 않는다. rerank 후보 수1~30과 topK1~5는 내부 호출자가 명시하고 실제 전송 후보 수도 결과에 남긴다. CPU 초기 검수는 소량부터 하며 이 내부 예산을 양쪽 최종 성능 계약으로 표시하지 않는다. `question_embeddings`는 추천용 저장 기반이며 이번 질의 캐시로 사용하지 않는다. [실행·검수](../runbooks/live-retrieval.md)를 참고한다.
 
 평가 계산은 사람이 준 기대 조문과 순위를 article 단위로 중복 제거한 top5로 대조한다. Recall은 사례별 비율 평균, Hit는 하나 이상 일치 비율이다. 정답 조문 없는 HOLD는 검색 분모에서 제외하고 판정 분모에는 포함한다. 기술 실패는 0점, 빈 셋은 null, Mock은 실제 평가에서 제외한다. 골든셋 저장/사람 라벨·실제 품질 비교는 미완료다.

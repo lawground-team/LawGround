@@ -13,6 +13,8 @@
 - [내부 OpenAPI 계약](api/internal.openapi.yaml)
 - [정상·오류 계약 사례](api/examples/contract-cases.json)
 - [로컬 실행과 문제 해결](runbooks/local-development.md)
+- [실제 Python AI 연결과 로컬 검사](runbooks/ai-connection.md)
+- [LIVE 색인·검색·리랭크 내부 연결과 검수](runbooks/live-retrieval.md)
 - [법령·기출·로그인 연결 준비](runbooks/data-sources.md)
 
 이 디렉터리는 팀과 공유한다. 개인 AI 프롬프트와 주차별 실행 계획은 커밋에서 제외한 루트 `AI/`에만 보관한다.
