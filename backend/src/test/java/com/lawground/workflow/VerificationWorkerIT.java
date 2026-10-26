@@ -541,7 +541,7 @@ class VerificationWorkerIT {
     }
 
     @Test
-    void nonReadyVerifierAndUnsupportedExtensionNeverProduceLegalResults() throws Exception {
+    void nonReadyVerifierAndMalformedChoiceArrayNeverProduceLegalResults() throws Exception {
         var missing = trace(question());
         HTTP.readiness = "missing";
         worker.process(job(missing));
@@ -555,7 +555,7 @@ class VerificationWorkerIT {
                 };
         var extra = trace(question());
         worker.process(job(extra));
-        failed(extra, "VERIFICATION_EXTENSION_UNSUPPORTED");
+        failed(extra, "AI_CONTRACT_INVALID");
     }
 
     @Test

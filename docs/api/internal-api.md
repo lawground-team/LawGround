@@ -76,6 +76,8 @@ HTTP 어댑터는 자동 재시도하지 않는다. LIVE job 정책은 통신 �
 
 ## 연결 전 공동 검토
 
+Spring은 기존 optional choiceAnalyses의5개/번호·관계·인용키/정정문 검증과 V008 원자 저장을 지원한다. 기존 null도 유지하며 태그 사전 미확정으로 tags=[]/tagSetVersion=null만 수용한다. [선지 분석 구현 경계](../runbooks/choice-analysis.md)를 참고한다. 실제 Python 생산 응답/의미 검수와 공동 계약 확정은 별도이며 아래 확인 항목을 완료로 바꾸지 않는다.
+
 - [ ] wire 필드·nullable·ID/순서·chunkId/evidenceKey 매핑·계약 버전.
 - [ ] 실제 embedding/reranker/LLM revision·토큰 한도·GPU·배치·timeout.
 - [ ] tokenizer/chunker 버전·기준일별 법령 범위.

@@ -71,8 +71,7 @@ public final class VerificationWire {
         if (!pin.promptVersion().equals(out.promptVersion()))
             throw new AiClientException(
                     AiClientException.Kind.VERSION_MISMATCH, 0, "PROMPT_VERSION_MISMATCH", false);
-        if (out.choiceAnalyses() != null && !out.choiceAnalyses().isNull()
-                || out.tagSetVersion() != null)
+        if (out.tagSetVersion() != null)
             throw new AiClientException(
                     AiClientException.Kind.PROTOCOL,
                     0,
@@ -95,6 +94,31 @@ public final class VerificationWire {
             } catch (IllegalArgumentException bad) {
                 throw protocol();
             }
+        }
+        if (out.choiceAnalyses() == null) return;
+        if (out.choiceAnalyses().size() != 5) throw protocol();
+        var numbers = new HashSet<Integer>();
+        for (var c : out.choiceAnalyses()) {
+            if (c == null
+                    || c.choiceNumber() < 1
+                    || c.choiceNumber() > 5
+                    || !numbers.add(c.choiceNumber())
+                    || c.relation() == null
+                    || !text(c.explanation(), 10000)
+                    || c.tags() == null
+                    || c.evidenceKeys() == null
+                    || c.evidenceKeys().size() > 20) throw protocol();
+            if (!c.tags().isEmpty())
+                throw new AiClientException(
+                        AiClientException.Kind.PROTOCOL, 0, "VERIFICATION_TAGS_UNSUPPORTED", false);
+            var references = new HashSet<String>();
+            for (String key : c.evidenceKeys())
+                if (!text(key, 80) || !references.add(key) || !keys.contains(key)) throw protocol();
+            if (c.relation() != Relation.INSUFFICIENT && references.isEmpty()) throw protocol();
+            if (c.correctedText() != null
+                    && (c.relation() != Relation.CONTRADICTS
+                            || references.isEmpty()
+                            || !text(c.correctedText(), 2000))) throw protocol();
         }
     }
 

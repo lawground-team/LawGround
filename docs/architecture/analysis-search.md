@@ -63,7 +63,7 @@ lease 180초, heartbeat 30초, 접수 후 deadline 10분이다. 선점할 때 fe
 | V004 | trace_runs, processing_jobs, evidence_results | 입력 스냅샷·멱등·작업 복구·근거 저장 자리 |
 | V005 | law_chunk_indexes, question_embeddings | 모델/토큰 버전별 법령 색인·현재 문제 revision/hash별 추천 벡터 |
 
-기존 migration은 수정하지 않는다. V001~V007을 사용하며 V007은 골든셋5테이블과 EVALUATION trace 연결을 추가한다. LIVE 워커의 검색/검증 checkpoint는 기존 V004를 재사용한다. 선지 분석 테이블은 후속이다. [평가 서비스](../runbooks/evaluation.md)는 관리자 allowlist·소유자를 확인하는 내부 서비스로, 사용자 실행과 다른 scope/operation을 사용하며 정답 라벨을 모델/사용자 API에 전달하지 않는다.
+기존 migration은 수정하지 않는다. V001~V008을 사용한다. V007은 골든셋5테이블/EVALUATION trace를, V008은 choice_analyses/choice_analysis_evidences의 선지5개·복수 인용·원자 완료를 추가한다. LIVE checkpoint는 기존 V004를 재사용한다. [선지 저장/응답](../runbooks/choice-analysis.md), [평가 서비스](../runbooks/evaluation.md)를 참고한다. 평가는 관리자 allowlist·소유자를 검사하는 별도 scope/operation이며 정답 라벨을 모델/사용자 API에 전달하지 않는다.
 
 `LawImportService`는 제한된 내부 service이며 공개 import HTTP가 없다. 같은 공급자 키/hash는 재사용하고 다른 hash나 VERIFIED 기간 겹침은 `SOURCE_CONFLICT`로 거절한다. 신규 법령 생성부터 advisory lock, 이후 법령 row lock으로 동시 수집을 직렬화한다. 원문을 덮어쓰지 않는다.
 
