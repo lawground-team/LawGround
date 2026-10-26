@@ -26,7 +26,7 @@ public final class SearchValues {
         for (String token : tokens)
             if (token == null
                     || token.isBlank()
-                    || token.length() > 200
+                    || token.codePointCount(0, token.length()) > 200
                     || token.codePoints().anyMatch(Character::isWhitespace)
                     || token.indexOf('\0') >= 0)
                 throw new IllegalArgumentException("Tokens must be nonblank atomic strings");

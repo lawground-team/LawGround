@@ -4,6 +4,8 @@
 
 현재는 **Google 로그인·문제 입력/확인·DB 저장·내 라이브러리·상세/수정/삭제 화면**이 실제 Spring API에 연결되어 있습니다. V002~V006, 입력 검증·소유권·CSRF·JDBC 세션을 포함합니다. 실제 AI 연결·법령 수집/품질은 아직 준비 중이며 화면에서 새 분석은 비활성화했습니다. 개발 Mock 큐·법령 검색 SQL 기반은 실제 AI 결과와 구분합니다. [화면 범위](frontend/README.md)와 [OIDC 실행 안내](docs/runbooks/oauth-preparation.md)를 참고하세요.
 
+Spring의 내부 AI 클라이언트와 검수된 법령의 LIVE 색인 저장·Hybrid/RRF·리랭크 내부 경로를 추가했습니다. [색인·검색 연결과 검수](docs/runbooks/live-retrieval.md), [실제 모델 로컬 검사](docs/runbooks/ai-connection.md)를 참고하세요. 일반 테스트/기동은 모델 다운로드를 요구하지 않습니다. 공식 법령 수집·검수 코퍼스 확보, 최종 `/verify`·사용자 분석 워커·화면 연결은 후속입니다.
+
 ## 기술 기준
 
 | 구성 | 버전 / 용도 |

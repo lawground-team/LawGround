@@ -10,6 +10,8 @@
 
 V001~V006이 적용된다. 사용자 화면에서 Google 로그인·문제 입력/확인·DB 저장·내 라이브러리·상세/수정/삭제를 사용할 수 있다. 프런트는 Spring에 포함되며 별도 서버가 필요 없다. 실제 AI 파이프라인은 미연결이므로 화면의 분석은 비활성 상태이며 가짜 결과를 생성하지 않는다. 개발 Mock 분석·검색 계산 기반은 별도 검수 기능이다. 기존 볼륨을 유지한다. [프런트 범위](../../frontend/README.md), [기존 기능 검토](week-02-03-review.md), [인증 설정·검증](oauth-preparation.md)을 따른다.
 
+Python 실제 모델의 내부 HTTP 호출은 [AI 연결 검사](ai-connection.md)를 따른다. 사용자 분석 워커 전체 연결과 별도로 검수하며 기본 기동에서 진단 호출을 실행하지 않는다.
+
 ## 문제 등록·조회 재현 (local 전용)
 
 아래는 Google 로그인과 별개인 선택적 개발 회원 재현이다. 실제 사용자 화면은 [Google 설정](oauth-preparation.md)과 `LAWGROUND_DEV_AUTH_ENABLED=false`를 사용한다. 개발 회원 재현 시에만 `LAWGROUND_OIDC_ENABLED=false`, `LAWGROUND_DEV_AUTH_ENABLED=true`를 명시하고 local/127.0.0.1로 기동한다. prod/test 또는 외부 바인딩에서는 차단한다. 개발 회원 하나를 서버에서 생성하며 클라이언트 memberId로 계정을 고를 수 없다.
