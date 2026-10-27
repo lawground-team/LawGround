@@ -4,7 +4,7 @@
   EMBED_BACKEND   = off | bge-m3 | mock
   RERANK_BACKEND  = off | bge-reranker | mock
   HYDE_BACKEND    = off | mock        (LLM 미정, 실제 구현 없음)
-  VERIFY_BACKEND  = off | mock        (LLM 미정, 실제 구현 없음)
+  VERIFY_BACKEND  = off | mock | gemini   (gemini: LLM_API_KEY, LLM_MODEL 필요. 선택: LLM_MODEL_REVISION, LLM_TIMEOUT_SECONDS, LLM_MAX_INPUT_CHARS)
   EMBED_MODEL_REVISION / RERANK_MODEL_REVISION = Hugging Face 커밋 해시(40자 hex). 비우면 캐시된 최신 스냅샷의 해시를 쓴다.
 """
 import os
@@ -13,9 +13,9 @@ ALLOWED = {
     "EMBED_BACKEND": {"off", "bge-m3", "mock"},
     "RERANK_BACKEND": {"off", "bge-reranker", "mock"},
     "HYDE_BACKEND": {"off", "mock"},
-    "VERIFY_BACKEND": {"off", "mock"},
+    "VERIFY_BACKEND": {"off", "mock", "gemini"},
 }
-_state = {"embedder": None, "reranker": None}
+_state = {"embedder": None, "reranker": None, "verifier": None}
 
 
 def backend(name: str) -> str:
@@ -45,9 +45,18 @@ def get_reranker():
     return _state["reranker"]
 
 
+def set_verifier(x):
+    _state["verifier"] = x
+
+
+def get_verifier():
+    return _state["verifier"]
+
+
 def reset():
     _state["embedder"] = None
     _state["reranker"] = None
+    _state["verifier"] = None
 
 
 def load_configured():
@@ -59,3 +68,6 @@ def load_configured():
     if backend("RERANK_BACKEND") == "bge-reranker" and _state["reranker"] is None:
         from app.services.reranker import BgeReranker
         _state["reranker"] = BgeReranker(pinned_revision=os.environ.get("RERANK_MODEL_REVISION") or None)
+    if backend("VERIFY_BACKEND") == "gemini" and _state["verifier"] is None:
+        from app.services import verifier
+        _state["verifier"] = verifier.from_env(os.environ)        # 설정이 틀리면 서버 시작에서 크게 실패한다(네트워크 호출은 하지 않는다)
