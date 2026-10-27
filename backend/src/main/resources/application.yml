@@ -75,6 +75,13 @@ springdoc:
     enabled: false
 
 lawground:
+  batch:
+    enabled: ${LAWGROUND_BATCH_ENABLED:false}
+    managers: ${LAWGROUND_BATCH_MANAGERS:}
+    max-items: ${LAWGROUND_BATCH_MAX_ITEMS:20}
+    build-revision: ${LAWGROUND_BATCH_BUILD_REVISION:}
+  ui:
+    analysis-enabled: ${LAWGROUND_UI_ANALYSIS_ENABLED:false}
   evaluation:
     enabled: ${LAWGROUND_EVALUATION_ENABLED:false}
     managers: ${LAWGROUND_EVALUATION_MANAGERS:}

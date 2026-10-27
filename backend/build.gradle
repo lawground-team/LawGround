@@ -77,6 +77,15 @@ tasks.register('integrationTest', Test) {
 
 check.dependsOn integrationTest
 
+tasks.register('frontendE2E', JavaExec) {
+    group = 'verification'
+    description = 'Browser workflow with real DB/queue and signed test OIDC; synthetic inference.'
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.lawground.auth.FrontendE2EProbe'
+    jvmArgs '-Xmx512m', '-Dfile.encoding=COMPAT'
+}
+
 // Explicit actual-model acceptance probe. Uses a disposable PG container, never the user's DB.
 tasks.register('liveModelSmoke', JavaExec) {
     group = 'verification'

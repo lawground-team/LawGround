@@ -34,7 +34,7 @@ JSON API 기본 경로는 `/api/v1`. OAuth 경로 `/oauth2/authorization/google`
 
 목록은 `{items:[],nextCursor:null}`. limit 기본20/1~50, createdAt DESC/id DESC 정렬, 검증 가능한 불투명 cursor. scope 기본 mine이며 공개 목록도 이 초안에서는 로그인 후 조회한다. 공개 단건과 검수된 법령 원문은 익명 조회 가능. 비공개/타인 자원은 404로 가리고 이력·결과·중단 요청은 소유권을 확인한다. 추천은 limit 기본5/최대10인 고정 top-N/nextCursor=null이며 현재 revision의 본인 USER/LIVE 검증 완료·SUPPORTED 실행을 기준으로 한다. 미완료·이전 revision은409, Mock/HOLD/REJECTED는빈목록이다. [후보·순위·시행일과 색인 정책](../runbooks/recommendations.md)을 참고한다.
 
-분석 접수는 `{"questionRevision":1}`과 UUID Idempotency-Key로 202 + runId/jobId/statusUrl/resultUrl을 받는다. 동일 소유자·키·payload는 같은 결과, 다른 payload는 409. 중단 요청 202는 완료가 아니며 실제 CANCELLED 여부는 상태 조회로 확인한다.
+분석 접수는 `{"questionRevision":1}`과 UUID Idempotency-Key로 202 + runId/jobId/statusUrl/resultUrl을 받는다. 동일 요청자·키·payload는 같은 결과, 다른 payload는 409. 중단 요청 202는 완료가 아니며 실제 CANCELLED 여부는 상태 조회로 확인한다.
 
 | 상태 축 | 값 |
 |---|---|
@@ -59,4 +59,6 @@ Spring 독립 구현 기준이며 공동 확정 전 초안. Python wire·태그�
 Python 3.11+ 가상환경에서 `pip install -r scripts/requirements-contracts.txt`, `python scripts/check_contracts.py`, `python -m unittest discover -s scripts/tests -v`. OpenAPI 3.1 검증기 0.9.0·JSON Schema 형식·왕복 fixture를 검사한다. 등록·단건 조회는 실제 PostgreSQL 통합 검사와 로컬 HTTP 재현으로 확인한다. 미래 기능·실제 모델 품질 검사는 해당 구현 단계에서 추가한다.
 
 
-LIVE 검색 워커를 별도로 활성화한 경우에도 위 입력/응답 DTO는 같다. 접수된 법령·모델/manifest를 고정하고 검색 checkpoint를 저장하지만 기본 검증 OFF는 FAILED/VERIFIER_NOT_CONFIGURED·verdict null이며 최종 결과는409다. 선택적 검증 core가 준비된 응답을 받아 인용 검사를 통과한 실행만 COMPLETED/결과200이 가능하다. 실제 Python LLM은 아직 미구현이며 [지원 범위](../runbooks/verification.md)를 따른다. analysisAvailable=false는 유지한다. [LIVE 실행 범위](../runbooks/live-retrieval.md)를 참고한다.
+LIVE 검색 워커를 별도로 활성화한 경우에도 위 입력/응답 DTO는 같다. 접수된 법령·모델/manifest를 고정하고 검색 checkpoint를 저장하지만 기본 검증 OFF는 FAILED/VERIFIER_NOT_CONFIGURED·verdict null이며 최종 결과는409다. 선택적 검증 core가 준비된 응답을 받아 인용 검사를 통과한 실행만 COMPLETED/결과200이 가능하다. 실제 Python LLM은 아직 미구현이며 [지원 범위](../runbooks/verification.md)를 따른다. 화면 분석은 기본 비활성이며 LIVE·검증과 LAWGROUND_UI_ANALYSIS_ENABLED 명시 설정이 모두 켜진 경우에만 활성화한다. [LIVE 실행 범위](../runbooks/live-retrieval.md)를 참고한다.
+
+분석 요청은 본인 문제 또는 승인된 PUBLIC/EXAM_IMPORT/OFFICIAL_VERIFIED 기출만 허용한다. 실행의 requester 소유권은 별도로 유지하며 다른 회원의 실행 결과를 공유하지 않는다. `GET /api/v1/trace-runs/{id}/job`은 기존 Job DTO를 반환하고 새로고침 후 단계 조회를 복구한다. 비공개/타인 실행 및 BATCH/EVALUATION 실행은404다. [화면 흐름](../runbooks/analysis-ui.md)을 참고한다.

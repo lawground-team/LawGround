@@ -76,7 +76,7 @@ public class AnalysisService {
                 requester + ":TRACE_CREATE:" + key);
         var owned =
                 jdbc.query(
-                        "SELECT revision FROM questions WHERE id=? AND owner_id=? AND deleted_at IS NULL FOR UPDATE",
+                        "SELECT revision FROM questions WHERE id=? AND deleted_at IS NULL AND (owner_id=? OR (visibility='PUBLIC' AND source_kind='EXAM_IMPORT' AND answer_source='OFFICIAL_VERIFIED')) FOR UPDATE",
                         (rs, n) -> rs.getLong(1),
                         questionId,
                         requester);
@@ -205,6 +205,18 @@ public class AnalysisService {
                         member);
         if (rows.isEmpty()) throw missing();
         return rows.get(0);
+    }
+
+    @Transactional(readOnly = true)
+    public TraceDtos.Job jobForRun(UUID runId) {
+        get(runId);
+        var ids =
+                jdbc.query(
+                        "SELECT id FROM processing_jobs WHERE run_id=?",
+                        (rs, n) -> rs.getObject(1, UUID.class),
+                        runId);
+        if (ids.isEmpty()) throw missing();
+        return job(ids.getFirst());
     }
 
     @Transactional(readOnly = true)

@@ -96,6 +96,7 @@ public class SecurityConfiguration {
                                     "/api/v1/jobs/*",
                                     "/api/v1/trace-runs/*",
                                     "/api/v1/trace-runs/*/result",
+                                    "/api/v1/trace-runs/*/job",
                                     "/api/v1/trace-runs/*/cancel")
                             .authenticated();
                     if (devAuthEnabled)
