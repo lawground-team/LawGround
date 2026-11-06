@@ -11,8 +11,10 @@ import os
 
 from app.common import ERR, P, TOKEN_ENV, ContractError, make_guard, register_handlers
 from app.contract import models as M
+from app.contract.checks import check_verify
 from app.mock import logic
 from app.services import registry, tokenizer
+from app.services.verifier import LlmError
 
 
 @asynccontextmanager
@@ -30,6 +32,18 @@ guard = make_guard(lambda: os.environ.get(TOKEN_ENV), allow_mock_scenarios=False
 
 def _off(what: str) -> ContractError:
     return ContractError(503, M.ErrorCode.MODEL_NOT_READY, f"{what} 백엔드가 꺼져 있거나 준비되지 않았다", False)
+
+
+def _llm_error(e: LlmError) -> ContractError:
+    if e.kind == "rate_limited":
+        return ContractError(429, M.ErrorCode.RATE_LIMITED, str(e), True, headers={"Retry-After": str(e.retry_after or 2)})
+    if e.kind == "timeout":
+        return ContractError(504, M.ErrorCode.MODEL_TIMEOUT, str(e), True)
+    if e.kind == "input_too_long":
+        return ContractError(422, M.ErrorCode.INPUT_TOO_LONG, str(e), False)
+    if e.kind == "output_invalid":
+        return ContractError(502, M.ErrorCode.MODEL_OUTPUT_INVALID, str(e), False)
+    return ContractError(502, M.ErrorCode.MODEL_UPSTREAM_ERROR, str(e), e.retryable)
 
 
 @app.post(P + "/tokenize", response_model=M.TokenizeResponse, responses=ERR, tags=["tokenize"])
@@ -91,9 +105,21 @@ def hyde(req: M.HydeRequest, _=Depends(guard)):
 
 @app.post(P + "/verify", response_model=M.VerifyResponse, responses=ERR, tags=["verify"])
 def verify(req: M.VerifyRequest, _=Depends(guard)):
-    if registry.backend("VERIFY_BACKEND") == "mock":
+    mode = registry.backend("VERIFY_BACKEND")
+    if mode == "mock":
         return logic.verify(req, "")
-    raise _off("verify")
+    v = registry.get_verifier() if mode == "gemini" else None
+    if v is None:
+        raise _off("verify")
+    try:
+        resp = v.verify(req)
+    except LlmError as e:
+        raise _llm_error(e)
+    try:
+        check_verify(req, resp)                      # 계약 자체 검사(인용이 원문과 정확히 같은지 등). 어긋나면 응답하지 않는다
+    except Exception:
+        raise ContractError(502, M.ErrorCode.MODEL_OUTPUT_INVALID, "검증 결과가 계약 검사를 통과하지 못했다", False)
+    return resp
 
 
 @app.get(P + "/health/ready", response_model=M.ReadyOutput, responses={401: {"model": M.ErrorOut}, 503: {"model": M.ReadyOutput}}, tags=["health"])
@@ -109,6 +135,9 @@ def ready(_=Depends(guard)):
             models.append(M.ModelState(name=f"{label}:mock", revision=logic.MOCK_REV, ready=True))   # 이름에 mock 이 드러난다
         else:
             models.append(M.ModelState(name=f"{label}:off", revision=None, ready=False))
+    if registry.backend("VERIFY_BACKEND") == "gemini":                      # 실제 검증기만 광고한다(off/mock 은 지금처럼 목록에 없다)
+        v = registry.get_verifier()
+        models.append(M.ModelState(name=v.name if v else "verify:unavailable", revision=v.revision if v else None, ready=v is not None))
     out = M.ReadyOutput(status=M.ReadyStatus.READY if all(m.ready for m in models) else M.ReadyStatus.NOT_READY, models=models)
     if out.status == M.ReadyStatus.NOT_READY:
         return JSONResponse(status_code=503, content=out.model_dump(mode="json"))
