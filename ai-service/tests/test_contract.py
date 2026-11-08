@@ -56,6 +56,13 @@ class SchemaTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             M.QuestionSnapshot(**snapshot(providedAnswerNumber=2.0))
 
+    def test_subject_is_broker_or_public_law_only(self):
+        for s in ("BROKER_LAW", "PUBLIC_LAW"):
+            M.QuestionSnapshot(**snapshot(subject=s))
+        for s in ("CIVIL_LAW", "public_law", "PUBLIC_LAW "):
+            with self.assertRaises(ValidationError):
+                M.QuestionSnapshot(**snapshot(subject=s))
+
     def test_choice_numbers_must_be_1_to_5_once(self):
         with self.assertRaises(ValidationError):
             M.QuestionSnapshot(**snapshot(choices=[{"number": 1, "text": "a"}] * 5))

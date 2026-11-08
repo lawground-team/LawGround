@@ -128,7 +128,7 @@ class QuestionChoice(Strict):
 
 
 class QuestionSnapshot(Strict):
-    subject: Annotated[StrictStr, Field(pattern="^BROKER_LAW$")]
+    subject: Annotated[StrictStr, Field(pattern="^(BROKER_LAW|PUBLIC_LAW)$")]  # 1과목 공인중개사법령, 2과목 부동산공법(2026-11-09 추가)
     stem: _text(10000)
     questionType: QuestionType
     choices: Annotated[list[QuestionChoice], Field(min_length=5, max_length=5)]

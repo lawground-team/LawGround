@@ -66,6 +66,15 @@ class Build(unittest.TestCase):
         self.assertEqual(d["sourceUrl"], "https://www.law.go.kr/lsInfoP.do?lsiSeq=283713")
         self.assertNotIn("OC=", json.dumps(d).upper())
 
+    def test_long_annex_is_split_at_line_ends_into_contiguous_spans_within_limit(self):
+        long = {**RECS[4], "text": "■ 별표 2\n" + "│가나다라마바사아자차│\n" * 2500}           # 약 35,000자 (공법 별표 2 크기)
+        d = L.build_import([long], "283713", META, "VERIFIED", "abc")                          # validate() 통과 = 빈틈없이 이어짐·각 20000자 이하
+        spans = d["articles"][0]["spans"]
+        self.assertGreater(len(spans), 1)
+        for s in spans[:-1]:
+            self.assertEqual(long["text"][s["end"] - 1], "\n")                                    # 줄 끝에서 끊김
+            self.assertTrue(s["searchText"].startswith("별표 1 요율"))                             # 조각마다 조문 제목이 붙는다
+
     def test_law_name_mismatch_between_xml_and_jsonl_is_rejected(self):
         with self.assertRaises(ValueError) as cm:
             doc(meta={"title": "다른 법"})

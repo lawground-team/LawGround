@@ -128,7 +128,7 @@
   "wrongSpans": [ { "statementStart": 0, "statementEnd": 8, "lawExpression": "…(1~500자)…", "evidenceKey": "e1" } ],
   "correctedStatement": "…(1~2,000자) 또는 null",
   "tags": [ { "code": "ACTOR" } ],
-  "tagSetVersion": "variation-v1",
+  "tagSetVersion": "choice-tags-v1",
   "modelRevision": "verify:gemini-…",
   "promptVersion": "statement-v1"
 }
@@ -204,22 +204,22 @@
   - 기능 꺼짐: 503 `FEATURE_DISABLED`(`retryable=false`). **새 ErrorCode 제안.**
   - 그 밖은 기존 오류 코드를 쓴다.
 
-### 3-3. 변형 유형 코드 (`tagSetVersion: variation-v1`)
+### 3-3. 태그 코드 (`tagSetVersion: choice-tags-v1`) — 2026-11-09 확정
 
-> **[2026-11-09 확정]** 선지 분석 태그는 **5종: 시점·기한 / 조건 추가 / 주체·권한 / 개념 오인 / 숫자·수치 오류.** 변형 유형도 이 5종으로 합친다. 아래 8종은 세부 분류 후보이며, 확정 시 상위 태그로 묶는다(예: NUMBER·SCOPE → 시점·기한/숫자, ACTOR → 주체·권한, PROCEDURE·MODALITY → 조건, OBJECT·NEGATION → 개념 오인).
+선지 분석(`/verify`)·문장 확인·비슷한 기출 변형 표시가 **같은 5종**을 쓴다. 화면 글자는 Spring 이 code → 한글로 바꾼다.
 
-| code | 뜻 | 예 |
+| code | 화면 표시 | 예 |
 |---|---|---|
-| `NUMBER` | 숫자·기간·비율·면적 | 3년 ↔ 5년, 2분의 1 ↔ 3분의 2, 1만㎡ |
-| `ACTOR` | 주체·권한자 | 국토교통부장관 ↔ 시·도지사 ↔ 시장·군수 |
-| `MODALITY` | 의무·재량·금지 | 하여야 한다 ↔ 할 수 있다 ↔ 할 수 없다 |
-| `NEGATION` | 긍정·부정 뒤집기 | 해당한다 ↔ 해당하지 않는다, 받아야 한다 ↔ 받지 않아도 된다 |
-| `SCOPE` | 범위·기준점 | 이상 ↔ 초과, 이내 ↔ 미만, "날부터" ↔ "다음 날부터" |
-| `PROCEDURE` | 절차·방식 | 인가 ↔ 신고 ↔ 허가, 심의 ↔ 협의 |
-| `OBJECT` | 대상·종류 | 재건축 ↔ 재개발, 공장 ↔ 창고 |
-| `OTHER` | 위 분류에 안 맞는 차이 | — |
+| `TIMING` | 시점·기한 | 3개월 ↔ 6개월 이내, "날부터" ↔ "다음 날부터", 인가 전 ↔ 인가 후 |
+| `CONDITION` | 조건 추가 | 조문에 없는 요건·예외를 붙이거나 뺌, 하여야 한다 ↔ 할 수 있다, 해당한다 ↔ 해당하지 않는다 |
+| `ACTOR` | 주체·권한 | 국토교통부장관 ↔ 시·도지사 ↔ 시장·군수, 인가 ↔ 신고 |
+| `CONCEPT` | 개념 오인 | 재건축 ↔ 재개발, 공장 ↔ 창고, 용어·제도 혼동 |
+| `NUMBER` | 숫자·수치 오류 | 금액·비율·면적·횟수(2분의 1 ↔ 3분의 2, 1만㎡) |
 
-- 분류 방법(Python, 규칙 기반): 두 문장을 형태소로 비교해 다른 구간을 찾는다. 숫자나 단위가 있으면 NUMBER, 권한자 사전에 있으면 ACTOR, 서술어 끝 사전에 걸리면 MODALITY, NEGATION, SCOPE로 정한다. 사전은 `variation-v1` 파일 하나로 관리한다.
+- `/verify`(구현됨, `VERIFY_TAGS=1`일 때): LLM 이 CONTRADICTS 선지에만 1~2개 고르고, Python 이 5종 밖 코드를 버린다. 시점이 숫자로 바뀐 경우는 `TIMING` 우선.
+- 이전 초안의 8종(NUMBER·ACTOR·MODALITY·NEGATION·SCOPE·PROCEDURE·OBJECT·OTHER)은 규칙 분류의 세부 신호로만 쓰고, 응답에는 위 5종으로 묶어 낸다: SCOPE(기간·기준점)→TIMING, MODALITY·NEGATION→CONDITION, PROCEDURE→ACTOR, OBJECT→CONCEPT, 숫자→NUMBER(기간이면 TIMING).
+
+- 분류 방법(Python, 규칙 기반): 두 문장을 형태소로 비교해 다른 구간을 찾는다. 숫자나 단위가 있으면 NUMBER, 권한자 사전에 있으면 ACTOR, 서술어 끝 사전에 걸리면 MODALITY, NEGATION, SCOPE로 정한다. 사전은 `choice-tags-v1` 파일 하나로 관리한다.
 - 공부 팁 문장은 3개 기출에서 가장 많이 나온 유형 1~2개로 템플릿을 고르고, `TRUE` 기출 문장(없으면 근거 조문)의 해당 구간을 "현행 표현"으로 채운다.
 
 ---

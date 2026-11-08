@@ -134,7 +134,7 @@ def run_probe(rows, chunks, raw, retriever, verifier, *, limit=10, negative=Fals
                 labels = {str(chunk_uuid(c)): c for c in ids}
                 item["detail"] = {"llm_verdict": (getattr(verifier, "last_raw", None) or {}).get("verdict"), "summary": resp.summary[:200],
                                   "quotes": [{"label": labels.get(str(e.chunkId), "?"), "quote": e.quote[:120]} for e in resp.evidences],
-                                  "relations": {c.choiceNumber: c.relation.value for c in (resp.choiceAnalyses or [])}}
+                                  "relations": {c.choiceNumber: c.relation.value + "".join(f"[{t.code}]" for t in c.tags) for c in (resp.choiceAnalyses or [])}}
         results.append(item)
         if on_result:
             on_result(item)                              # 문제마다 바로 출력한다(전부 끝난 뒤가 아니라)

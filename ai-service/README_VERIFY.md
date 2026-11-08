@@ -12,16 +12,18 @@
 | `LLM_TIMEOUT_SECONDS` | | 호출 1회 제한(기본 50, 최대 55). 형식 오류 재시도 1회까지 합쳐 Spring 제한 120초 안에 끝나게 한다 |
 | `LLM_MAX_INPUT_CHARS` | | 입력 상한(기본 150000자). 넘으면 자르지 않고 422 `INPUT_TOO_LONG` |
 | `LLM_TRANSIENT_RETRIES` | | 일시적 서버 과부하(5xx, 예: 503 `high demand`) 재시도 횟수(기본 1, 0~2). 첫 호출이 25초 안에 실패했을 때만 3초 쉬고 다시 부른다 |
+| `VERIFY_TAGS` | | `1` 이면 선지 분석 태그 5종을 낸다(기본 `0`). 켜면 `promptVersion=verify-prompt-v2-tags`, `tagSetVersion=choice-tags-v1`. **Spring 이 태그를 받도록 바뀐 뒤에만 켠다**(지금 Spring 은 `VERIFICATION_TAGS_UNSUPPORTED` 로 거절) |
 
 ## Spring 쪽 설정(같은 값이어야 한다)
 - `AI_VERIFIER_MODEL_NAME` = `verify:<LLM_MODEL>` (예: `verify:gemini-…`). `/health/ready` 가 광고하는 이름과 글자까지 같아야 한다.
-- `AI_VERIFIER_MODEL_REVISION` = `LLM_MODEL_REVISION`(또는 모델 ID), `AI_VERIFIER_PROMPT_VERSION` = `verify-prompt-v1`.
+- `AI_VERIFIER_MODEL_REVISION` = `LLM_MODEL_REVISION`(또는 모델 ID), `AI_VERIFIER_PROMPT_VERSION` = `verify-prompt-v1`(`VERIFY_TAGS=1` 이면 `verify-prompt-v2-tags`).
 - 모델·프롬프트가 바뀌면 이 세 값도 같이 바꾼다(Spring 은 자동 채택하지 않는다).
 
 ## 동작 규칙
 - LLM 은 판정과 인용 **문구**만 낸다. 인용의 `start/end/quote` 는 Python 이 원문(sourceText)에서 다시 찾아 만든다(공백 차이만 허용, 없으면 버림).
 - 근거 인용이 하나도 확인되지 않으면 SUPPORTED/REJECTED 대신 **HOLD(`NO_VERIFIED_QUOTE`)**.
-- 선지 분석이 정확히 5개로 안 맞으면 `choiceAnalyses=null`(미제공). 근거 없는 SUPPORTS/CONTRADICTS 는 INSUFFICIENT 로 내린다. `tags=[]`, `tagSetVersion=null` 만 낸다.
+- 선지 분석이 정확히 5개로 안 맞으면 `choiceAnalyses=null`(미제공). 근거 없는 SUPPORTS/CONTRADICTS 는 INSUFFICIENT 로 내린다. 기본은 `tags=[]`, `tagSetVersion=null` 이다.
+- 태그(`VERIFY_TAGS=1`): CONTRADICTS 선지에만 1~2개. 코드 `TIMING`(시점·기한) `CONDITION`(조건 추가) `ACTOR`(주체·권한) `CONCEPT`(개념 오인) `NUMBER`(숫자·수치 오류). 5종 밖의 코드는 버린다. 선지 분석이 null 이면 `tagSetVersion` 도 null.
 - 판정과 선지 분석이 모순이면 **HOLD(`INCONSISTENT_ANALYSIS`)**.
 - 형식 오류(JSON 깨짐)는 1회 다시 묻는다(시작 후 60초 안일 때만).
 - **일시적 서버 과부하(5xx)만** 설정한 횟수(기본 1회) 다시 부른다. 시간 초과·한도 초과(429)·거절(4xx)은 다시 부르지 않는다. 두 재시도를 합쳐도 약 110초를 넘지 않게 시간 규칙을 둔다(Spring 제한 120초).
