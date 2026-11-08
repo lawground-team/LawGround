@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import re
+import time
 from typing import Mapping, Protocol
 from uuid import UUID
 
@@ -26,6 +27,9 @@ from app.contract import models as M
 PROMPT_VERSION = "verify-prompt-v1"
 DEFAULT_MAX_INPUT_CHARS = 150_000
 DEFAULT_TIMEOUT_SECONDS = 50.0           # 재시도 1회까지 합쳐 100초 < Spring verify 제한 120초
+TRANSIENT_RETRY_BEFORE = 25.0     # 첫 호출이 이 시간(초) 안에 5xx 로 실패했을 때만 다시 부른다(Spring 제한 120초 안에 끝내려는 규칙)
+REPAIR_RETRY_BEFORE = 60.0        # 형식 오류 재시도는 시작 후 이 시간(초) 안일 때만
+DEFAULT_TRANSIENT_BACKOFF = 3.0
 MIN_QUOTE_CHARS = 4
 MAX_QUOTE_CHARS = 20_000
 
@@ -264,19 +268,38 @@ def build_choices(raw, id_map: dict[str, str]) -> list[M.VerifyChoice] | None:
 
 
 class LlmVerifier:
-    def __init__(self, client: LlmClient, *, max_input_chars: int = DEFAULT_MAX_INPUT_CHARS, prompt_version: str = PROMPT_VERSION):
+    def __init__(self, client: LlmClient, *, max_input_chars: int = DEFAULT_MAX_INPUT_CHARS, prompt_version: str = PROMPT_VERSION,
+                 transient_retries: int = 0, transient_backoff: float = DEFAULT_TRANSIENT_BACKOFF, keep_raw: bool = False,
+                 clock=time.monotonic, sleeper=time.sleep):
         self.client, self.max_input_chars, self.prompt_version = client, max_input_chars, prompt_version
+        self.transient_retries, self.transient_backoff, self.keep_raw = transient_retries, transient_backoff, keep_raw
+        self.clock, self.sleeper = clock, sleeper
         self.name = f"verify:{client.name}"                       # Spring 은 'verify:<이름>' 형식만 받는다
         self.revision = client.revision
+        self.last_raw: dict | None = None                         # keep_raw 일 때만: LLM 이 처음 낸 판정(점검·시험 도구용)
+        self.last_calls = 0                                       # 마지막 verify 에서 외부 LLM 을 부른 횟수
 
-    def _ask(self, req: M.VerifyRequest) -> dict:
+    def _generate(self, system: str, user: str, started: float, state: dict) -> str:
+        """외부 장애 중 일시적 서버 과부하(5xx)만 한 번 다시 부른다. 시간 초과·한도 초과(429)·거절(4xx)은 다시 부르지 않는다."""
+        while True:
+            state["calls"] += 1
+            try:
+                return self.client.generate(system, user)
+            except LlmError as e:
+                if e.kind == "upstream" and e.retryable and state["transient_left"] > 0 and self.clock() - started < TRANSIENT_RETRY_BEFORE:
+                    state["transient_left"] -= 1
+                    self.sleeper(self.transient_backoff)
+                    continue
+                raise
+
+    def _ask(self, req: M.VerifyRequest, started: float, state: dict) -> dict:
         hint = None
-        for attempt in (0, 1):                                   # 형식 오류에만 1회 다시 묻는다. 외부 장애는 다시 부르지 않는다
-            text = self.client.generate(SYSTEM_PROMPT, build_user_prompt(req, hint))
+        for attempt in (0, 1):                                   # 형식 오류에만 1회 다시 묻는다(시간이 남았을 때만)
+            text = self._generate(SYSTEM_PROMPT, build_user_prompt(req, hint), started, state)
             try:
                 return parse_json(text)
             except LlmError as e:
-                if attempt == 1:
+                if attempt == 1 or self.clock() - started >= REPAIR_RETRY_BEFORE:
                     raise
                 hint = str(e)
         raise AssertionError("unreachable")
@@ -284,7 +307,15 @@ class LlmVerifier:
     def verify(self, req: M.VerifyRequest) -> M.VerifyResponse:
         if input_chars(req) > self.max_input_chars:
             raise LlmError("input_too_long", f"입력이 상한({self.max_input_chars}자)을 넘었다. 자르지 않고 거절한다")
-        data = self._ask(req)
+        started = self.clock()
+        state = {"calls": 0, "transient_left": self.transient_retries}
+        self.last_raw, self.last_calls = None, 0
+        try:
+            data = self._ask(req, started, state)
+        finally:
+            self.last_calls = state["calls"]
+        if self.keep_raw:
+            self.last_raw = data
         candidates = {c.chunkId: c.sourceText for c in req.candidates}
         evidences, id_map = build_evidences(data.get("evidences"), candidates)
         choices = build_choices(data.get("choices"), id_map)
@@ -316,12 +347,13 @@ def from_env(environ: Mapping[str, str]) -> LlmVerifier:
     try:
         timeout = float(environ.get("LLM_TIMEOUT_SECONDS", DEFAULT_TIMEOUT_SECONDS))
         max_chars = int(environ.get("LLM_MAX_INPUT_CHARS", DEFAULT_MAX_INPUT_CHARS))
-        if not 1 <= timeout <= 55 or max_chars < 1000:
+        transient = int(environ.get("LLM_TRANSIENT_RETRIES", 1))
+        if not 1 <= timeout <= 55 or max_chars < 1000 or not 0 <= transient <= 2:
             raise ValueError
     except ValueError:
-        raise RuntimeError("LLM_TIMEOUT_SECONDS 는 1~55, LLM_MAX_INPUT_CHARS 는 1000 이상이어야 한다") from None
+        raise RuntimeError("LLM_TIMEOUT_SECONDS 는 1~55, LLM_MAX_INPUT_CHARS 는 1000 이상, LLM_TRANSIENT_RETRIES 는 0~2 여야 한다") from None
     try:
         client = GeminiClient(key, model.strip(), revision=(environ.get("LLM_MODEL_REVISION") or "").strip() or None, timeout=timeout)
     except ValueError as e:
         raise RuntimeError(str(e)) from None
-    return LlmVerifier(client, max_input_chars=max_chars)
+    return LlmVerifier(client, max_input_chars=max_chars, transient_retries=transient)

@@ -25,6 +25,6 @@ class BgeReranker:
 
     def score(self, query: str, texts: list[str]) -> list[float]:
         with self._lock:
-            out = self._model.predict([(query, t) for t in texts], batch_size=8, activation_fn=self._identity,
+            out = self._model.predict([(query, t) for t in texts], batch_size=1, activation_fn=self._identity,
                                       show_progress_bar=False, convert_to_numpy=True)
         return [float(x) for x in out]
