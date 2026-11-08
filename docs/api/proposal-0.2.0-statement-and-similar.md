@@ -32,9 +32,9 @@
    - 선택 입력 "문제 머리말": 예 "공인중개사법령상"처럼 문장만으로 법령이 애매할 때 도움이 된다. 최대 500자.
 2. "확인하기"를 누르면 작업이 접수된다(비동기). 진행은 기존 분석과 같은 단계 표시를 쓴다: `PREPARE → SEARCH → VERIFY → SIMILAR → PERSIST`.
 3. 결과 카드
-   - **판정 배지**: `맞는 문장` / `틀린 문장` / `판단 보류`
+   - **판정 배지**: `조문과 일치` / `조문과 어긋남` / `판단 보류` (기획 문서 결정: "틀림"으로 단정하지 않는다. "옳지 않은 것은?" 문제에서는 맞는 문장이 오답이므로 정답 여부가 아니라 조문과의 관계로 표시)
    - **근거**: 조문명·조항과 인용 문구(원문에서 형광펜 표시)
-   - **틀린 부분**(틀린 문장일 때): 사용자 문장에서 틀린 구간에 밑줄을 긋고, 그 옆에 법령 원문 표현을 보여 준다. 예: ~~3년~~ → **5년**
+   - **어긋난 부분**(조문과 어긋날 때): 사용자 문장에서 틀린 구간에 밑줄을 긋고, 그 옆에 법령 원문 표현을 보여 준다. 예: ~~3년~~ → **5년**
    - **고친 문장**: 맞게 고친 문장 한 줄
    - **비슷한 기출 3개**(③): 카드마다 `36회 59번 ①`, O/X 배지, 기출 문장, 내 문장과 다른 부분 색 표시
    - **공부 팁** 한 단락
@@ -74,7 +74,7 @@
   "id": "…", "status": "SUCCEEDED", "stage": "PERSIST",
   "input": { "subject": "PUBLIC_LAW", "statement": "…", "contextStem": "…", "referenceDate": "2026-11-17" },
   "result": {
-    "verdict": "INCORRECT",
+    "verdict": "INCONSISTENT",
     "reasonCode": "CONTRADICTED_BY_LAW",
     "summary": "기본계획 타당성 검토 주체는 특별시장·광역시장·특별자치시장·특별자치도지사 또는 시장이다.",
     "evidences": [ { "evidenceId": "…", "lawTitle": "도시 및 주거환경정비법", "articleLabel": "제4조", "quote": "…5년마다 타당성을 검토하여…", "start": 120, "end": 168 } ],
@@ -121,7 +121,7 @@
 응답
 ```json
 {
-  "verdict": "INCORRECT",
+  "verdict": "INCONSISTENT",
   "reasonCode": "CONTRADICTED_BY_LAW",
   "summary": "…(1~10,000자)…",
   "evidences": [ { "evidenceKey": "e1", "chunkId": "uuid", "quote": "…", "start": 120, "end": 168 } ],
@@ -133,20 +133,20 @@
   "promptVersion": "statement-v1"
 }
 ```
-- `verdict`는 **새 enum** `StatementVerdict`이다: `CORRECT | INCORRECT | HOLD`.
+- `verdict`는 **새 enum** `StatementVerdict`이다: `CONSISTENT | INCONSISTENT | HOLD` (화면: 조문과 일치 / 조문과 어긋남 / 판단 보류).
   - 기존 `Verdict`(SUPPORTED/REJECTED/HOLD)는 "제공된 정답 번호가 맞는지"라는 다른 의미라서 재사용하지 않는다. 화면에서 헷갈리지 않게 하기 위해서다.
 - `reasonCode`는 확정된 5개 사전을 그대로 쓴다.
 
 | verdict | 허용 reasonCode |
 |---|---|
-| CORRECT | `SUFFICIENT_EVIDENCE` |
-| INCORRECT | `CONTRADICTED_BY_LAW` |
+| CONSISTENT | `SUFFICIENT_EVIDENCE` |
+| INCONSISTENT | `CONTRADICTED_BY_LAW` |
 | HOLD | `INSUFFICIENT_EVIDENCE`, `NO_VERIFIED_QUOTE`, `INCONSISTENT_ANALYSIS` |
 
 - 일관성 규칙(Python이 보내기 전에 검사하고, Spring도 다시 검사한다)
-  - `CORRECT`와 `INCORRECT`는 `evidences`가 1개 이상 있어야 한다.
-  - `INCORRECT`이면 `wrongSpans`가 1개 이상 있어야 하고, `correctedStatement`는 null이 아니어야 한다.
-  - `CORRECT`와 `HOLD`이면 `wrongSpans`는 빈 배열, `correctedStatement`는 null이다.
+  - `CONSISTENT`와 `INCONSISTENT`는 `evidences`가 1개 이상 있어야 한다.
+  - `INCONSISTENT`이면 `wrongSpans`가 1개 이상 있어야 하고, `correctedStatement`는 null이 아니어야 한다.
+  - `CONSISTENT`와 `HOLD`이면 `wrongSpans`는 빈 배열, `correctedStatement`는 null이다.
   - `wrongSpans`의 `statementStart` < `statementEnd` ≤ 문장 길이(code point)여야 하고, `evidenceKey`는 `evidences` 안에 있어야 한다.
   - 인용 `quote`는 `sourceText[start,end)`와 정확히 같아야 한다(기존 규칙).
   - Python은 모델 출력이 이 규칙을 어기면 1회 재시도한다. 그래도 어기면 `HOLD/INCONSISTENT_ANALYSIS` 또는 `NO_VERIFIED_QUOTE`로 낮춰서 보낸다(가짜 근거를 만들지 않는다).
@@ -206,6 +206,8 @@
 
 ### 3-3. 변형 유형 코드 (`tagSetVersion: variation-v1`)
 
+> **[2026-11-09]** 선지 분석 태그(기획 문서: 시점·기한 / 조건 추가 / 주체·권한 / 개념 오인 + 숫자 오류 여부 미정)와 **하나의 태그 세트로 합친다.** 아래 8종은 세부 분류 후보이며, 확정 시 상위 태그로 묶는다(예: NUMBER·SCOPE → 시점·기한/숫자, ACTOR → 주체·권한, PROCEDURE·MODALITY → 조건, OBJECT·NEGATION → 개념 오인).
+
 | code | 뜻 | 예 |
 |---|---|---|
 | `NUMBER` | 숫자·기간·비율·면적 | 3년 ↔ 5년, 2분의 1 ↔ 3분의 2, 1만㎡ |
@@ -222,7 +224,11 @@
 
 ---
 
-## 4. 기출 선지 은행 (Python 소유, 읽기 전용)
+## 4. 기출 선지 은행
+
+> **[2026-11-09 수정 방향]** 계약 C01("DB는 Spring 소유, Python은 DB를 갖지 않는다")과 이미 구현된 Spring 공개 기출·기출 배치(ExamBatch)·유사문제 추천(`recommendation` 패키지: 공통 근거 조문 + 임베딩 유사도)을 고려해, **권장안은 기출 선지 데이터와 후보 선택을 Spring이 맡고(기존 추천을 선지 단위로 확장), Python은 두 문장을 비교해 변형 유형·팁을 만드는 상태 없는 API만 맡는 것**이다. 이 경우 3-2의 `/similar-items`는 `/variation-diff`(요청: 사용자 문장 + 후보 기출 선지 1~5개 → 응답: 후보별 diff·유형 + tip)로 바뀌고, 아래 Python 소유 은행 파일은 Spring 적재 전 오프라인 평가용으로만 쓴다. 아래 원안은 비교용으로 남긴다.
+
+### (원안) Python 소유, 읽기 전용
 
 - 원천: 25~36회 2차 1교시 1과목·공법 960문제 × 선지 5개 = 4,800개.
 - 선지 정답(truth) 자동 계산
@@ -291,7 +297,7 @@
 
 | 질문 | 권장안 | 이유 |
 |---|---|---|
-| 문장 판정 enum을 새로 둘까, 기존 Verdict를 재사용할까 | **새 enum `CORRECT/INCORRECT/HOLD`** | 기존 SUPPORTED는 "정답 번호가 맞다"는 뜻이라, 화면에서 의미가 섞인다 |
+| 문장 판정 enum을 새로 둘까, 기존 Verdict를 재사용할까 | **새 enum `CONSISTENT/INCONSISTENT/HOLD`** | 기존 SUPPORTED는 "정답 번호가 맞다"는 뜻이라, 화면에서 의미가 섞인다 |
 | reasonCode 사전을 늘릴까 | **늘리지 않음**(5개 재사용) | 11/08 확정 사전과 일관 |
 | 공부 팁을 LLM으로 만들까 | **규칙 기반(v1)**, LLM은 후속 | 무료·빠름·결정적, 거짓 설명 위험이 없음 |
 | similar 결과를 저장할까 | **저장(표시용 사본)** | 은행이 바뀌어도 재현 가능 |
