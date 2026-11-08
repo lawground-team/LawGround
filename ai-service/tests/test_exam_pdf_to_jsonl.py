@@ -55,6 +55,18 @@ def test_choices_joined_and_page_header_removed():
     assert "2024년" not in q1["stem"] + "".join(q1["choices"])
 
 
+def test_stops_at_next_number_after_count():
+    text = "1. 첫문제\n①가\n2. 둘째\n①나\n제과목\n2\n3. 다음과목\n①다"
+    b = ep.split_questions(text, count=2)
+    assert sorted(b) == [1, 2] and "다음과목" not in b[2]
+
+
+def test_second_subject_from_41():
+    text = "제1과목\n1. 중개\n①가\n제2과목\n41. 공법첫문제\n①나\n42. 둘째\n①다\n제3과목\n81. 다른과목"
+    b = ep.split_questions(text, count=2, first=41)
+    assert sorted(b) == [41, 42] and "다른과목" not in b[42] and "중개" not in b[41]
+
+
 def test_header_variants_removed():
     for h in ("2024년제35회공인중개사2차1교시A형-12-1", "제28회공인중개사2차1교시A-12-3"):
         assert ep.HEADER.match(h)

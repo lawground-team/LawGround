@@ -15,17 +15,17 @@ HEADER = re.compile(r"^(\d{4}년)?제\d+회.*-\d+-\d+$")        # 28회는 '제2
 INCORRECT = re.compile(r"(틀린|옳지않|아닌것|않은것)")
 
 
-def split_questions(text: str, count: int = 40) -> dict[int, str]:
-    """페이지 머리줄을 지우고 번호 순서대로 문제 덩어리로 나눈다."""
+def split_questions(text: str, count: int = 40, first: int = 1) -> dict[int, str]:
+    """페이지 머리줄을 지우고 번호 순서대로 문제 덩어리로 나눈다. first 번부터 count 개(공법은 41 또는 81부터)."""
     lines = [l.strip() for l in text.splitlines()]
     lines = [l for l in lines if l and not l.startswith("=====PAGE") and not HEADER.match(l)]
     out: dict[int, list[str]] = {}
-    cur, want = None, 1
+    cur, want, last = None, first, first + count - 1
     for l in lines:
-        if l.startswith("제2과목"):
-            break
+        if cur is not None and (re.match(r"^제\d*과목", l) or (want > last and re.match(rf"^{want}\.(?!\d)", l))):
+            break                                       # 다음 과목 제목(25·26회는 '제과목'/'2' 로 쪼개짐) 또는 다음 번호에서 멈춘다
         m = re.match(rf"^{want}\.(?!\d)\s*(.*)$", l)
-        if want <= count and m:
+        if want <= last and m:
             cur = want
             out[cur] = [m.group(1)]
             want += 1
@@ -52,10 +52,10 @@ def respace(kiwi, s: str) -> str:
     return kiwi.space(s) if s else s
 
 
-def build_rows(text: str, answers: dict[int, int], exam: str, kiwi=None):
+def build_rows(text: str, answers: dict[int, int], exam: str, kiwi=None, first: int = 1):
     rows, warns = [], []
-    blocks = split_questions(text)
-    for n in range(1, 41):
+    blocks = split_questions(text, first=first)
+    for n in range(first, first + 40):
         if n not in blocks:
             warns.append(f"{n}번: 문제를 찾지 못함")
             continue
@@ -93,12 +93,13 @@ def main(argv=None) -> int:
     ap.add_argument("--answers", required=True)
     ap.add_argument("--exam", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--first", type=int, default=1, help="첫 문제 번호(제2과목 공법은 41, 25~27회 공법은 81)")
     a = ap.parse_args(argv)
     import pymupdf
     from kiwipiepy import Kiwi
     doc = pymupdf.open(a.pdf)
     text = "\n".join(f"=====PAGE {i + 1}\n" + p.get_text() for i, p in enumerate(doc))
-    rows, warns = build_rows(text, load_answers(a.answers), a.exam, Kiwi())
+    rows, warns = build_rows(text, load_answers(a.answers), a.exam, Kiwi(), first=a.first)
     Path(a.out).write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
     print(f"{len(rows)}문제 저장: {a.out} | 합답형 {sum(r['kind'] == 'combo' for r in rows)}개")
     for w in warns:
