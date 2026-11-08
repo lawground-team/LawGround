@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>문제 붙여넣기 시험</title>
+<style>
+:root{--bg:#f7f7f5;--card:#fff;--ink:#1d1d1f;--sub:#6b6b70;--line:#dcdcd8;--accent:#2f5bd3;--accent-ink:#fff;--warn:#a15c00;--warn-bg:#fff4e0;--ok:#1d7a3e;--ok-bg:#e7f6ec;--field:#fff}
+@media (prefers-color-scheme:dark){:root{--bg:#141416;--card:#1d1d20;--ink:#ececef;--sub:#9a9aa2;--line:#33333a;--accent:#7c9cff;--accent-ink:#0d0d10;--warn:#ffb85c;--warn-bg:#3a2a12;--ok:#6ad08f;--ok-bg:#15301f;--field:#242428}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,"Malgun Gothic","Apple SD Gothic Neo",sans-serif}
+main{max-width:980px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:20px;margin:0 0 4px}
+.lead{color:var(--sub);margin:0 0 16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:760px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
+.card h2{font-size:15px;margin:0 0 8px}
+textarea,input,select{width:100%;font:inherit;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:8px;padding:8px}
+textarea{resize:vertical}
+#paste{min-height:260px}
+label{display:block;font-size:13px;color:var(--sub);margin:10px 0 4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button{font:inherit;border:1px solid var(--line);background:var(--field);color:var(--ink);border-radius:8px;padding:6px 12px;cursor:pointer}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.choice{display:grid;grid-template-columns:28px 1fr;gap:6px;align-items:start;margin-bottom:6px}
+.choice b{padding-top:8px;text-align:center}
+.choice textarea{min-height:40px}
+.msg{border-radius:8px;padding:8px 10px;margin:6px 0;font-size:14px}
+.msg.warn{background:var(--warn-bg);color:var(--warn)}
+.msg.ok{background:var(--ok-bg);color:var(--ok)}
+pre{background:var(--field);border:1px solid var(--line);border-radius:8px;padding:10px;overflow:auto;font-size:12.5px;max-height:320px;margin:0}
+details{margin-top:16px}
+summary{cursor:pointer;font-weight:600}
+footer{margin-top:24px;color:var(--sub);font-size:12.5px;border-top:1px solid var(--line);padding-top:10px}
+.muted{color:var(--sub);font-size:13px}
+</style>
+</head>
+<body>
+<main>
+<h1>문제 붙여넣기 → 선지 자동 분리 (시험용)</h1>
+<p class="lead">책 문제를 휴대폰으로 찍어 글자를 복사한 뒤 아래에 붙여 넣으면, 지문과 선지 5개로 나눠 앱에 보낼 형식(JSON)을 만듭니다. 원래 앱 코드는 건드리지 않은 별도 시험 페이지입니다.</p>
+
+<div class="grid">
+  <section class="card">
+    <h2>1. 붙여넣기</h2>
+    <textarea id="paste" placeholder="예)&#10;12. 공인중개사법령상 중개보수에 관한 설명으로 옳은 것은?&#10;① …&#10;② …&#10;③ …&#10;④ …&#10;⑤ …"></textarea>
+    <div class="row" style="margin-top:8px">
+      <span class="muted">예시 넣기:</span>
+      <button data-sample="circled">①②③ 형식</button>
+      <button data-sample="numbered">1. 2. 3. 형식</button>
+      <button data-sample="flat">한 줄로 붙은 형식</button>
+      <button id="clear">지우기</button>
+    </div>
+    <div id="msgs"></div>
+  </section>
+
+  <section class="card">
+    <h2>2. 확인·수정</h2>
+    <label for="stem">지문</label>
+    <textarea id="stem" rows="3"></textarea>
+    <div class="grid" style="gap:8px;grid-template-columns:1fr 1fr">
+      <div>
+        <label for="qtype">문제 유형 <span id="qtypeHint" class="muted"></span></label>
+        <select id="qtype"><option value="">(고르세요)</option><option value="SELECT_CORRECT">옳은 것 고르기</option><option value="SELECT_INCORRECT">옳지 않은 것 고르기</option></select>
+      </div>
+      <div>
+        <label for="subject">과목 <span id="subjectHint" class="muted"></span></label>
+        <select id="subject"><option value="">(고르세요)</option><option value="BROKER_LAW">공인중개사법령 및 실무</option><option value="PUBLIC_LAW">부동산공법 (Spring 반영 후)</option></select>
+      </div>
+    </div>
+    <label>선지</label>
+    <div id="choices"></div>
+    <label>정답 번호 (책 정답표에서 직접 고르기)</label>
+    <div class="row" id="answer"></div>
+    <label for="refDate">기준일 (어느 날짜의 법령으로 볼지)</label>
+    <input id="refDate" type="date">
+  </section>
+</div>
+
+<section class="card" style="margin-top:16px">
+  <div class="row" style="justify-content:space-between">
+    <h2 style="margin:0">3. 앱에 보낼 형식 (POST /api/v1/questions 본문)</h2>
+    <button class="primary" id="copy">JSON 복사</button>
+  </div>
+  <div id="ready"></div>
+  <pre id="json"></pre>
+</section>
+
+<details>
+  <summary>휴대폰으로 책 문제 글자 가져오기</summary>
+  <ul>
+    <li><b>아이폰:</b> 카메라를 문제에 대면 오른쪽 아래 <i>텍스트 인식</i> 아이콘 → 문제 부분 선택 → 복사. (사진 앱에서 찍은 사진을 길게 눌러도 됩니다)</li>
+    <li><b>안드로이드:</b> 카메라 또는 Google 렌즈 → <i>텍스트</i> → 문제 부분 선택 → 복사.</li>
+    <li>PC로 옮기기: 카카오톡 <i>나와의 채팅</i>에 붙여 넣고 PC 카카오톡에서 복사 → 이 페이지에 붙여넣기.</li>
+    <li>①②③ 같은 동그라미 숫자가 1) 2) 또는 (1) (2)로 읽혀도 자동 분리됩니다. 줄이 중간에 끊겨도 선지 안의 줄바꿈은 한 칸 띄어쓰기로 합칩니다.</li>
+  </ul>
+</details>
+
+<details>
+  <summary>이 페이지가 하지 않는 것</summary>
+  <ul>
+    <li>정답 번호는 자동으로 고르지 않습니다(책 정답표를 보고 직접 선택).</li>
+    <li>시험 회차·연도를 추측하지 않습니다. 기준일은 오늘 날짜가 기본값이며 직접 바꿀 수 있습니다.</li>
+    <li>앱으로 바로 보내지 않습니다. 복사한 JSON은 앱 입력 화면 개선(영주 님 작업)의 시험 자료입니다.</li>
+  </ul>
+</details>
+
+<footer>
+  본 기출문제의 저작권은 한국산업인력공단(Q-Net)에 있으며, 출처를 밝히고 사용하였습니다. 입력 편의를 위해 일부 재가공됨.<br>
+  예시 버튼의 문제는 형식 시험용으로 만든 합성 문장입니다. · 자체 검사: 주소 끝에 <code>?test</code>
+</footer>
+</main>
+
+<script>
+"use strict";
+const MAX_STEM = 10000, MAX_CHOICE = 2000;
+
+// ---- 분리 로직 (DOM 없음, ?test 로 검사) ----
+const CIRCLED = "①②③④⑤";
+const STYLES = [
+  { name: "①", re: n => new RegExp(CIRCLED[n - 1], "g") },
+  { name: "(1)", re: n => new RegExp(`[(（]\\s*${n}\\s*[)）]`, "g") },
+  { name: "1)", re: n => new RegExp(`(?:^|(?<=\\s))${n}\\s*[)）]`, "g") },
+  { name: "1.", re: n => new RegExp(`(?:^|(?<=\\s))${n}\\s*[.．](?=\\s)`, "g") },
+];
+const QNUM = /^\s*(?:문\s*)?\d{1,3}\s*[.)번]\s*(?=\S)/;
+
+function findMarkers(text, style) {
+  // 1~5 표지를 순서대로 찾는다. 하나라도 없으면 null.
+  const out = []; let from = 0;
+  for (let n = 1; n <= 5; n++) {
+    const re = style.re(n); re.lastIndex = from;
+    const m = re.exec(text);
+    if (!m) return null;
+    out.push({ start: m.index, end: m.index + m[0].length });
+    from = m.index + m[0].length;
+  }
+  return out;
+}
+
+function squeeze(s) { return s.replace(/\s+/g, " ").trim(); }
+
+function split(raw) {
+  let text = raw.replace(/\r\n?/g, "\n").replace(/ /g, " ").trim();
+  text = text.replace(QNUM, "");
+  for (const style of STYLES) {
+    const m = findMarkers(text, style);
+    if (!m) continue;
+    const stem = text.slice(0, m[0].start).replace(/[ \t]+\n/g, "\n").replace(/\n{2,}/g, "\n").trim();
+    const choices = m.map((x, i) => squeeze(text.slice(x.end, i < 4 ? m[i + 1].start : text.length)));
+    return { stem, choices, style: style.name };
+  }
+  return { stem: text, choices: ["", "", "", "", ""], style: null };
+}
+
+function detectType(stem) {
+  const s = stem.replace(/\s+/g, "");
+  if (/(옳지않은|틀린|잘못된|아닌것|않는것|없는것|않은것)/.test(s)) return "SELECT_INCORRECT";
+  if (/(옳은|맞는|바른|해당하는것|있는것)/.test(s)) return "SELECT_CORRECT";
+  return "";
+}
+
+const KW = {
+  PUBLIC_LAW: ["국토의계획", "국토계획", "도시·군", "도시군", "용도지역", "용도지구", "개발행위", "지구단위", "기반시설", "도시개발", "환지", "정비사업", "재건축", "재개발", "정비구역", "건축법", "건축물", "건폐율", "용적률", "주택법", "주택조합", "사업계획승인", "분양가", "농지", "농업경영"],
+  BROKER_LAW: ["공인중개사", "중개", "중개보수", "중개사무소", "거래신고", "토지거래허가", "외국인", "분묘", "매수신청대리", "확인·설명", "확인설명", "전속중개", "주택임대차", "포상금"],
+};
+function detectSubject(text) {
+  const s = text.replace(/\s+/g, "");
+  const score = k => KW[k].reduce((a, w) => a + (s.split(w).length - 1), 0);
+  const p = score("PUBLIC_LAW"), b = score("BROKER_LAW");
+  return p > b ? "PUBLIC_LAW" : b > p ? "BROKER_LAW" : "";
+}
+
+function isComboChoices(choices) {
+  return choices.every(c => /^[ㄱ-ㅎ\s,·및과와]+$/.test(c) && /[ㄱ-ㅎ]/.test(c));
+}
+
+// ---- 자체 검사 ----
+function selfTest() {
+  const eq = (a, b, m) => { if (JSON.stringify(a) !== JSON.stringify(b)) throw new Error(m + "\n기대 " + JSON.stringify(b) + "\n실제 " + JSON.stringify(a)); };
+  let r = split("3. 다음 중 옳은 것은?\n① 가나\n다라\n② 마바 ③ 사아\n④ 자차\n⑤ 카타 1.5배");
+  eq([r.stem, r.choices, r.style], ["다음 중 옳은 것은?", ["가나 다라", "마바", "사아", "자차", "카타 1.5배"], "①"], "동그라미");
+  r = split("옳지 않은 것은?\n1. 3개월 이내\n2. 제2조 1.5배\n3. 셋\n4. 넷\n5. 다섯");
+  eq([r.choices, r.style], [["3개월 이내", "제2조 1.5배", "셋", "넷", "다섯"], "1."], "숫자 점");
+  r = split("옳은 것은? (1) 하나 (2) 둘 (3) 셋 (4) 넷 (5) 다섯");
+  eq(r.choices, ["하나", "둘", "셋", "넷", "다섯"], "괄호 숫자 한 줄");
+  r = split("옳은 것은? 1) 제1조) 하나 2) 둘 3) 셋 4) 넷 5) 다섯");
+  eq(r.choices, ["제1조) 하나", "둘", "셋", "넷", "다섯"], "닫는 괄호, 조문 번호와 혼동 없음");
+  r = split("옳은 것을 모두 고른 것은?\nㄱ. 가\nㄴ. 나\n① ㄱ\n② ㄴ\n③ ㄱ, ㄴ\n④ ㄴ, ㄷ\n⑤ ㄱ, ㄴ, ㄷ");
+  eq([r.stem, isComboChoices(r.choices)], ["옳은 것을 모두 고른 것은?\nㄱ. 가\nㄴ. 나", true], "보기 조합형");
+  eq(split("선지가 없는 문장 하나").style, null, "표지 없음");
+  eq(split("① 하나 ② 둘 ③ 셋 ④ 넷").style, null, "4개뿐");
+  eq([detectType("옳지 않은 것은?"), detectType("옳은 것은?"), detectType("해당하지 않는 것은?"), detectType("무엇인가")], ["SELECT_INCORRECT", "SELECT_CORRECT", "SELECT_INCORRECT", ""], "유형");
+  eq([detectSubject("국토의 계획 및 이용에 관한 법령상 용도지역"), detectSubject("공인중개사법령상 중개보수"), detectSubject("무관한 글")], ["PUBLIC_LAW", "BROKER_LAW", ""], "과목");
+  return "자체 검사 9개 모두 통과";
+}
+
+// ---- 화면 ----
+const $ = id => document.getElementById(id);
+const state = { answer: null };
+const SAMPLES = {
+  circled: "7. 공인중개사법령상 중개보수에 관한 설명으로 옳은 것은? (합성 예시)\n① 중개보수의 지급시기는 당사자\n간 약정이 없으면 거래대금 지급이 완료된 날로 한다.\n② 합성 선지 둘\n③ 합성 선지 셋\n④ 합성 선지 넷\n⑤ 합성 선지 다섯",
+  numbered: "23. 국토의 계획 및 이용에 관한 법령상 용도지역에 관한 설명으로 옳지 않은 것은? (합성 예시)\n1. 합성 선지 하나\n2. 건폐율 1.5배 완화 합성 선지\n3. 합성 선지 셋\n4. 합성 선지 넷\n5. 합성 선지 다섯",
+  flat: "주택법령상 주택조합에 관한 설명으로 옳은 것은? (합성 예시) (1) 합성 선지 하나 (2) 합성 선지 둘 (3) 합성 선지 셋 (4) 합성 선지 넷 (5) 합성 선지 다섯",
+};
+
+function renderChoices(choices) {
+  $("choices").innerHTML = "";
+  choices.forEach((c, i) => {
+    const d = document.createElement("div"); d.className = "choice";
+    d.innerHTML = `<b>${CIRCLED[i]}</b><textarea rows="2" data-i="${i}" aria-label="선지 ${i + 1}"></textarea>`;
+    d.querySelector("textarea").value = c;
+    $("choices").appendChild(d);
+  });
+}
+
+function renderAnswer() {
+  $("answer").innerHTML = "";
+  for (let n = 1; n <= 5; n++) {
+    const b = document.createElement("button");
+    b.textContent = n + "번"; b.setAttribute("aria-pressed", String(state.answer === n));
+    b.onclick = () => { state.answer = state.answer === n ? null : n; renderAnswer(); update(); };
+    $("answer").appendChild(b);
+  }
+}
+
+function onPaste() {
+  const raw = $("paste").value;
+  const r = split(raw);
+  $("stem").value = r.stem;
+  renderChoices(r.choices);
+  const t = detectType(r.stem); $("qtype").value = t; $("qtypeHint").textContent = t ? "(자동)" : "";
+  const s = detectSubject(raw); $("subject").value = s; $("subjectHint").textContent = s ? "(자동)" : "";
+  state.answer = null; renderAnswer();
+  const m = [];
+  if (!raw.trim()) m.push(["warn", "문제를 붙여 넣으세요."]);
+  else if (!r.style) m.push(["warn", "선지 번호(① 또는 1. 1) (1))를 5개 찾지 못했습니다. 오른쪽 칸에 직접 나눠 넣으세요."]);
+  else m.push(["ok", `선지 5개로 나눴습니다 (번호 형식: ${r.style}). 오른쪽에서 확인하세요.`]);
+  if (r.style && isComboChoices(r.choices)) m.push(["warn", "보기(ㄱ·ㄴ·ㄷ) 조합형입니다. 선지가 문장이 아니라 분석이 부정확할 수 있습니다."]);
+  $("msgs").innerHTML = m.map(([k, t]) => `<div class="msg ${k}">${t}</div>`).join("");
+  update();
+}
+
+function payload() {
+  return {
+    subject: $("subject").value || null,
+    stem: $("stem").value.trim(),
+    questionType: $("qtype").value || null,
+    choices: [...document.querySelectorAll("#choices textarea")].map((t, i) => ({ number: i + 1, text: squeeze(t.value) })),
+    providedAnswerNumber: state.answer,
+    referenceDate: $("refDate").value || null,
+  };
+}
+
+function problems(p) {
+  const out = [];
+  if (!p.subject) out.push("과목을 고르세요");
+  if (p.subject === "PUBLIC_LAW") out.push("부동산공법은 Spring 반영 전이라 지금 앱은 거절합니다(시험용으로만 확인)");
+  if (!p.stem) out.push("지문이 비었습니다"); else if (p.stem.length > MAX_STEM) out.push(`지문이 ${MAX_STEM}자를 넘습니다`);
+  if (!p.questionType) out.push("문제 유형을 고르세요");
+  p.choices.forEach(c => { if (!c.text) out.push(`${c.number}번 선지가 비었습니다`); else if (c.text.length > MAX_CHOICE) out.push(`${c.number}번 선지가 ${MAX_CHOICE}자를 넘습니다`); });
+  if (!p.providedAnswerNumber) out.push("정답 번호를 고르세요");
+  if (!p.referenceDate) out.push("기준일을 넣으세요");
+  return out;
+}
+
+function update() {
+  const p = payload(), bad = problems(p);
+  $("json").textContent = JSON.stringify(p, null, 2);
+  $("ready").innerHTML = bad.length ? bad.map(t => `<div class="msg warn">${t}</div>`).join("") : `<div class="msg ok">앱에 보낼 수 있는 형식입니다.</div>`;
+}
+
+$("paste").addEventListener("input", onPaste);
+["stem", "qtype", "subject", "refDate"].forEach(id => $(id).addEventListener("input", update));
+$("choices").addEventListener("input", update);
+document.querySelectorAll("[data-sample]").forEach(b => b.onclick = () => { $("paste").value = SAMPLES[b.dataset.sample]; onPaste(); });
+$("clear").onclick = () => { $("paste").value = ""; onPaste(); };
+$("copy").onclick = async () => {
+  const text = $("json").textContent;
+  try { await navigator.clipboard.writeText(text); $("copy").textContent = "복사됨"; }
+  catch { const r = document.createRange(); r.selectNodeContents($("json")); getSelection().removeAllRanges(); getSelection().addRange(r); $("copy").textContent = "선택됨 → Ctrl+C"; }
+  setTimeout(() => $("copy").textContent = "JSON 복사", 1500);
+};
+const d = new Date(); $("refDate").value = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+renderChoices(["", "", "", "", ""]); renderAnswer(); onPaste();
+
+if (location.search.includes("test")) {
+  let msg; try { msg = selfTest(); } catch (e) { msg = "자체 검사 실패: " + e.message; }
+  const box = document.createElement("div"); box.className = "msg " + (msg.startsWith("자체 검사 실패") ? "warn" : "ok");
+  box.id = "selftest"; box.textContent = msg; box.style.whiteSpace = "pre-wrap";
+  document.querySelector("main").prepend(box);
+}
+</script>
+</body>
+</html>

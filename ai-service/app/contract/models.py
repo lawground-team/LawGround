@@ -326,3 +326,162 @@ class ModelState(Strict):
 class ReadyOutput(Strict):
     status: ReadyStatus
     models: Annotated[list[ModelState], Field(max_length=20)]
+
+
+# ---------------------------------------------------------------------------
+# 0.2.0-draft (제안, docs/api/proposal-0.2.0-statement-and-similar.md). 새 경로만 이 버전 헤더를 받는다. 기존 0.1.0 경로는 그대로.
+# ---------------------------------------------------------------------------
+CONTRACT_VERSION_02 = "0.2.0-draft"
+Subject = Annotated[StrictStr, Field(pattern="^(BROKER_LAW|PUBLIC_LAW)$")]
+TAG_CODES = ("TIMING", "CONDITION", "ACTOR", "CONCEPT", "NUMBER")     # choice-tags-v1 (2026-11-09 확정)
+
+
+def _tag_code(v: str) -> str:
+    if v not in TAG_CODES:
+        raise ValueError(f"태그 코드는 {TAG_CODES} 중 하나다")
+    return v
+
+
+TagCode = Annotated[StrictStr, AfterValidator(_tag_code)]
+
+
+class StatementVerdict(str, Enum):
+    CONSISTENT = "CONSISTENT"        # 조문과 일치
+    INCONSISTENT = "INCONSISTENT"    # 조문과 어긋남
+    HOLD = "HOLD"                    # 판단 보류
+
+
+STATEMENT_REASONS = {StatementVerdict.CONSISTENT: {"SUFFICIENT_EVIDENCE"}, StatementVerdict.INCONSISTENT: {"CONTRADICTED_BY_LAW"},
+                     StatementVerdict.HOLD: {"INSUFFICIENT_EVIDENCE", "NO_VERIFIED_QUOTE", "INCONSISTENT_ANALYSIS"}}
+
+
+class StatementInput(Strict):
+    subject: Subject
+    text: _text(2000)
+    contextStem: Optional[Annotated[StrictStr, Field(max_length=500)]]     # required + nullable
+    referenceDate: date
+
+
+class VerifyStatementRequest(Strict):
+    requestId: UUID
+    statement: StatementInput
+    referenceDate: date
+    candidates: Annotated[list[VerifyCandidate], Field(min_length=1, max_length=5)]
+
+    @model_validator(mode="after")
+    def _same_date_unique(self):
+        if self.referenceDate != self.statement.referenceDate:
+            raise ValueError("referenceDate 와 statement.referenceDate 가 달라서는 안 된다")
+        ids = [c.chunkId for c in self.candidates]
+        if len(set(ids)) != len(ids):
+            raise ValueError("candidates 의 chunkId 가 중복됐다")
+        return self
+
+
+class WrongSpan(Strict):
+    statementStart: Annotated[StrictInt, Field(ge=0)]
+    statementEnd: Annotated[StrictInt, Field(ge=1)]
+    lawExpression: _text(500)
+    evidenceKey: _short(80)
+
+
+class StatementTag(Strict):
+    code: TagCode
+
+
+class VerifyStatementResponse(Strict):
+    verdict: StatementVerdict
+    reasonCode: _short(80)
+    summary: _text(10000)
+    evidences: Annotated[list[Evidence], Field(max_length=50)]
+    wrongSpans: Annotated[list[WrongSpan], Field(max_length=10)]
+    correctedStatement: Optional[_text(2000)]
+    tags: Annotated[list[StatementTag], Field(max_length=5)]
+    tagSetVersion: Optional[_short(80)]
+    modelRevision: Version
+    promptVersion: Version
+
+    @model_validator(mode="after")
+    def _consistency(self):
+        keys = [e.evidenceKey for e in self.evidences]
+        if len(set(keys)) != len(keys):
+            raise ValueError("evidenceKey 는 응답 안에서 유일해야 한다")
+        if self.reasonCode not in STATEMENT_REASONS[self.verdict]:
+            raise ValueError(f"{self.verdict.value} 에 허용되지 않는 reasonCode: {self.reasonCode}")
+        if self.verdict != StatementVerdict.HOLD and not self.evidences:
+            raise ValueError("CONSISTENT/INCONSISTENT 는 근거가 1개 이상 필요하다")
+        if self.verdict == StatementVerdict.INCONSISTENT:
+            if not self.wrongSpans or self.correctedStatement is None:
+                raise ValueError("INCONSISTENT 는 wrongSpans 1개 이상과 correctedStatement 가 필요하다")
+        elif self.wrongSpans or self.correctedStatement is not None or self.tags:
+            raise ValueError("CONSISTENT/HOLD 는 wrongSpans=[], correctedStatement=null, tags=[] 여야 한다")
+        for w in self.wrongSpans:
+            if not w.statementStart < w.statementEnd:
+                raise ValueError("statementStart < statementEnd 여야 한다")
+            if w.evidenceKey not in keys:
+                raise ValueError(f"wrongSpans 가 존재하지 않는 evidenceKey 를 참조한다: {w.evidenceKey}")
+        if self.tags and self.tagSetVersion is None:
+            raise ValueError("tags 가 있으면 tagSetVersion 이 필요하다")
+        return self
+
+
+class Truth(str, Enum):
+    TRUE = "TRUE"          # 기출에서 맞는 문장
+    FALSE = "FALSE"        # 틀린 문장
+    UNKNOWN = "UNKNOWN"    # 조합형 등 자동 판정 불가
+
+
+class VariationItemIn(Strict):
+    itemId: _short(80)
+    text: _text(2000)
+    truth: Truth
+
+
+class VariationDiffRequest(Strict):
+    requestId: UUID
+    subject: Subject
+    text: _text(2000)
+    items: Annotated[list[VariationItemIn], Field(min_length=1, max_length=5)]
+
+    @model_validator(mode="after")
+    def _unique(self):
+        ids = [i.itemId for i in self.items]
+        if len(set(ids)) != len(ids):
+            raise ValueError("items 의 itemId 가 중복됐다")
+        return self
+
+
+class DiffPart(Strict):
+    type: TagCode
+    userStart: Annotated[StrictInt, Field(ge=0)]       # 사용자 문장 [userStart, userEnd) code point. 기출에만 있는 말이면 빈 구간(start==end)
+    userEnd: Annotated[StrictInt, Field(ge=0)]
+    itemStart: Annotated[StrictInt, Field(ge=0)]
+    itemEnd: Annotated[StrictInt, Field(ge=0)]
+    userText: Annotated[StrictStr, Field(max_length=2000)]
+    itemText: Annotated[StrictStr, Field(max_length=2000)]
+
+    @model_validator(mode="after")
+    def _order(self):
+        if self.userStart > self.userEnd or self.itemStart > self.itemEnd or (self.userStart == self.userEnd and self.itemStart == self.itemEnd):
+            raise ValueError("diff 구간은 start ≤ end 이고, 두 쪽이 모두 비어서는 안 된다")
+        if len(self.userText) != self.userEnd - self.userStart or len(self.itemText) != self.itemEnd - self.itemStart:
+            raise ValueError("userText/itemText 길이는 구간 길이와 같아야 한다")
+        return self
+
+
+class VariationItemOut(Strict):
+    itemId: _short(80)
+    similarity: Annotated[float, Field(strict=True, ge=0, le=1)]
+    diff: Annotated[list[DiffPart], Field(max_length=10)]
+
+
+class StudyTip(Strict):
+    categories: Annotated[list[TagCode], Field(min_length=1, max_length=2)]
+    text: _text(1000)
+
+
+class VariationDiffResponse(Strict):
+    items: Annotated[list[VariationItemOut], Field(min_length=1, max_length=5)]     # 요청 순서 그대로
+    tip: Optional[StudyTip]
+    tagSetVersion: _short(80)
+    algorithmVersion: Version

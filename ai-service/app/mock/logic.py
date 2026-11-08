@@ -53,6 +53,13 @@ def _evidence(cand: M.VerifyCandidate, key: str) -> M.Evidence:
     return M.Evidence(evidenceKey=key, chunkId=cand.chunkId, quote=quote, start=start, end=start + len(quote))
 
 
+def verify_statement(req: M.VerifyStatementRequest) -> M.VerifyStatementResponse:
+    """(Mock) 고정 응답: 첫 후보 앞부분을 인용해 CONSISTENT. Spring 개발용이며 실제 판정이 아니다."""
+    return M.VerifyStatementResponse(verdict="CONSISTENT", reasonCode="SUFFICIENT_EVIDENCE", summary="(Mock) 고정 응답이다. 실제 판정이 아니다.",
+                                     evidences=[_evidence(req.candidates[0], "ev-1")], wrongSpans=[], correctedStatement=None, tags=[],
+                                     tagSetVersion=None, modelRevision="mock-llm-0", promptVersion="mock-statement-0")
+
+
 def verify(req: M.VerifyRequest, scenario: str = "") -> M.VerifyResponse:
     q, cand = req.questionSnapshot, req.candidates[0]
     base = dict(modelRevision="mock-llm-0", promptVersion="mock-verify-0")

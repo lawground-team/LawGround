@@ -1,0 +1,642 @@
+openapi: 3.1.0
+info:
+  title: LawGround Python AI 내부 API — 0.2.0-draft 제안 경로
+  description: 'docs/api/proposal-0.2.0-statement-and-similar.md 의 Python 쪽 경로. 헤더
+    X-Contract-Version: 0.2.0-draft. 0.1.0 경로는 openapi.yaml 그대로.'
+  version: 0.2.0-draft
+paths:
+  /internal/v1/verify-statement:
+    post:
+      tags:
+      - 0.2.0-draft
+      summary: Verify Statement
+      description: 문장 하나 확인(제안). /verify 와 같은 VERIFY_BACKEND 와 같은 LLM 클라이언트를 쓴다.
+      operationId: verify_statement_internal_v1_verify_statement_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyStatementRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyStatementResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '413':
+          description: Content Too Large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '422':
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '504':
+          description: Gateway Timeout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+  /internal/v1/variation-diff:
+    post:
+      tags:
+      - 0.2.0-draft
+      summary: Variation Diff
+      description: '사용자 문장 vs 기출 선지 1~5개: 바뀐 구간·태그·공부 팁(제안). 규칙 기반이라 모델 설정 없이 항상 켜져
+        있다.'
+      operationId: variation_diff_internal_v1_variation_diff_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VariationDiffRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VariationDiffResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '413':
+          description: Content Too Large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '422':
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+        '504':
+          description: Gateway Timeout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOut'
+components:
+  schemas:
+    CandidateMetadata:
+      properties:
+        articleId:
+          type: string
+          format: uuid
+          title: Articleid
+        lawVersionId:
+          type: string
+          format: uuid
+          title: Lawversionid
+        lawTitle:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Lawtitle
+        articleLabel:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Articlelabel
+        effectiveFrom:
+          type: string
+          format: date
+          title: Effectivefrom
+        effectiveTo:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Effectiveto
+      additionalProperties: false
+      type: object
+      required:
+      - articleId
+      - lawVersionId
+      - lawTitle
+      - articleLabel
+      - effectiveFrom
+      - effectiveTo
+      title: CandidateMetadata
+    DiffPart:
+      properties:
+        type:
+          type: string
+          title: Type
+        userStart:
+          type: integer
+          minimum: 0.0
+          title: Userstart
+        userEnd:
+          type: integer
+          minimum: 0.0
+          title: Userend
+        itemStart:
+          type: integer
+          minimum: 0.0
+          title: Itemstart
+        itemEnd:
+          type: integer
+          minimum: 0.0
+          title: Itemend
+        userText:
+          type: string
+          maxLength: 2000
+          title: Usertext
+        itemText:
+          type: string
+          maxLength: 2000
+          title: Itemtext
+      additionalProperties: false
+      type: object
+      required:
+      - type
+      - userStart
+      - userEnd
+      - itemStart
+      - itemEnd
+      - userText
+      - itemText
+      title: DiffPart
+    ErrorCode:
+      type: string
+      enum:
+      - INVALID_REQUEST
+      - RATE_LIMITED
+      - MODEL_NOT_READY
+      - MODEL_TIMEOUT
+      - INTERNAL_ERROR
+      - UNAUTHORIZED
+      - UNSUPPORTED_CONTRACT_VERSION
+      - MODEL_REVISION_MISMATCH
+      - INPUT_TOO_LONG
+      - PAYLOAD_TOO_LARGE
+      - MODEL_OUTPUT_INVALID
+      - MODEL_UPSTREAM_ERROR
+      - IDEMPOTENCY_CONFLICT
+      title: ErrorCode
+    ErrorOut:
+      properties:
+        code:
+          $ref: '#/components/schemas/ErrorCode'
+        message:
+          type: string
+          maxLength: 500
+          minLength: 1
+          title: Message
+        requestId:
+          type: string
+          format: uuid
+          title: Requestid
+        timestamp:
+          type: string
+          format: date-time
+          title: Timestamp
+        retryable:
+          type: boolean
+          title: Retryable
+      additionalProperties: false
+      type: object
+      required:
+      - code
+      - message
+      - requestId
+      - timestamp
+      - retryable
+      title: ErrorOut
+    Evidence:
+      properties:
+        evidenceKey:
+          type: string
+          maxLength: 80
+          minLength: 1
+          title: Evidencekey
+        chunkId:
+          type: string
+          format: uuid
+          title: Chunkid
+        quote:
+          type: string
+          maxLength: 20000
+          minLength: 1
+          title: Quote
+        start:
+          type: integer
+          minimum: 0.0
+          title: Start
+        end:
+          type: integer
+          minimum: 0.0
+          title: End
+      additionalProperties: false
+      type: object
+      required:
+      - evidenceKey
+      - chunkId
+      - quote
+      - start
+      - end
+      title: Evidence
+    StatementInput:
+      properties:
+        subject:
+          type: string
+          pattern: ^(BROKER_LAW|PUBLIC_LAW)$
+          title: Subject
+        text:
+          type: string
+          maxLength: 2000
+          minLength: 1
+          title: Text
+        contextStem:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Contextstem
+        referenceDate:
+          type: string
+          format: date
+          title: Referencedate
+      additionalProperties: false
+      type: object
+      required:
+      - subject
+      - text
+      - contextStem
+      - referenceDate
+      title: StatementInput
+    StatementTag:
+      properties:
+        code:
+          type: string
+          title: Code
+      additionalProperties: false
+      type: object
+      required:
+      - code
+      title: StatementTag
+    StatementVerdict:
+      type: string
+      enum:
+      - CONSISTENT
+      - INCONSISTENT
+      - HOLD
+      title: StatementVerdict
+    StudyTip:
+      properties:
+        categories:
+          items:
+            type: string
+          type: array
+          maxItems: 2
+          minItems: 1
+          title: Categories
+        text:
+          type: string
+          maxLength: 1000
+          minLength: 1
+          title: Text
+      additionalProperties: false
+      type: object
+      required:
+      - categories
+      - text
+      title: StudyTip
+    Truth:
+      type: string
+      enum:
+      - 'TRUE'
+      - 'FALSE'
+      - UNKNOWN
+      title: Truth
+    VariationDiffRequest:
+      properties:
+        requestId:
+          type: string
+          format: uuid
+          title: Requestid
+        subject:
+          type: string
+          pattern: ^(BROKER_LAW|PUBLIC_LAW)$
+          title: Subject
+        text:
+          type: string
+          maxLength: 2000
+          minLength: 1
+          title: Text
+        items:
+          items:
+            $ref: '#/components/schemas/VariationItemIn'
+          type: array
+          maxItems: 5
+          minItems: 1
+          title: Items
+      additionalProperties: false
+      type: object
+      required:
+      - requestId
+      - subject
+      - text
+      - items
+      title: VariationDiffRequest
+    VariationDiffResponse:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/VariationItemOut'
+          type: array
+          maxItems: 5
+          minItems: 1
+          title: Items
+        tip:
+          anyOf:
+          - $ref: '#/components/schemas/StudyTip'
+          - type: 'null'
+        tagSetVersion:
+          type: string
+          maxLength: 80
+          minLength: 1
+          title: Tagsetversion
+        algorithmVersion:
+          type: string
+          maxLength: 160
+          minLength: 1
+          title: Algorithmversion
+      additionalProperties: false
+      type: object
+      required:
+      - items
+      - tip
+      - tagSetVersion
+      - algorithmVersion
+      title: VariationDiffResponse
+    VariationItemIn:
+      properties:
+        itemId:
+          type: string
+          maxLength: 80
+          minLength: 1
+          title: Itemid
+        text:
+          type: string
+          maxLength: 2000
+          minLength: 1
+          title: Text
+        truth:
+          $ref: '#/components/schemas/Truth'
+      additionalProperties: false
+      type: object
+      required:
+      - itemId
+      - text
+      - truth
+      title: VariationItemIn
+    VariationItemOut:
+      properties:
+        itemId:
+          type: string
+          maxLength: 80
+          minLength: 1
+          title: Itemid
+        similarity:
+          type: number
+          maximum: 1.0
+          minimum: 0.0
+          title: Similarity
+        diff:
+          items:
+            $ref: '#/components/schemas/DiffPart'
+          type: array
+          maxItems: 10
+          title: Diff
+      additionalProperties: false
+      type: object
+      required:
+      - itemId
+      - similarity
+      - diff
+      title: VariationItemOut
+    VerifyCandidate:
+      properties:
+        chunkId:
+          type: string
+          format: uuid
+          title: Chunkid
+        sourceText:
+          type: string
+          maxLength: 200000
+          minLength: 1
+          title: Sourcetext
+        metadata:
+          $ref: '#/components/schemas/CandidateMetadata'
+      additionalProperties: false
+      type: object
+      required:
+      - chunkId
+      - sourceText
+      - metadata
+      title: VerifyCandidate
+    VerifyStatementRequest:
+      properties:
+        requestId:
+          type: string
+          format: uuid
+          title: Requestid
+        statement:
+          $ref: '#/components/schemas/StatementInput'
+        referenceDate:
+          type: string
+          format: date
+          title: Referencedate
+        candidates:
+          items:
+            $ref: '#/components/schemas/VerifyCandidate'
+          type: array
+          maxItems: 5
+          minItems: 1
+          title: Candidates
+      additionalProperties: false
+      type: object
+      required:
+      - requestId
+      - statement
+      - referenceDate
+      - candidates
+      title: VerifyStatementRequest
+    VerifyStatementResponse:
+      properties:
+        verdict:
+          $ref: '#/components/schemas/StatementVerdict'
+        reasonCode:
+          type: string
+          maxLength: 80
+          minLength: 1
+          title: Reasoncode
+        summary:
+          type: string
+          maxLength: 10000
+          minLength: 1
+          title: Summary
+        evidences:
+          items:
+            $ref: '#/components/schemas/Evidence'
+          type: array
+          maxItems: 50
+          title: Evidences
+        wrongSpans:
+          items:
+            $ref: '#/components/schemas/WrongSpan'
+          type: array
+          maxItems: 10
+          title: Wrongspans
+        correctedStatement:
+          anyOf:
+          - type: string
+            maxLength: 2000
+            minLength: 1
+          - type: 'null'
+          title: Correctedstatement
+        tags:
+          items:
+            $ref: '#/components/schemas/StatementTag'
+          type: array
+          maxItems: 5
+          title: Tags
+        tagSetVersion:
+          anyOf:
+          - type: string
+            maxLength: 80
+            minLength: 1
+          - type: 'null'
+          title: Tagsetversion
+        modelRevision:
+          type: string
+          maxLength: 160
+          minLength: 1
+          title: Modelrevision
+        promptVersion:
+          type: string
+          maxLength: 160
+          minLength: 1
+          title: Promptversion
+      additionalProperties: false
+      type: object
+      required:
+      - verdict
+      - reasonCode
+      - summary
+      - evidences
+      - wrongSpans
+      - correctedStatement
+      - tags
+      - tagSetVersion
+      - modelRevision
+      - promptVersion
+      title: VerifyStatementResponse
+    WrongSpan:
+      properties:
+        statementStart:
+          type: integer
+          minimum: 0.0
+          title: Statementstart
+        statementEnd:
+          type: integer
+          minimum: 1.0
+          title: Statementend
+        lawExpression:
+          type: string
+          maxLength: 500
+          minLength: 1
+          title: Lawexpression
+        evidenceKey:
+          type: string
+          maxLength: 80
+          minLength: 1
+          title: Evidencekey
+      additionalProperties: false
+      type: object
+      required:
+      - statementStart
+      - statementEnd
+      - lawExpression
+      - evidenceKey
+      title: WrongSpan

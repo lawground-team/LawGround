@@ -41,6 +41,21 @@ async def rerank(req: M.RerankRequest, _=Depends(guard)):
     return logic.rerank(req)
 
 
+guard02 = make_guard(lambda: os.environ.get(TOKEN_ENV, DEV_TOKEN), allow_mock_scenarios=True, version=M.CONTRACT_VERSION_02)
+
+
+# 0.2.0-draft 제안 경로: Spring 개발용 Mock. 0.1.0 OpenAPI(openapi.json)에 섞이지 않게 문서에서는 뺀다(openapi-0.2.0-draft.yaml 참고)
+@app.post(P + "/verify-statement", response_model=M.VerifyStatementResponse, include_in_schema=False)
+async def verify_statement(req: M.VerifyStatementRequest, _=Depends(guard02)):
+    return logic.verify_statement(req)
+
+
+@app.post(P + "/variation-diff", response_model=M.VariationDiffResponse, include_in_schema=False)
+async def variation_diff(req: M.VariationDiffRequest, _=Depends(guard02)):
+    from app.services.variation import variation_diff as run       # 규칙 기반이라 Mock 도 실제 계산을 쓴다
+    return run(req)
+
+
 @app.post(P + "/verify", response_model=M.VerifyResponse, responses=ERR, tags=["verify"])
 async def verify(req: M.VerifyRequest, scenario: str = Depends(guard)):
     return logic.verify(req, scenario)

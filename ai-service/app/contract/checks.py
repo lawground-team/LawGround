@@ -43,3 +43,24 @@ def check_verify(req: VerifyRequest, resp: VerifyResponse):
         _need(src[e.start:e.end] == e.quote, f"sourceText[start:end] != quote ({e.evidenceKey})")
     if resp.verdict.value in ("SUPPORTED", "REJECTED"):
         _need(len(resp.evidences) >= 1, "[제안] SUPPORTED/REJECTED 는 근거가 1개 이상 필요하다")
+
+
+def check_verify_statement(req, resp):
+    """0.2.0-draft /verify-statement: 인용은 원문 그대로, 틀린 구간은 사용자 문장 안에 있어야 한다."""
+    text = {c.chunkId: c.sourceText for c in req.candidates}
+    for e in resp.evidences:
+        _need(e.chunkId in text, f"후보 밖 chunkId 인용 금지: {e.chunkId}")
+        src = text[e.chunkId]
+        _need(0 <= e.start < e.end <= len(src) and src[e.start:e.end] == e.quote, f"sourceText[start:end] != quote ({e.evidenceKey})")
+    n = len(req.statement.text)
+    for w in resp.wrongSpans:
+        _need(0 <= w.statementStart < w.statementEnd <= n, f"wrongSpans 범위 오류: {w.statementStart}..{w.statementEnd} / {n}")
+
+
+def check_variation_diff(req, resp):
+    _need([i.itemId for i in resp.items] == [i.itemId for i in req.items], "items 의 itemId·순서가 요청과 같아야 한다")
+    texts = {i.itemId: i.text for i in req.items}
+    for o in resp.items:
+        for d in o.diff:
+            _need(req.text[d.userStart:d.userEnd] == d.userText and d.userEnd <= len(req.text), f"userText 위치 오류 ({o.itemId})")
+            _need(texts[o.itemId][d.itemStart:d.itemEnd] == d.itemText and d.itemEnd <= len(texts[o.itemId]), f"itemText 위치 오류 ({o.itemId})")

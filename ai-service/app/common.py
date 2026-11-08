@@ -78,7 +78,7 @@ MOCK_OPS = {
 }
 
 
-def make_guard(token_getter: Callable[[], Optional[str]], allow_mock_scenarios: bool):
+def make_guard(token_getter: Callable[[], Optional[str]], allow_mock_scenarios: bool, version: str = M.CONTRACT_VERSION):
     """인증 → 계약 버전 → 본문 크기 → 중복 키·후행 JSON → 요청 ID 일치 → (Mock 만) 시나리오 순으로 확인한다.
     실제 서버는 토큰이 설정되지 않았으면 모든 요청을 거절하고(fail closed), X-Mock-Scenario 를 무시한다."""
     async def guard(request: Request):
@@ -89,9 +89,9 @@ def make_guard(token_getter: Callable[[], Optional[str]], allow_mock_scenarios: 
         scenario = request.headers.get("x-mock-scenario", "") if allow_mock_scenarios else ""
         if request.method == "GET":
             return scenario
-        if request.headers.get("x-contract-version") != M.CONTRACT_VERSION:
+        if request.headers.get("x-contract-version") != version:
             raise ContractError(400, M.ErrorCode.UNSUPPORTED_CONTRACT_VERSION,
-                                f"지원하는 계약 버전은 {M.CONTRACT_VERSION} 이다", False, rid)
+                                f"지원하는 계약 버전은 {version} 이다", False, rid)
         raw = await request.body()
         if len(raw) > MAX_BODY:
             raise ContractError(413, M.ErrorCode.PAYLOAD_TOO_LARGE, "요청 본문이 상한을 넘었다", False, rid)

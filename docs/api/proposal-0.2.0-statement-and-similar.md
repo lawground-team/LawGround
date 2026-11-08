@@ -1,6 +1,6 @@
 # [제안] 0.2.0-draft — "이 문장만 확인" + "비슷한 기출" 기능 계약
 
-- 작성: 임수종 측(Python), 2026-11-09 / 상태: **제안, 합의 전**. 윤영주 님 검토 후 확정한다.
+- 작성: 임수종 측(Python), 2026-11-09 / 상태: **제안, 합의 전**(Python 쪽 경로는 구현됨, 아래 '구현 현황'). 윤영주 님 검토 후 확정한다.
 - 대상 기능
   - **② 문장 확인**: 선지 하나(문장 1개)만 넣으면 현행 법령으로 맞는지 판정하고, 근거 인용과 틀린 부분을 보여 준다.
   - **③ 비슷한 기출**: 그 문장과 같은 쟁점의 기출 선지 3개를 O/X와 함께 보여 주고, 어디를 어떻게 바꿔 출제했는지와 공부 팁을 준다.
@@ -9,6 +9,22 @@
   - 검색은 기존 Spring LIVE 검색(Hybrid/RRF → rerank 상위 5)을 그대로 재사용한다.
   - ③은 LLM 없이 동작한다(빠르고 무료, 결정적). ②만 LLM(Gemini)을 쓴다.
   - 헤더(`X-Internal-Token`, `X-Request-Id`, `X-Contract-Version`), 오류 DTO, 인용 규칙(`[start,end)` Unicode code point, `sourceText` 기준)은 기존과 같다. 새 경로의 `X-Contract-Version`은 `0.2.0-draft`.
+
+## 구현 현황 (2026-11-09, Python 쪽)
+
+| 항목 | 상태 | 위치 |
+|---|---|---|
+| `POST /internal/v1/verify-statement` (② 판정, LLM) | **구현·테스트 완료**. `VERIFY_BACKEND=gemini`일 때 /verify와 같은 Gemini 클라이언트, `mock`이면 고정 응답 | `app/services/statement.py`, `promptVersion=statement-v1` |
+| `POST /internal/v1/variation-diff` (③ 변형 비교, 규칙) | **구현·테스트 완료**. 권장안(4절)대로 Spring이 고른 기출 선지 1~5개를 받아 바뀐 구간·태그·공부 팁을 돌려준다. 모델 설정 없이 항상 켜짐 | `app/services/variation.py`, `algorithmVersion=variation-v1` |
+| 기출 선지 은행 생성(Spring 적재용) | **완료**. 25~36회 범위 안 790문제 → 선지 3,950개(TRUE 1,519 / FALSE 1,726 / UNKNOWN 705). 선지가 5개로 안 나뉜 12문제(조합형 분리 실패·조문 빈칸형) 제외. 저장소에는 올리지 않음 | `scripts/build_choice_bank.py` |
+| OpenAPI | `ai-service/openapi-0.2.0-draft.yaml` (새 경로만). 0.1.0 `openapi.yaml`은 그대로 | `scripts/export_openapi.py` |
+| 헤더 | 새 경로는 `X-Contract-Version: 0.2.0-draft`만 받는다. 기존 경로는 `0.1.0-draft` 그대로 | `app/common.py` |
+
+아래 원안과 달라진 점:
+- 3-1 일관성 규칙 위반 시 **재시도하지 않고** 바로 `HOLD`로 낮춘다(무료 한도 절약). JSON 형식 오류만 1회 다시 묻는다.
+- 3-1 `tags`는 최대 2개(5종 코드만), INCONSISTENT일 때만.
+- 3-2 `/similar-items`는 만들지 않았다(권장안 채택) → `/variation-diff`: 요청 `{requestId, subject, text, items:[{itemId, text, truth}] 1~5}`, 응답 `{items:[{itemId, similarity, diff[]}], tip|null, tagSetVersion, algorithmVersion}`. `FEATURE_DISABLED` 새 오류 코드는 필요 없어졌다.
+- 변형 비교는 띄어쓰기·문장부호를 빼고 글자 단위로 비교한다. 글자 유사도 0.55 미만이면 다른 문장으로 보고 `diff=[]`, 바뀐 곳이 4군데 이상이면 공부 팁 집계에서 뺀다(표현만 바꿔 쓴 문장). **품질 평가(6절 Precision@3, 사람 O/X 30문장)는 아직 안 했다.**
 
 ---
 
