@@ -120,7 +120,7 @@ lawground:
       embed: 30s
       tokenize: 30s
       hyde: 60s
-      rerank: 60s
+      rerank: 120s
       verify: 120s
       answer: 120s
   law:
