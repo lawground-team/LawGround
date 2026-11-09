@@ -83,6 +83,15 @@ def validate(doc: dict) -> None:
         need(last == total, f"조문 전체를 덮지 못한다: {a['articleKey']}")
 
 
+def split_points(text: str, limit: int = MAX_SOURCE) -> list[int]:
+    """span 경계. 보통 [0, len]. 20000자를 넘는 조문(공법 별표 등)은 줄 끝에서 끊어 각 조각을 limit 이하로 만든다(줄이 없으면 그냥 자른다)."""
+    cuts = [0]
+    while len(text) - cuts[-1] > limit:
+        nl = text.rfind("\n", cuts[-1] + 1, cuts[-1] + limit)
+        cuts.append(nl + 1 if nl > cuts[-1] else cuts[-1] + limit)
+    return cuts + [len(text)]
+
+
 def build_import(records: list[dict], mst: str, meta: dict, status: str, raw_sha: str = "") -> dict:
     law_name = records[0]["law_name"] if records else meta.get("title")
     if meta.get("title") and records and meta["title"].replace(" ", "") != law_name.replace(" ", ""):
@@ -92,8 +101,11 @@ def build_import(records: list[dict], mst: str, meta: dict, status: str, raw_sha
         if r["kind"] not in USE_KINDS or not r["article_label"]:
             continue
         text = r["text"]
+        cuts = split_points(text)
+        spans = [{"start": a, "end": b, "searchText": chunk_text(r if len(cuts) == 2 else {**r, "text": text[a:b]}, strip_notes=True)}
+                 for a, b in zip(cuts, cuts[1:])]
         arts.append({"articleKey": r["article_label"], "articleLabel": f"{r['article_label']} {r['title']}".strip(), "sourceText": text,
-                     "spans": [{"start": 0, "end": len(text), "searchText": chunk_text(r, strip_notes=True)}]})
+                     "spans": spans})
     doc = {"sourceProvider": PROVIDER, "sourceLawId": meta["law_id"], "sourceVersionKey": mst, "title": law_name,
            "effectiveFrom": meta["effective_from"], "effectiveTo": None, "applicabilityStatus": status, "sourceUrl": source_url(mst),
            "rawPayload": {"source": "law.go.kr DRF lawService", "mst": mst, "parser": "law_fetch.py articles", "rawXmlSha256": raw_sha,

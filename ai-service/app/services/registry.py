@@ -4,7 +4,7 @@
   EMBED_BACKEND   = off | bge-m3 | mock
   RERANK_BACKEND  = off | bge-reranker | mock
   HYDE_BACKEND    = off | mock        (LLM 미정, 실제 구현 없음)
-  VERIFY_BACKEND  = off | mock | gemini   (gemini: LLM_API_KEY, LLM_MODEL 필요. 선택: LLM_MODEL_REVISION, LLM_TIMEOUT_SECONDS, LLM_MAX_INPUT_CHARS)
+  VERIFY_BACKEND  = off | mock | gemini   (gemini: LLM_API_KEY, LLM_MODEL 필요. 선택: LLM_MODEL_REVISION, LLM_TIMEOUT_SECONDS, LLM_MAX_INPUT_CHARS, VERIFY_TAGS)
   EMBED_MODEL_REVISION / RERANK_MODEL_REVISION = Hugging Face 커밋 해시(40자 hex). 비우면 캐시된 최신 스냅샷의 해시를 쓴다.
 """
 import os

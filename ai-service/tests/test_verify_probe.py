@@ -162,6 +162,43 @@ class RobustnessTests(Base):
         self.assertEqual(self.sleeps, [5])                                       # 한 번만 쉬고 한 번만 다시 시도했다
         self.assertEqual(len(judge.calls), 2)                                    # 최초 1회 + 다시 시도 1회, 딱 두 번만 불렀다
 
+    def test_results_are_reported_right_after_each_call_not_at_the_end(self):
+        truth = {"중개보수의 지급시기에 관한 설명으로 옳은 것은?": 2, "다음 설명 중 옳지 않은 것은?": 4}
+        events = []
+        judge = Judge(truth)
+        original = judge.generate
+        judge.generate = lambda system, user: (events.append("호출"), original(system, user))[1]
+        v = V.LlmVerifier(judge)
+        P.run_probe(rows(), self.chunks, self.raw, self.ret, v, limit=2, sleeper=lambda s: events.append("쉼"),
+                    on_start=lambda rid, prov: events.append(f"시작:{rid}"), on_result=lambda item: events.append(f"결과:{item['id']}"))
+        self.assertEqual(events, ["시작:q-1", "호출", "결과:q-1", "시작:q-2", "호출", "결과:q-2"])      # 호출 직후 바로 결과를 알린다
+
+    def test_show_records_the_original_llm_verdict_quotes_with_labels_and_relations(self):
+        truth = {"중개보수의 지급시기에 관한 설명으로 옳은 것은?": 2, "다음 설명 중 옳지 않은 것은?": 4}
+        (res, _), _ = self.probe(Judge(truth), limit=1, negative=True, show=True)
+        d = res[0]["detail"]
+        self.assertEqual((d["llm_verdict"], res[0]["verdict"]), ("REJECTED", "REJECTED"))
+        self.assertEqual(sorted(d["relations"]), [1, 2, 3, 4, 5])
+        self.assertTrue(d["quotes"] and all(q["label"] == "공인중개사법 제1조" for q in d["quotes"]))        # 인용이 어느 조문에서 왔는지 표시
+        (res2, _), _ = self.probe(Judge(truth), limit=1)
+        self.assertNotIn("detail", res2[0])                                                             # 켜지 않으면 상세를 만들지 않는다
+
+    def test_show_exposes_why_a_verdict_was_downgraded(self):
+        truth = {"중개보수의 지급시기에 관한 설명으로 옳은 것은?": 2, "다음 설명 중 옳지 않은 것은?": 4}
+        (res, _), _ = self.probe(Judge(truth, always="SUPPORTED", consistent=False), limit=1, negative=True, show=True)
+        self.assertEqual((res[0]["verdict"], res[0]["detail"]["llm_verdict"]), ("HOLD", "SUPPORTED"))    # LLM 은 SUPPORTED 라 했지만 모순이라 HOLD
+
+    def test_retried_flag_comes_from_the_verifiers_call_count(self):
+        truth = {"중개보수의 지급시기에 관한 설명으로 옳은 것은?": 2, "다음 설명 중 옳지 않은 것은?": 4}
+        busy = V.LlmError("upstream", "외부 LLM 서버 오류(503)", retryable=True)
+        judge = Judge(truth, fail=[busy, None])
+        v = V.LlmVerifier(judge, transient_retries=1, sleeper=lambda s: None)
+        res, _ = P.run_probe(rows(), self.chunks, self.raw, self.ret, v, limit=1, sleeper=lambda s: None)
+        self.assertEqual((res[0]["verdict"], res[0]["retried"], len(judge.calls)), ("SUPPORTED", True, 2))
+        judge2 = Judge(truth)
+        res2, _ = P.run_probe(rows(), self.chunks, self.raw, self.ret, V.LlmVerifier(judge2), limit=1, sleeper=lambda s: None)
+        self.assertEqual((res2[0]["retried"], len(judge2.calls)), (False, 1))
+
     def test_output_file_has_neither_key_nor_prompts(self):
         corpus_dir = self.tmp / "law"; corpus_dir.mkdir()
         (corpus_dir / "a.jsonl").write_text((self.tmp / "a.jsonl").read_text(encoding="utf-8"), encoding="utf-8")

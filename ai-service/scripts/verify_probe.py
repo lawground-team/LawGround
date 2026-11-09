@@ -91,21 +91,21 @@ def skip_reason(row: dict) -> str | None:
 
 
 def call_once(verifier, req, sleeper):
-    try:
-        return verifier.verify(req), None
-    except V.LlmError as e:
-        if e.kind == "rate_limited":                 # 한도에 걸리면 안내된 시간만큼 쉬고 한 번만 다시 시도한다
+    """한 번 부르고, 한도 초과(429)는 안내된 시간만큼 쉬고 한 번만 다시 시도한다. 일시적 서버 과부하(5xx) 재시도는 검증기가 한다(서버와 같은 규칙)."""
+    for attempt in (0, 1):
+        try:
+            return verifier.verify(req), None
+        except V.LlmError as e:
+            if e.kind != "rate_limited" or attempt == 1:
+                return None, (e.kind, str(e))
             sleeper(e.retry_after or 2)
-            try:
-                return verifier.verify(req), None
-            except V.LlmError as e2:
-                return None, (e2.kind, str(e2))
-        return None, (e.kind, str(e))
 
 
 def run_probe(rows, chunks, raw, retriever, verifier, *, limit=10, negative=False, sleep=0.0, ref_date=date(2026, 10, 27),
-              sleeper=time.sleep, clock=time.monotonic):
+              sleeper=time.sleep, clock=time.monotonic, show=False, on_start=None, on_result=None):
     results, skipped, used = [], [], 0
+    if show and hasattr(verifier, "keep_raw"):
+        verifier.keep_raw = True                         # LLM 이 처음 낸 판정을 보려는 점검용(서버 기본값은 꺼짐)
     for row in rows:
         why = skip_reason(row)
         if why:
@@ -119,16 +119,25 @@ def run_probe(rows, chunks, raw, retriever, verifier, *, limit=10, negative=Fals
         req = make_request(row, ids, raw, provided, ref_date)
         gold_uuids = {str(chunk_uuid(g)) for g in row["gold"]}
         t0 = clock()
+        if on_start:
+            on_start(row["id"], provided)                # 호출 전에 알려서 오래 걸려도 진행 중임을 보여 준다
         resp, failure = call_once(verifier, req, sleeper)
         err, err_message = failure if failure else (None, None)
         item = {"id": row["id"], "mode": "negative" if negative else "positive", "provided": provided, "answer": row["answer"],
                 "questionType": req.questionSnapshot.questionType.value, "gold_in_candidates": all(g in ids for g in row["gold"]),
-                "secs": round(clock() - t0, 2), "error": err, "error_message": err_message}
+                "secs": round(clock() - t0, 2), "error": err, "error_message": err_message, "retried": getattr(verifier, "last_calls", 1) > 1}
         if resp is not None:
             item.update(verdict=resp.verdict.value, reasonCode=resp.reasonCode, evidences=len(resp.evidences),
                         evidence_in_gold=any(str(e.chunkId) in gold_uuids for e in resp.evidences),
                         choices_present=resp.choiceAnalyses is not None)
+            if show:
+                labels = {str(chunk_uuid(c)): c for c in ids}
+                item["detail"] = {"llm_verdict": (getattr(verifier, "last_raw", None) or {}).get("verdict"), "summary": resp.summary[:200],
+                                  "quotes": [{"label": labels.get(str(e.chunkId), "?"), "quote": e.quote[:120]} for e in resp.evidences],
+                                  "relations": {c.choiceNumber: c.relation.value + "".join(f"[{t.code}]" for t in c.tags) for c in (resp.choiceAnalyses or [])}}
         results.append(item)
+        if on_result:
+            on_result(item)                              # 문제마다 바로 출력한다(전부 끝난 뒤가 아니라)
         if sleep:
             sleeper(sleep)
     return results, skipped
@@ -156,6 +165,7 @@ def main(argv=None):
     ap.add_argument("--corpus-dir", required=True); ap.add_argument("--gold", required=True)
     ap.add_argument("--limit", type=int, default=10); ap.add_argument("--negative", action="store_true")
     ap.add_argument("--sleep", type=float, default=4.0, help="호출 사이 대기(초). 무료 한도를 아끼려는 값이다")
+    ap.add_argument("--show", action="store_true", help="LLM 의 처음 판정, 선지별 관계, 인용 문구를 문제마다 보여 준다")
     ap.add_argument("--out", default=None)
     a = ap.parse_args(argv)
     try:
@@ -171,10 +181,20 @@ def main(argv=None):
     rows = E.load_gold(a.gold, [c["id"] for c in chunks])
     rows = [dict(r) for r in rows]
     print(f"모델: {verifier.name} | 모드: {'negative(틀린 번호)' if a.negative else 'positive(정답 번호)'} | 최대 {a.limit}문제 | 호출 간 대기 {a.sleep}초")
-    results, skipped = run_probe(rows, chunks, raw, retriever, verifier, limit=a.limit, negative=a.negative, sleep=a.sleep)
-    for r in results:
+    def show_start(rid, provided):
+        print(f"  … {rid}  제공 {provided}번 호출 중", flush=True)
+
+    def show_result(r):
         tail = f"오류 {r['error']}: {(r['error_message'] or '')[:200]}" if r["error"] else f"{r['verdict']}({r['reasonCode']}) 인용 {r['evidences']}개, 선지분석 {'O' if r['choices_present'] else 'X'}"
-        print(f"  {r['id']}  제공 {r['provided']}번  {r['secs']:>5.1f}초  {tail}")
+        print(f"  {r['id']}  제공 {r['provided']}번  {r['secs']:>5.1f}초{' (재시도)' if r['retried'] else ''}  {tail}", flush=True)
+        d = r.get("detail")
+        if d:
+            print(f"      LLM 처음 판정: {d['llm_verdict']} → 최종: {r['verdict']} | 선지 관계: " + " ".join(f"{k}:{v}" for k, v in d["relations"].items()), flush=True)
+            for q in d["quotes"]:
+                print(f"      인용 [{q['label']}] {q['quote']}", flush=True)
+
+    results, skipped = run_probe(rows, chunks, raw, retriever, verifier, limit=a.limit, negative=a.negative, sleep=a.sleep,
+                                 show=a.show, on_start=show_start, on_result=show_result)
     s = summarize(results, skipped)
     print("\n요약:", json.dumps(s, ensure_ascii=False))
     if a.out:

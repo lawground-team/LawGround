@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import re
+import time
 from typing import Mapping, Protocol
 from uuid import UUID
 
@@ -24,8 +25,17 @@ import httpx
 from app.contract import models as M
 
 PROMPT_VERSION = "verify-prompt-v1"
+# 선지 분석 태그 5종 (2026-11-09 확정). VERIFY_TAGS=1 일 때만 켠다: Spring 이 아직 tags=[]·tagSetVersion=null 만 받기 때문이다
+# (VerificationWire: VERIFICATION_TAGS_UNSUPPORTED). 켜면 프롬프트가 바뀌므로 Spring 의 AI_VERIFIER_PROMPT_VERSION 도 함께 바꾼다.
+PROMPT_VERSION_TAGS = "verify-prompt-v2-tags"
+TAG_SET_VERSION = "choice-tags-v1"
+TAGS = {"TIMING": "시점·기한", "CONDITION": "조건 추가", "ACTOR": "주체·권한", "CONCEPT": "개념 오인", "NUMBER": "숫자·수치 오류"}
+MAX_TAGS_PER_CHOICE = 2
 DEFAULT_MAX_INPUT_CHARS = 150_000
 DEFAULT_TIMEOUT_SECONDS = 50.0           # 재시도 1회까지 합쳐 100초 < Spring verify 제한 120초
+TRANSIENT_RETRY_BEFORE = 25.0     # 첫 호출이 이 시간(초) 안에 5xx 로 실패했을 때만 다시 부른다(Spring 제한 120초 안에 끝내려는 규칙)
+REPAIR_RETRY_BEFORE = 60.0        # 형식 오류 재시도는 시작 후 이 시간(초) 안일 때만
+DEFAULT_TRANSIENT_BACKOFF = 3.0
 MIN_QUOTE_CHARS = 4
 MAX_QUOTE_CHARS = 20_000
 
@@ -139,6 +149,22 @@ SYSTEM_PROMPT = """당신은 공인중개사법령 기출문제의 정답 근거
  "choices":[{"number":1,"relation":"SUPPORTS|CONTRADICTS|INSUFFICIENT","explanation":"...","correctedText":null,"evidenceIds":["e1"]}]}
 choices 는 number 1~5 를 각각 한 번씩 모두 포함한다."""
 
+_TAG_RULE = ("9. tags: relation 이 CONTRADICTS 인 선지에만, 선지가 조문과 어긋난 방식을 아래 코드에서 1~2개 고른다. 그 외 선지는 빈 배열이다.\n"
+             "   TIMING=시점·기한(기간·기한·시기·효력 발생 시점을 바꿈), CONDITION=조건 추가(조문에 없는 요건·예외를 붙이거나 뺌), "
+             "ACTOR=주체·권한(하는 사람·기관·권한자를 바꿈), CONCEPT=개념 오인(용어·제도·대상을 다른 것과 혼동), "
+             "NUMBER=숫자·수치 오류(금액·비율·면적·횟수 등 숫자를 바꿈). 시점이 숫자로 바뀐 경우(예: 3개월→6개월)는 TIMING 을 먼저 고른다.")
+SYSTEM_PROMPT_TAGS = (SYSTEM_PROMPT
+                      .replace("공인중개사법령 기출문제", "공인중개사 시험(공인중개사법령·부동산공법) 기출문제")
+                      .replace("\n\n[출력 JSON 형식]", "\n" + _TAG_RULE + "\n\n[출력 JSON 형식]")
+                      .replace('"evidenceIds":["e1"]}]}', '"evidenceIds":["e1"],"tags":["TIMING"]}]}'))
+assert SYSTEM_PROMPT_TAGS.count("9. tags") == 1 and '"tags":["TIMING"]' in SYSTEM_PROMPT_TAGS
+
+
+def parse_tags(raw) -> list[M.Tag]:
+    """LLM 이 낸 태그 중 5종 코드만 순서대로 남긴다(중복 제거, 최대 2개). 모르는 코드는 버린다(지어낸 태그를 넘기지 않는다)."""
+    codes = [t.strip().upper() for t in raw if isinstance(t, str)] if isinstance(raw, list) else []
+    return [M.Tag(code=c) for c in dict.fromkeys(c for c in codes if c in TAGS)][:MAX_TAGS_PER_CHOICE]
+
 
 def build_user_prompt(req: M.VerifyRequest, repair_hint: str | None = None) -> str:
     q = req.questionSnapshot
@@ -227,7 +253,7 @@ def build_evidences(raw, candidates: Mapping[UUID, str]) -> tuple[list[M.Evidenc
 NO_EVIDENCE_EXPLANATION = "후보 조문에서 이 선지를 뒷받침하거나 반박하는 인용을 확인하지 못했다."
 
 
-def build_choices(raw, id_map: dict[str, str]) -> list[M.VerifyChoice] | None:
+def build_choices(raw, id_map: dict[str, str], with_tags: bool = False) -> list[M.VerifyChoice] | None:
     if not isinstance(raw, list):
         return None
     by_num: dict[int, dict] = {}
@@ -259,24 +285,47 @@ def build_choices(raw, id_map: dict[str, str]) -> list[M.VerifyChoice] | None:
             rel, explanation, corrected = M.Relation.INSUFFICIENT, NO_EVIDENCE_EXPLANATION, None
         if rel != M.Relation.CONTRADICTS:
             corrected = None
-        out.append(M.VerifyChoice(choiceNumber=n, relation=rel, explanation=explanation, correctedText=corrected, tags=[], evidenceKeys=keys))
+        tags = parse_tags(c.get("tags")) if with_tags and rel == M.Relation.CONTRADICTS else []
+        out.append(M.VerifyChoice(choiceNumber=n, relation=rel, explanation=explanation, correctedText=corrected, tags=tags, evidenceKeys=keys))
     return out
 
 
 class LlmVerifier:
-    def __init__(self, client: LlmClient, *, max_input_chars: int = DEFAULT_MAX_INPUT_CHARS, prompt_version: str = PROMPT_VERSION):
-        self.client, self.max_input_chars, self.prompt_version = client, max_input_chars, prompt_version
+    def __init__(self, client: LlmClient, *, max_input_chars: int = DEFAULT_MAX_INPUT_CHARS, prompt_version: str | None = None,
+                 transient_retries: int = 0, transient_backoff: float = DEFAULT_TRANSIENT_BACKOFF, keep_raw: bool = False,
+                 tags: bool = False, clock=time.monotonic, sleeper=time.sleep):
+        self.tags = tags
+        self.system_prompt = SYSTEM_PROMPT_TAGS if tags else SYSTEM_PROMPT
+        self.client, self.max_input_chars = client, max_input_chars
+        self.prompt_version = prompt_version or (PROMPT_VERSION_TAGS if tags else PROMPT_VERSION)
+        self.transient_retries, self.transient_backoff, self.keep_raw = transient_retries, transient_backoff, keep_raw
+        self.clock, self.sleeper = clock, sleeper
         self.name = f"verify:{client.name}"                       # Spring 은 'verify:<이름>' 형식만 받는다
         self.revision = client.revision
+        self.last_raw: dict | None = None                         # keep_raw 일 때만: LLM 이 처음 낸 판정(점검·시험 도구용)
+        self.last_calls = 0                                       # 마지막 verify 에서 외부 LLM 을 부른 횟수
 
-    def _ask(self, req: M.VerifyRequest) -> dict:
+    def _generate(self, system: str, user: str, started: float, state: dict) -> str:
+        """외부 장애 중 일시적 서버 과부하(5xx)만 한 번 다시 부른다. 시간 초과·한도 초과(429)·거절(4xx)은 다시 부르지 않는다."""
+        while True:
+            state["calls"] += 1
+            try:
+                return self.client.generate(system, user)
+            except LlmError as e:
+                if e.kind == "upstream" and e.retryable and state["transient_left"] > 0 and self.clock() - started < TRANSIENT_RETRY_BEFORE:
+                    state["transient_left"] -= 1
+                    self.sleeper(self.transient_backoff)
+                    continue
+                raise
+
+    def _ask(self, req: M.VerifyRequest, started: float, state: dict) -> dict:
         hint = None
-        for attempt in (0, 1):                                   # 형식 오류에만 1회 다시 묻는다. 외부 장애는 다시 부르지 않는다
-            text = self.client.generate(SYSTEM_PROMPT, build_user_prompt(req, hint))
+        for attempt in (0, 1):                                   # 형식 오류에만 1회 다시 묻는다(시간이 남았을 때만)
+            text = self._generate(self.system_prompt, build_user_prompt(req, hint), started, state)
             try:
                 return parse_json(text)
             except LlmError as e:
-                if attempt == 1:
+                if attempt == 1 or self.clock() - started >= REPAIR_RETRY_BEFORE:
                     raise
                 hint = str(e)
         raise AssertionError("unreachable")
@@ -284,10 +333,18 @@ class LlmVerifier:
     def verify(self, req: M.VerifyRequest) -> M.VerifyResponse:
         if input_chars(req) > self.max_input_chars:
             raise LlmError("input_too_long", f"입력이 상한({self.max_input_chars}자)을 넘었다. 자르지 않고 거절한다")
-        data = self._ask(req)
+        started = self.clock()
+        state = {"calls": 0, "transient_left": self.transient_retries}
+        self.last_raw, self.last_calls = None, 0
+        try:
+            data = self._ask(req, started, state)
+        finally:
+            self.last_calls = state["calls"]
+        if self.keep_raw:
+            self.last_raw = data
         candidates = {c.chunkId: c.sourceText for c in req.candidates}
         evidences, id_map = build_evidences(data.get("evidences"), candidates)
-        choices = build_choices(data.get("choices"), id_map)
+        choices = build_choices(data.get("choices"), id_map, self.tags)
         verdict = M.Verdict(data["verdict"])
         summary = data.get("summary") if isinstance(data.get("summary"), str) and data["summary"].strip() else "요약이 제공되지 않았다."
         summary = summary.strip()[:10000]
@@ -303,7 +360,8 @@ class LlmVerifier:
             if provided != (expected if verdict == M.Verdict.SUPPORTED else opposite):
                 verdict, reason, summary = M.Verdict.HOLD, REASON_INCONSISTENT, "선지 분석과 판정이 서로 맞지 않아 판단을 보류한다."
         return M.VerifyResponse(verdict=verdict, reasonCode=reason, summary=summary, evidences=evidences, choiceAnalyses=choices,
-                                tagSetVersion=None, modelRevision=self.revision, promptVersion=self.prompt_version)
+                                tagSetVersion=TAG_SET_VERSION if self.tags and choices is not None else None,
+                                modelRevision=self.revision, promptVersion=self.prompt_version)
 
 
 def from_env(environ: Mapping[str, str]) -> LlmVerifier:
@@ -316,12 +374,14 @@ def from_env(environ: Mapping[str, str]) -> LlmVerifier:
     try:
         timeout = float(environ.get("LLM_TIMEOUT_SECONDS", DEFAULT_TIMEOUT_SECONDS))
         max_chars = int(environ.get("LLM_MAX_INPUT_CHARS", DEFAULT_MAX_INPUT_CHARS))
-        if not 1 <= timeout <= 55 or max_chars < 1000:
+        transient = int(environ.get("LLM_TRANSIENT_RETRIES", 1))
+        tags = {"": False, "0": False, "false": False, "1": True, "true": True}[environ.get("VERIFY_TAGS", "").strip().lower()]
+        if not 1 <= timeout <= 55 or max_chars < 1000 or not 0 <= transient <= 2:
             raise ValueError
-    except ValueError:
-        raise RuntimeError("LLM_TIMEOUT_SECONDS 는 1~55, LLM_MAX_INPUT_CHARS 는 1000 이상이어야 한다") from None
+    except (ValueError, KeyError):
+        raise RuntimeError("LLM_TIMEOUT_SECONDS 는 1~55, LLM_MAX_INPUT_CHARS 는 1000 이상, LLM_TRANSIENT_RETRIES 는 0~2, VERIFY_TAGS 는 0/1 이어야 한다") from None
     try:
         client = GeminiClient(key, model.strip(), revision=(environ.get("LLM_MODEL_REVISION") or "").strip() or None, timeout=timeout)
     except ValueError as e:
         raise RuntimeError(str(e)) from None
-    return LlmVerifier(client, max_input_chars=max_chars)
+    return LlmVerifier(client, max_input_chars=max_chars, transient_retries=transient, tags=tags)

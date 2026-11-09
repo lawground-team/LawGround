@@ -700,7 +700,7 @@ components:
       properties:
         subject:
           type: string
-          pattern: ^BROKER_LAW$
+          pattern: ^(BROKER_LAW|PUBLIC_LAW)$
           title: Subject
         stem:
           type: string

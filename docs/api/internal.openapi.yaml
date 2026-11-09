@@ -1228,6 +1228,7 @@ components:
           type: string
           enum:
           - BROKER_LAW
+          - PUBLIC_LAW
         stem: &id003
           type: string
           minLength: 1

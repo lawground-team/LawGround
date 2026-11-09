@@ -11,9 +11,9 @@ import os
 
 from app.common import ERR, P, TOKEN_ENV, ContractError, make_guard, register_handlers
 from app.contract import models as M
-from app.contract.checks import check_verify
+from app.contract.checks import check_variation_diff, check_verify, check_verify_statement
 from app.mock import logic
-from app.services import registry, tokenizer
+from app.services import registry, statement, tokenizer, variation
 from app.services.verifier import LlmError
 
 
@@ -28,6 +28,7 @@ app = FastAPI(title="LawGround Python AI 내부 API", version=M.CONTRACT_VERSION
               description="계약 0.1.0-draft(Spring 측 제안). tokenize 는 실제 Kiwi, 나머지는 환경변수로 선택한다.")
 register_handlers(app)
 guard = make_guard(lambda: os.environ.get(TOKEN_ENV), allow_mock_scenarios=False)
+guard02 = make_guard(lambda: os.environ.get(TOKEN_ENV), allow_mock_scenarios=False, version=M.CONTRACT_VERSION_02)   # 0.2.0-draft 새 경로 전용
 
 
 def _off(what: str) -> ContractError:
@@ -119,6 +120,34 @@ def verify(req: M.VerifyRequest, _=Depends(guard)):
         check_verify(req, resp)                      # 계약 자체 검사(인용이 원문과 정확히 같은지 등). 어긋나면 응답하지 않는다
     except Exception:
         raise ContractError(502, M.ErrorCode.MODEL_OUTPUT_INVALID, "검증 결과가 계약 검사를 통과하지 못했다", False)
+    return resp
+
+
+@app.post(P + "/verify-statement", response_model=M.VerifyStatementResponse, responses=ERR, tags=["0.2.0-draft"])
+def verify_statement(req: M.VerifyStatementRequest, _=Depends(guard02)):
+    """문장 하나 확인(제안). /verify 와 같은 VERIFY_BACKEND 와 같은 LLM 클라이언트를 쓴다."""
+    mode = registry.backend("VERIFY_BACKEND")
+    if mode == "mock":
+        return logic.verify_statement(req)
+    v = registry.get_verifier() if mode == "gemini" else None
+    if v is None:
+        raise _off("verify-statement")
+    try:
+        resp = statement.verify_statement(v, req)
+    except LlmError as e:
+        raise _llm_error(e)
+    try:
+        check_verify_statement(req, resp)
+    except Exception:
+        raise ContractError(502, M.ErrorCode.MODEL_OUTPUT_INVALID, "문장 확인 결과가 계약 검사를 통과하지 못했다", False)
+    return resp
+
+
+@app.post(P + "/variation-diff", response_model=M.VariationDiffResponse, responses=ERR, tags=["0.2.0-draft"])
+def variation_diff(req: M.VariationDiffRequest, _=Depends(guard02)):
+    """사용자 문장 vs 기출 선지 1~5개: 바뀐 구간·태그·공부 팁(제안). 규칙 기반이라 모델 설정 없이 항상 켜져 있다."""
+    resp = variation.variation_diff(req)
+    check_variation_diff(req, resp)
     return resp
 
 
