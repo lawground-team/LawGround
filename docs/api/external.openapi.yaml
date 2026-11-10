@@ -1490,6 +1490,7 @@ components:
           type: string
           enum:
           - BROKER_LAW
+          - PUBLIC_LAW
         stem: &id009
           type: string
           minLength: 1
@@ -1723,6 +1724,7 @@ components:
           type: string
           enum:
           - BROKER_LAW
+          - PUBLIC_LAW
         stem:
           type: string
           minLength: 1
@@ -1867,6 +1869,7 @@ components:
           type: string
           enum:
           - BROKER_LAW
+          - PUBLIC_LAW
         referenceDate: *id015
         visibility:
           type: string

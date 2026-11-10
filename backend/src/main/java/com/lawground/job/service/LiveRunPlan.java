@@ -104,8 +104,14 @@ public class LiveRunPlan {
         validateConfiguration();
         LocalDate date = date(snapshot);
         queryText(snapshot);
+        var lawIds = settings.lawIdsFor(text(snapshot, "subject"));
+        if (lawIds.isEmpty())
+            throw new ApiException(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    ErrorCode.REQUEST_FAILED,
+                    "이 과목의 법령 색인이 아직 준비되지 않았습니다.");
         var profile = LiveSearchProfile.from(ai, LawImportService.CHUNKER);
-        var corpus = indexes.inspect(settings.lawIds(), date, profile);
+        var corpus = indexes.inspect(lawIds, date, profile);
         if (corpus.availability() != LiveIndexStore.Availability.READY)
             throw new ApiException(
                     HttpStatus.SERVICE_UNAVAILABLE,
@@ -114,9 +120,7 @@ public class LiveRunPlan {
         var config =
                 new Config(
                         1,
-                        settings.lawIds().stream()
-                                .sorted(Comparator.comparing(UUID::toString))
-                                .toList(),
+                        lawIds.stream().sorted(Comparator.comparing(UUID::toString)).toList(),
                         profile.chunker(),
                         profile.model(),
                         profile.tokenizer(),
@@ -242,7 +246,7 @@ public class LiveRunPlan {
         try {
             if (!snapshot.path("revision").isIntegralNumber()
                     || snapshot.path("revision").asLong() < 1
-                    || !List.of("BROKER_LAW").contains(text(snapshot, "subject"))
+                    || !List.of("BROKER_LAW", "PUBLIC_LAW").contains(text(snapshot, "subject"))
                     || !List.of("SELECT_CORRECT", "SELECT_INCORRECT")
                             .contains(text(snapshot, "questionType"))
                     || !snapshot.path("providedAnswerNumber").isIntegralNumber()
