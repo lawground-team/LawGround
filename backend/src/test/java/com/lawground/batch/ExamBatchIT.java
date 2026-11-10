@@ -497,6 +497,6 @@ class ExamBatchIT {
                         sql.queryForObject(
                                 "SELECT count(*) FROM flyway_schema_history WHERE type='SQL'",
                                 Integer.class))
-                .isEqualTo(9);
+                .isEqualTo(10);
     }
 }
