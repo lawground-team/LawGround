@@ -1,5 +1,9 @@
 import {escapeHtml as e, displayTime, safeLawLink} from './domain.js';
 
+// choice-tags-v1 (2026-11-09 확정). 모르는 코드는 화면에 내지 않는다.
+export const TAG_LABELS = {TIMING:'시점·기한', CONDITION:'조건 추가', ACTOR:'주체·권한', CONCEPT:'개념 오인', NUMBER:'숫자·수치 오류'};
+export const tagChips = tags => (tags ?? []).filter(t => TAG_LABELS[t?.code]).map(t => `<span class="badge tag-chip">${TAG_LABELS[t.code]}</span>`).join('');
+
 export const activeRun = run => ['QUEUED','RUNNING'].includes(run?.status) && run?.executionMode === 'LIVE';
 export function pollDelay(attempt=0, hidden=false) { return hidden ? 10000 : Math.min(10000,2000 + Math.floor(attempt/5)*2000); }
 export const stageLabel = stage => ({PREPARE:'입력 확인',HYDE:'검색 문맥 준비',SEARCH:'근거 검색',RERANK:'후보 정렬',VERIFY:'근거 검증',PERSIST:'결과 저장'}[stage] ?? '상태 확인');
@@ -47,7 +51,7 @@ export function resultMarkup(result) {
   const cards=(snapshot.choices ?? []).map(choice=>{
     const c=analyses.get(choice.number), [label,tone]=relation[c?.relation] ?? ['설명 미제공','neutral'];
     const refs=(c?.evidenceIds ?? []).filter(id=>evidence.has(id));
-    return `<article class="analysis-choice"><div class="choice-analysis-heading"><span class="choice-number">${choice.number}</span><span class="badge ${tone}">${label}</span>${choice.number===snapshot.providedAnswerNumber?'<span class="helper">제공 정답</span>':''}</div><p class="original-choice">${e(c?.originalText ?? choice.text)}</p>${c?`<p>${e(c.explanation)}</p>`:''}${c?.relation==='CONTRADICTS' && refs.length && c.correctedText?`<p class="corrected-choice"><strong>근거에 따른 정정</strong><br>${e(c.correctedText)}</p>`:''}${refs.length?`<div class="choice-references">${refs.map((id,i)=>`<a href="#quote-${e(id)}" data-quote-ref="${e(id)}">근거 ${i+1} 보기</a>`).join('')}</div>`:''}</article>`;
+    return `<article class="analysis-choice"><div class="choice-analysis-heading"><span class="choice-number">${choice.number}</span><span class="badge ${tone}">${label}</span>${tagChips(c?.tags)}${choice.number===snapshot.providedAnswerNumber?'<span class="helper">제공 정답</span>':''}</div><p class="original-choice">${e(c?.originalText ?? choice.text)}</p>${c?`<p>${e(c.explanation)}</p>`:''}${c?.relation==='CONTRADICTS' && refs.length && c.correctedText?`<p class="corrected-choice"><strong>근거에 따른 정정</strong><br>${e(c.correctedText)}</p>`:''}${refs.length?`<div class="choice-references">${refs.map((id,i)=>`<a href="#quote-${e(id)}" data-quote-ref="${e(id)}">근거 ${i+1} 보기</a>`).join('')}</div>`:''}</article>`;
   }).join('');
   const quotes=(result.evidences ?? []).map(ev=>{
     const url=safeLawLink(ev.sourceUrl);

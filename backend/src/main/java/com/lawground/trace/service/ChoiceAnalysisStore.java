@@ -1,6 +1,7 @@
 package com.lawground.trace.service;
 
 import com.lawground.global.config.JsonData;
+import com.lawground.integration.ai.client.VerificationWire;
 import com.lawground.integration.ai.dto.VerifyDtos.*;
 import com.lawground.trace.dto.TraceDtos;
 import java.util.*;
@@ -52,7 +53,7 @@ public class ChoiceAnalysisStore {
                     c.explanation(),
                     c.correctedText(),
                     json.write(c.tags()),
-                    response.tagSetVersion());
+                    c.tags().isEmpty() ? null : response.tagSetVersion());
             for (String key : c.evidenceKeys()) {
                 UUID evidence = ids.get(key);
                 if (evidence == null) throw new IllegalStateException("Unknown evidence key");
@@ -71,8 +72,16 @@ public class ChoiceAnalysisStore {
                 jdbc.query(
                         "SELECT * FROM choice_analyses WHERE run_id=? ORDER BY choice_number",
                         (rs, n) -> {
-                            if (!json.read(rs.getString("tags")).isEmpty()
-                                    || rs.getString("tag_set_version") != null)
+                            var codes = new ArrayList<TraceDtos.Tag>();
+                            json.read(rs.getString("tags"))
+                                    .forEach(
+                                            t ->
+                                                    codes.add(
+                                                            new TraceDtos.Tag(
+                                                                    t.path("code").asText())));
+                            String version = rs.getString("tag_set_version");
+                            if (!codes.isEmpty()
+                                    && !VerificationWire.TAG_SET_VERSION.equals(version))
                                 throw new IllegalStateException("Unsupported stored tag taxonomy");
                             var ids =
                                     jdbc.query(
@@ -86,7 +95,7 @@ public class ChoiceAnalysisStore {
                                     rs.getString("relation"),
                                     rs.getString("explanation"),
                                     rs.getString("corrected_text"),
-                                    List.of(),
+                                    List.copyOf(codes),
                                     ids);
                         },
                         runId);

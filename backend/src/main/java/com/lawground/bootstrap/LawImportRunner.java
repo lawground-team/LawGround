@@ -23,12 +23,14 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 /**
- * Explicit local-only loader: reads reviewed {@code *.import.json} files (LawImport), imports each law version,
- * then indexes its chunks through the existing AI client. No public endpoint; enabled only by
- * {@code --lawground.law-import.dir=...} on the isolated local loopback profile (same guard as AiConnectionSmoke).
+ * Explicit local-only loader: reads reviewed {@code *.import.json} files (LawImport), imports each
+ * law version, then indexes its chunks through the existing AI client. No public endpoint; enabled
+ * only by {@code --lawground.law-import.dir=...} on the isolated local loopback profile (same guard
+ * as AiConnectionSmoke).
  *
- * <p>Re-running is safe: an identical import is reused and already-indexed chunks are skipped. A chunk that fails to
- * index (for example a very long annex hitting the embed timeout) is reported at the end instead of stopping the load.
+ * <p>Re-running is safe: an identical import is reused and already-indexed chunks are skipped. A
+ * chunk that fails to index (for example a very long annex hitting the embed timeout) is reported
+ * at the end instead of stopping the load.
  */
 @Component
 @ConditionalOnProperty(name = "lawground.law-import.dir")
@@ -63,7 +65,8 @@ public class LawImportRunner implements ApplicationRunner {
         if (!environment.matchesProfiles("local & !prod & !test")
                 || address == null
                 || !Set.of("127.0.0.1", "localhost", "::1").contains(address)) {
-            throw new IllegalStateException("Law import requires the isolated local loopback profile");
+            throw new IllegalStateException(
+                    "Law import requires the isolated local loopback profile");
         }
     }
 
@@ -79,7 +82,10 @@ public class LawImportRunner implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         List<Path> files;
         try (Stream<Path> listing = Files.list(dir)) {
-            files = listing.filter(p -> p.getFileName().toString().endsWith(".import.json")).sorted().toList();
+            files =
+                    listing.filter(p -> p.getFileName().toString().endsWith(".import.json"))
+                            .sorted()
+                            .toList();
         }
         if (files.isEmpty()) throw new IllegalStateException("No *.import.json files in " + dir);
         List<String> failures = new ArrayList<>();
@@ -90,13 +96,22 @@ public class LawImportRunner implements ApplicationRunner {
         for (Path file : files) {
             LawImport input = mapper.readValue(file.toFile(), LawImport.class);
             var imported = importer.importVersion(input);
-            UUID lawId = jdbc.queryForObject("SELECT law_id FROM law_versions WHERE id=?", UUID.class, imported.versionId());
+            UUID lawId =
+                    jdbc.queryForObject(
+                            "SELECT law_id FROM law_versions WHERE id=?",
+                            UUID.class,
+                            imported.versionId());
             lawIds.add(lawId);
             List<UUID> chunkIds = imported.chunkIds();
             LOG.info(
                     "LAW_IMPORT title={} versionKey={} lawId={} versionId={} articles={} chunks={} reusedImport={}",
-                    input.title(), input.sourceVersionKey(), lawId, imported.versionId(),
-                    imported.articleIds().size(), chunkIds.size(), imported.reused());
+                    input.title(),
+                    input.sourceVersionKey(),
+                    lawId,
+                    imported.versionId(),
+                    imported.articleIds().size(),
+                    chunkIds.size(),
+                    imported.reused());
             if (!index) continue;
             List<String> labels = spanLabels(input);
             for (int i = 0; i < chunkIds.size(); i++) {
@@ -107,16 +122,34 @@ public class LawImportRunner implements ApplicationRunner {
                     else alreadyIndexed++;
                 } catch (RuntimeException failure) {
                     String label = labels.size() == chunkIds.size() ? labels.get(i) : "#" + i;
-                    failures.add(input.title() + " " + label + " -> " + failure.getClass().getSimpleName() + ": " + failure.getMessage());
+                    failures.add(
+                            input.title()
+                                    + " "
+                                    + label
+                                    + " -> "
+                                    + failure.getClass().getSimpleName()
+                                    + ": "
+                                    + failure.getMessage());
                 }
                 if ((i + 1) % 20 == 0 || i + 1 == chunkIds.size()) {
-                    LOG.info("LAW_INDEX_PROGRESS title={} {}/{}", input.title(), i + 1, chunkIds.size());
+                    LOG.info(
+                            "LAW_INDEX_PROGRESS title={} {}/{}",
+                            input.title(),
+                            i + 1,
+                            chunkIds.size());
                 }
             }
         }
-        LOG.info("LAW_IMPORT_DONE laws={} chunks={} indexedNow={} alreadyIndexed={} failed={}",
-                lawIds.size(), chunks, indexedNow, alreadyIndexed, failures.size());
+        LOG.info(
+                "LAW_IMPORT_DONE laws={} chunks={} indexedNow={} alreadyIndexed={} failed={}",
+                lawIds.size(),
+                chunks,
+                indexedNow,
+                alreadyIndexed,
+                failures.size());
         for (String failure : failures) LOG.warn("LAW_INDEX_FAILED {}", failure);
-        LOG.info("LAWGROUND_ANALYSIS_LIVE_LAW_IDS={}", String.join(",", lawIds.stream().map(UUID::toString).toList()));
+        LOG.info(
+                "LAWGROUND_ANALYSIS_LIVE_LAW_IDS={}",
+                String.join(",", lawIds.stream().map(UUID::toString).toList()));
     }
 }

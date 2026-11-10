@@ -83,14 +83,30 @@ class LiveWorkerTest {
     }
 
     @Test
+    void subjectSelectsItsOwnLawSetAndPublicLawStaysOptional() {
+        UUID broker = UUID.randomUUID(), publicLaw = UUID.randomUUID();
+        var both = new LiveAnalysisProperties(true, Set.of(broker), null, null, Set.of(publicLaw));
+        assertThat(both.lawIdsFor("BROKER_LAW")).containsExactly(broker);
+        assertThat(both.lawIdsFor("PUBLIC_LAW")).containsExactly(publicLaw);
+        var brokerOnly = new LiveAnalysisProperties(true, Set.of(broker), null, null, null);
+        assertThat(brokerOnly.lawIdsFor("PUBLIC_LAW")).isEmpty();
+    }
+
+    @Test
     void liveModeRequiresExplicitCorpusBoundedBudgetAndMutualExclusion() throws Exception {
-        assertThat(new LiveAnalysisProperties(false, null, null, null).candidateLimit())
+        assertThat(new LiveAnalysisProperties(false, null, null, null, null).candidateLimit())
                 .isEqualTo(5);
-        assertThatThrownBy(() -> new LiveAnalysisProperties(true, null, null, null))
+        assertThatThrownBy(() -> new LiveAnalysisProperties(true, null, null, null, null))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new LiveAnalysisProperties(true, Set.of(UUID.randomUUID()), 31, 5))
+        assertThatThrownBy(
+                        () ->
+                                new LiveAnalysisProperties(
+                                        true, Set.of(UUID.randomUUID()), 31, 5, null))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new LiveAnalysisProperties(true, Set.of(UUID.randomUUID()), 1, 5))
+        assertThatThrownBy(
+                        () ->
+                                new LiveAnalysisProperties(
+                                        true, Set.of(UUID.randomUUID()), 1, 5, null))
                 .isInstanceOf(IllegalArgumentException.class);
         var plan = mock(LiveRunPlan.class);
         assertThatThrownBy(

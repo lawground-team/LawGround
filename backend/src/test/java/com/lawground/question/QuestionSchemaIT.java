@@ -84,12 +84,21 @@ class QuestionSchemaIT {
     }
 
     @Test
+    void subjectConstraintAcceptsPublicLawAndRejectsOthers() throws SQLException {
+        UUID id = validQuestion();
+        String update = "UPDATE questions SET subject=? WHERE id=?";
+        assertThat(jdbc.update(update, "PUBLIC_LAW", id)).isEqualTo(1);
+        assertThatThrownBy(() -> jdbc.update(update, "CIVIL_LAW", id))
+                .hasMessageContaining("questions_subject_check");
+    }
+
+    @Test
     void emptyDatabaseContainsVersionedProductTablesAndVector() {
         assertThat(
                         jdbc.queryForObject(
                                 "SELECT count(*) FROM flyway_schema_history WHERE success AND type='SQL'",
                                 Integer.class))
-                .isEqualTo(9);
+                .isEqualTo(10);
         assertThat(
                         jdbc.queryForList(
                                 "SELECT table_name FROM information_schema.tables WHERE table_schema='public' ORDER BY table_name",
@@ -152,7 +161,7 @@ class QuestionSchemaIT {
                         sql.queryForObject(
                                 "SELECT count(*) FROM flyway_schema_history WHERE success AND type='SQL'",
                                 Integer.class))
-                .isEqualTo(9);
+                .isEqualTo(10);
         assertThat(
                         sql.queryForObject(
                                 "SELECT checksum FROM flyway_schema_history WHERE version='001' OR version='1'",

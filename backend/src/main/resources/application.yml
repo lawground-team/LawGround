@@ -97,6 +97,7 @@ lawground:
     live:
       enabled: ${LAWGROUND_ANALYSIS_LIVE_ENABLED:false}
       law-ids: ${LAWGROUND_ANALYSIS_LIVE_LAW_IDS:}
+      public-law-ids: ${LAWGROUND_ANALYSIS_LIVE_PUBLIC_LAW_IDS:}
       candidate-limit: ${LAWGROUND_ANALYSIS_LIVE_CANDIDATE_LIMIT:5}
       top-k: ${LAWGROUND_ANALYSIS_LIVE_TOP_K:5}
   security:

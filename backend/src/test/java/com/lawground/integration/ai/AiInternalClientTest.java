@@ -68,7 +68,9 @@ class AiInternalClientTest {
         server.createContext("/", this::respond);
         server.start();
         base = URI.create("http://127.0.0.1:" + server.getAddress().getPort() + "/internal/v1");
-        client = new AiInternalClient(properties(Duration.ofSeconds(3), 4 * 1024 * 1024), mapper);
+        // Generous: a cold first call on a slow PC took 5s and was misread as a deadline;
+        // deadline tests build their own short client.
+        client = new AiInternalClient(properties(Duration.ofSeconds(30), 4 * 1024 * 1024), mapper);
     }
 
     @AfterEach
@@ -391,7 +393,7 @@ class AiInternalClientTest {
 
     @Test
     void oversizedBodyAndWrongContentTypeAreRejected() {
-        client = new AiInternalClient(properties(Duration.ofSeconds(3), 1024), mapper);
+        client = new AiInternalClient(properties(Duration.ofSeconds(30), 1024), mapper);
         responseBody = "x".repeat(2048);
         assertProtocol(() -> client.tokenize(UUID.randomUUID(), texts()));
         responseBody = "{}";

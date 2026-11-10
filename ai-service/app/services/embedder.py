@@ -21,8 +21,29 @@ class BgeM3Embedder:
     def count_tokens(self, text: str) -> int:
         return len(self._tokenizer(text, add_special_tokens=True)["input_ids"])
 
+    precomputed: dict[str, list[float]] = {}
+
+    def load_precomputed(self, texts_json: str, npy_path: str) -> int:
+        """같은 모델 커밋으로 미리 계산한 벡터(예: Colab GPU)를 글자가 정확히 같은 텍스트에만 재사용한다.
+        커밋이 다르면 거부한다. 법령 대량 색인을 이 PC CPU 로 1~2시간 돌리지 않으려는 용도다."""
+        import json
+        import numpy as np
+        meta = json.loads(open(texts_json, encoding="utf-8").read())
+        if meta.get("revision") != self.revision:
+            raise RuntimeError(f"미리 계산한 벡터의 모델 커밋({meta.get('revision')})이 서버({self.revision})와 다르다")
+        vecs = np.load(npy_path)
+        if vecs.shape != (len(meta["texts"]), 1024):
+            raise RuntimeError(f"벡터 모양 {vecs.shape} 이 텍스트 {len(meta['texts'])}개와 맞지 않는다")
+        self.precomputed = {t: v.tolist() for t, v in zip(meta["texts"], vecs)}
+        return len(self.precomputed)
+
     def encode(self, texts: list[str]) -> list[list[float]]:
-        with self._lock:      # CPU 추론을 한 번에 하나씩 (스레드 과다 사용 방지)
-            arr = self._model.encode(texts, batch_size=8, normalize_embeddings=True,
-                                     convert_to_numpy=True, show_progress_bar=False)
-        return arr.tolist()
+        out = [self.precomputed.get(t) for t in texts]
+        miss = [i for i, v in enumerate(out) if v is None]
+        if miss:
+            with self._lock:      # CPU 추론을 한 번에 하나씩 (스레드 과다 사용 방지)
+                arr = self._model.encode([texts[i] for i in miss], batch_size=8, normalize_embeddings=True,
+                                         convert_to_numpy=True, show_progress_bar=False)
+            for i, v in zip(miss, arr.tolist()):
+                out[i] = v
+        return out

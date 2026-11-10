@@ -22,7 +22,8 @@ public record CreateQuestionRequest(
     }
 
     public enum Subject {
-        BROKER_LAW
+        BROKER_LAW,
+        PUBLIC_LAW
     }
 
     public enum QuestionType {
