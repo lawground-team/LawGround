@@ -485,3 +485,37 @@ class VariationDiffResponse(Strict):
     tip: Optional[StudyTip]
     tagSetVersion: _short(80)
     algorithmVersion: Version
+
+
+class ArticleKey(Strict):
+    lawTitle: _short(200)
+    articleLabel: _short(200)
+
+
+class SimilarItemsRequest(Strict):
+    requestId: UUID
+    subject: Subject
+    text: _text(2000)
+    articleKeys: Annotated[list[ArticleKey], Field(max_length=10)] = []
+    limit: Annotated[StrictInt, Field(ge=1, le=5)] = 3
+
+
+class SimilarItem(Strict):
+    itemId: _short(80)
+    exam: StrictInt
+    questionNumber: StrictInt
+    choiceNumber: StrictInt
+    stemHead: StrictStr
+    text: _text(2000)
+    truth: Truth
+    match: Annotated[StrictStr, Field(pattern="^(SAME_ARTICLE|TEXT_ONLY)$")]
+    similarity: Annotated[float, Field(strict=True, ge=0, le=1)]
+    diff: Annotated[list[DiffPart], Field(max_length=10)]
+
+
+class SimilarItemsResponse(Strict):
+    items: Annotated[list[SimilarItem], Field(max_length=5)]
+    tip: Optional[StudyTip]
+    bankVersion: _short(80)
+    tagSetVersion: _short(80)
+    algorithmVersion: Version

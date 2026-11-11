@@ -13,7 +13,7 @@ from app.common import ERR, P, TOKEN_ENV, ContractError, make_guard, register_ha
 from app.contract import models as M
 from app.contract.checks import check_variation_diff, check_verify, check_verify_statement
 from app.mock import logic
-from app.services import registry, statement, tokenizer, variation
+from app.services import registry, similar, statement, tokenizer, variation
 from app.services.verifier import LlmError
 
 
@@ -149,6 +149,15 @@ def variation_diff(req: M.VariationDiffRequest, _=Depends(guard02)):
     resp = variation.variation_diff(req)
     check_variation_diff(req, resp)
     return resp
+
+
+@app.post(P + "/similar-items", response_model=M.SimilarItemsResponse, responses=ERR, tags=["0.2.0-draft"])
+def similar_items(req: M.SimilarItemsRequest, _=Depends(guard02)):
+    """선지와 같은 쟁점의 기출 선지(은행 파일)와 변형 비교. LLM 없음. SIMILAR_BANK_PATH 가 없으면 503."""
+    loaded = similar.bank()
+    if loaded is None:
+        raise _off("similar-items")
+    return similar.similar_items(req, loaded)
 
 
 @app.get(P + "/health/ready", response_model=M.ReadyOutput, responses={401: {"model": M.ErrorOut}, 503: {"model": M.ReadyOutput}}, tags=["health"])

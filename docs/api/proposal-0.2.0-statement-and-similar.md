@@ -16,6 +16,8 @@
 |---|---|---|
 | `POST /internal/v1/verify-statement` (② 판정, LLM) | **구현·테스트 완료**. `VERIFY_BACKEND=gemini`일 때 /verify와 같은 Gemini 클라이언트, `mock`이면 고정 응답 | `app/services/statement.py`, `promptVersion=statement-v1` |
 | `POST /internal/v1/variation-diff` (③ 변형 비교, 규칙) | **구현·테스트 완료**. 권장안(4절)대로 Spring이 고른 기출 선지 1~5개를 받아 바뀐 구간·태그·공부 팁을 돌려준다. 모델 설정 없이 항상 켜짐 | `app/services/variation.py`, `algorithmVersion=variation-v1` |
+| `POST /internal/v1/similar-items` (③ 비슷한 기출, 규칙) — **2026-11-12 추가** | **구현**. 제출 일정상 원안(3-2, Python이 은행 파일을 읽음)으로 먼저 붙였다. 같은 과목·같은 근거 조문(법령명+제N조) 우선, 조문이 다르면 글자 유사도 0.55 이상만, 입력한 그 기출 문제(유사도 0.95 이상)와 문장이 아닌 선지(UNKNOWN·15자 미만)는 뺀다. 0~3개, 억지로 채우지 않는다. `SIMILAR_BANK_PATH`가 없으면 503. 응답 약 0.1초 | `app/services/similar.py`, `algorithmVersion=similar-v1` |
+| Spring `GET /api/v1/trace-runs/{id}/choices/{n}/similar-items` + 결과 화면 "비슷한 기출 보기" — **2026-11-12 추가** | **구현**. 완료된 분석의 선지 원문과 그 선지의 근거 조문으로 위 경로를 부르고 응답을 그대로 넘긴다(저장 안 함, LLM 없음). 화면에 Q-Net 출처·재가공 문구 표시 | `SimilarChoiceController`, `frontend/src/analysis.js` |
 | 기출 선지 은행 생성(Spring 적재용) | **완료**. 25~36회 범위 안 790문제 → 선지 3,950개(TRUE 1,519 / FALSE 1,726 / UNKNOWN 705). 선지가 5개로 안 나뉜 12문제(조합형 분리 실패·조문 빈칸형) 제외. 저장소에는 올리지 않음 | `scripts/build_choice_bank.py` |
 | OpenAPI | `ai-service/openapi-0.2.0-draft.yaml` (새 경로만). 0.1.0 `openapi.yaml`은 그대로 | `scripts/export_openapi.py` |
 | 헤더 | 새 경로는 `X-Contract-Version: 0.2.0-draft`만 받는다. 기존 경로는 `0.1.0-draft` 그대로 | `app/common.py` |
