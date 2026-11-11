@@ -100,6 +100,7 @@ lawground:
       public-law-ids: ${LAWGROUND_ANALYSIS_LIVE_PUBLIC_LAW_IDS:}
       candidate-limit: ${LAWGROUND_ANALYSIS_LIVE_CANDIDATE_LIMIT:5}
       top-k: ${LAWGROUND_ANALYSIS_LIVE_TOP_K:5}
+      skip-rerank-without-cut: ${LAWGROUND_ANALYSIS_LIVE_SKIP_RERANK_WITHOUT_CUT:false}
   security:
     dev-auth-enabled: ${LAWGROUND_DEV_AUTH_ENABLED:false}
     oidc:
