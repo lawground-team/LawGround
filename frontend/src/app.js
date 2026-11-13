@@ -1,5 +1,5 @@
 import {ApiClient} from './api.js';
-import {AnalysisRequests,activeRun,pollDelay,stageLabel,failureMessage,resultMarkup,recommendationsMarkup} from './analysis.js';
+import {AnalysisRequests,activeRun,pollDelay,stageLabel,failureMessage,resultMarkup,recommendationsMarkup,similarMarkup} from './analysis.js';
 import {escapeHtml as e, koreaToday, displayTime, emptyQuestion, questionPayload, validateQuestion, statusInfo, shouldPoll, safeLawLink, filterQuestions, errorMessage, SUBJECTS, subjectLabel, SOURCE_NOTICE, splitPastedQuestion, detectQuestionType, detectSubject} from './domain.js';
 
 const root = document.querySelector('#app');
@@ -229,6 +229,7 @@ document.addEventListener('click',event=>{
   const nav=event.target.closest('a[data-nav]');
   if(nav && !event.ctrlKey && !event.metaKey && !event.shiftKey && event.button===0){event.preventDefault();if(state.busy)return;go(nav.getAttribute('href'));return;}
   const button=event.target.closest('button');if(!button || button.disabled)return;
+  if(button.dataset.similar){toggleSimilar(button);return;}
   if(button.dataset.edit){go(`/questions/new?edit=${button.dataset.edit}`);return;}
   if(button.dataset.delete){deleteQuestion(button.dataset.delete,button.dataset.revision);return;}
   if(button.dataset.filter){state.filter=button.dataset.filter;document.querySelectorAll('[data-filter]').forEach(b=>{b.classList.toggle('selected',b.dataset.filter===state.filter);b.setAttribute('aria-pressed',b.dataset.filter===state.filter);});renderLibraryRows();return;}
@@ -276,3 +277,12 @@ async function bootstrap() {
   } catch(error){showRouteError(error);}
 }
 void bootstrap();
+
+async function toggleSimilar(button) {
+  const box=document.getElementById('similar-'+button.dataset.similar), runId=state.activeRun;if(!box||!runId)return;
+  const open=box.hidden;box.hidden=!open;button.setAttribute('aria-expanded',String(open));button.textContent=open?'비슷한 기출 접기':'비슷한 기출 보기';
+  if(!open||box.dataset.loaded)return;
+  box.innerHTML='<p class="helper">비슷한 기출을 찾는 중…</p>';
+  try{const data=await api.get(`/trace-runs/${runId}/choices/${button.dataset.similar}/similar-items`);box.innerHTML=similarMarkup(data);box.dataset.loaded='1';}
+  catch(error){box.innerHTML=similarMarkup(null,error);}
+}

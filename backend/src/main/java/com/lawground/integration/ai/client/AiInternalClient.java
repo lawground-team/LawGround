@@ -37,6 +37,7 @@ import reactor.netty.http.client.HttpClient;
 @Component
 public class AiInternalClient {
     public static final String CONTRACT_VERSION = "0.1.0-draft";
+    public static final String CONTRACT_VERSION_02 = "0.2.0-draft";
 
     public enum Capability {
         TOKENIZE,
@@ -264,6 +265,21 @@ public class AiInternalClient {
         return response;
     }
 
+    /** 0.2.0-draft "비슷한 기출": 기출 선지 은행에서 같은 쟁점 선지와 변형 비교를 받는다. LLM 없음. 응답은 화면에 그대로 넘긴다. */
+    public com.fasterxml.jackson.databind.JsonNode similarItems(UUID requestId, Object body) {
+        var out =
+                exchange(
+                        "similar-items",
+                        requestId,
+                        body,
+                        com.fasterxml.jackson.databind.JsonNode.class,
+                        Duration.ofSeconds(5),
+                        false,
+                        CONTRACT_VERSION_02);
+        if (out == null || !out.path("items").isArray()) throw protocol();
+        return out;
+    }
+
     private <T> T call(String path, UUID requestId, Object body, Class<T> type, Duration timeout) {
         return exchange(path, requestId, body, type, timeout, false);
     }
@@ -275,6 +291,17 @@ public class AiInternalClient {
             Class<T> type,
             Duration timeout,
             boolean readiness) {
+        return exchange(path, requestId, body, type, timeout, readiness, CONTRACT_VERSION);
+    }
+
+    private <T> T exchange(
+            String path,
+            UUID requestId,
+            Object body,
+            Class<T> type,
+            Duration timeout,
+            boolean readiness,
+            String contractVersion) {
         URI uri = endpoint(path);
         int maxBytes = properties.maxResponseBytes();
         if (maxBytes < 1024 || maxBytes > 16 * 1024 * 1024) throw configuration();
@@ -297,7 +324,7 @@ public class AiInternalClient {
                             .uri(uri)
                             .header("X-Internal-Token", properties.apiKey())
                             .header("X-Request-Id", requestId.toString())
-                            .header("X-Contract-Version", CONTRACT_VERSION)
+                            .header("X-Contract-Version", contractVersion)
                             .accept(MediaType.APPLICATION_JSON);
             WebClient.RequestHeadersSpec<?> request =
                     body == null

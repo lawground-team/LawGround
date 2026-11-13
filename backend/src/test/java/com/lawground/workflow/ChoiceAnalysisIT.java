@@ -292,6 +292,45 @@ class ChoiceAnalysisIT {
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 
+    // 0.2.0-draft is still a proposal, so its body is not captured for the 0.1 contract check.
+    JsonNode similar(String url) throws Exception {
+        return json.readTree(
+                mvc.perform(get(url).with(user(owner.toString())))
+                        .andExpect(status().isOk())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsByteArray());
+    }
+
+    @Test
+    void similarItemsUseChoiceTextAndEvidenceArticlesAndStayOwnerOnly() throws Exception {
+        var r = submit();
+        String path = "/api/v1/trace-runs/" + r.run() + "/choices/";
+        mvc.perform(get(path + "2/similar-items").with(user(owner.toString())))
+                .andExpect(status().isConflict());
+        worker.process(r.job());
+        var evidence = result(r).path("evidences").get(0);
+        var body = similar(path + "2/similar-items");
+        assertThat(body.at("/items/0/itemId").asText()).isEqualTo("synthetic-1");
+        var sent = HTTP.similarRequests.getFirst();
+        assertThat(sent.path("subject").asText()).isEqualTo("BROKER_LAW");
+        assertThat(sent.path("text").asText()).isEqualTo("원래 선지 😀 2");
+        assertThat(sent.path("limit").asInt()).isEqualTo(3);
+        assertThat(sent.path("articleKeys").size()).isEqualTo(1);
+        assertThat(sent.at("/articleKeys/0/lawTitle").asText())
+                .isEqualTo(evidence.path("lawTitle").asText());
+        assertThat(sent.at("/articleKeys/0/articleLabel").asText())
+                .isEqualTo(evidence.path("articleLabel").asText());
+        similar(path + "3/similar-items");
+        assertThat(HTTP.similarRequests.get(1).path("articleKeys").size()).isEqualTo(1);
+        mvc.perform(get(path + "2/similar-items").with(user(other.toString())))
+                .andExpect(status().isNotFound());
+        mvc.perform(get(path + "2/similar-items")).andExpect(status().isUnauthorized());
+        api(get(path + "6/similar-items"), 400, "Error");
+        HTTP.similarStatus = 503;
+        api(get(path + "2/similar-items"), 503, "Error");
+    }
+
     @Test
     void insufficientChoicesNeedNoInventedEvidenceOrCorrection() throws Exception {
         HTTP.transform =
