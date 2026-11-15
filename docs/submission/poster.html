@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>LawGround 포스터</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700;900&family=Noto+Sans+KR:wght@400;500;700&display=block" rel="stylesheet">
+<style>
+  @page { size: 900mm 1400mm; margin: 0; }
+  :root {
+    --navy:#14284b; --navy-d:#0d1c37; --gold:#b08d3c; --gold-l:#dcc58f; --cream:#f6f1e6; --paper:#fcfaf5;
+    --ink:#1b2230; --muted:#5a6271; --rule:#d6c9a8; --red:#8e2f2f; --green:#2f5d46;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; background:var(--paper); }
+  body { width:900mm; height:1400mm; overflow:hidden; position:relative; color:var(--ink);
+         font-family:"Noto Sans KR","Malgun Gothic",sans-serif; font-size:27pt; line-height:1.5; }
+  @font-face { font-family:"LGSerif"; font-weight:400; src:local("HANBatang"), local("함초롬바탕"), local("HCR Batang"); }
+  @font-face { font-family:"LGSerif"; font-weight:700 900; src:local("HANBatangB"), local("HANBatang Bold"), url("file:///C:/Windows/Fonts/HANBatangB.ttf"); }
+  .serif { font-family:"LGSerif","Noto Serif KR","Batang",serif; }
+
+  /* masthead */
+  .mast { background:var(--paper); color:var(--navy); margin:0 45mm; padding:26mm 0 14mm; position:relative;
+          border-top:2.4mm solid var(--navy); border-bottom:.8mm solid var(--gold); }
+  .mast::before { content:""; position:absolute; left:0; right:0; top:2.2mm; border-top:.6mm solid var(--gold); }
+  .kicker { font-size:24pt; letter-spacing:3pt; color:var(--gold); margin:0 0 9mm; }
+  .titlerow { display:flex; align-items:center; gap:14mm; }
+  .titlerow svg { width:66mm; height:66mm; flex:none; }
+  h1 { margin:0; font-size:200pt; line-height:.95; font-weight:900; letter-spacing:-3pt; }
+  .lede { font-size:52pt; font-weight:700; margin:13mm 0 6mm; line-height:1.3; }
+  .lede em { font-style:normal; color:var(--gold); }
+  .team { font-size:27pt; color:var(--muted); margin:0; }
+  .team b { color:var(--navy); font-weight:700; }
+
+  /* numbers */
+  .nums { display:grid; grid-template-columns:repeat(3,1fr); margin:0 45mm; border-bottom:.6mm solid var(--rule); }
+  .nums > div { padding:12mm 6mm 10mm; text-align:center; border-right:.6mm solid var(--rule); }
+  .nums > div:last-child { border-right:0; }
+  .num { font-size:112pt; font-weight:900; color:var(--navy); line-height:1; }
+  .num small { font-size:50pt; color:var(--gold); margin-left:1mm; }
+  .numcap { font-size:23pt; color:var(--muted); margin-top:4mm; line-height:1.35; }
+
+  main { padding:0 45mm; }
+  .ch { display:flex; align-items:baseline; gap:8mm; margin:17mm 0 8mm; padding-bottom:3mm; border-bottom:.8mm solid var(--navy); }
+  .ch .no { font-size:30pt; color:var(--gold); font-weight:700; letter-spacing:1pt; white-space:nowrap; }
+  .ch h2 { margin:0; font-size:54pt; font-weight:900; color:var(--navy); }
+  .ch .aside { margin-left:auto; font-size:23pt; color:var(--muted); }
+  .cols { display:grid; grid-template-columns:1fr 1fr; gap:18mm; }
+  p { margin:0 0 4mm; }
+  ul { margin:0; padding-left:10mm; }
+  li { margin:0 0 3mm; }
+  li::marker { color:var(--gold); }
+  .lab { font-size:31pt; font-weight:700; color:var(--navy); margin:0 0 4mm; }
+  .lab.gold { color:var(--gold); }
+
+  /* follow one question */
+  .follow { display:grid; grid-template-columns:47% 1fr; gap:14mm; align-items:start; }
+  .shot { border:.6mm solid var(--rule); background:#fff; position:relative; }
+  .shot img { display:block; width:100%; }
+  .shot .ph { height:205mm; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:26pt; text-align:center; background:var(--cream); }
+  .steps { display:flex; flex-direction:column; gap:6mm; }
+  .step { display:grid; grid-template-columns:17mm 1fr; gap:5mm; }
+  .badge { width:15mm; height:15mm; border-radius:50%; background:var(--navy); color:#fff; font-size:25pt; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:1mm; }
+  .step h3 { margin:0 0 1.5mm; font-size:30pt; color:var(--navy); }
+  .step p { font-size:24pt; color:var(--ink); margin:0; }
+  .quote { font-size:24pt; border-left:1.4mm solid var(--gold); padding:1mm 0 1mm 5mm; margin-top:2mm; color:var(--ink); background:var(--cream); }
+  s { color:var(--red); text-decoration-thickness:.5mm; }
+  ins { text-decoration:none; color:var(--green); font-weight:700; border-bottom:.6mm solid var(--green); }
+  .verdict { display:inline-block; font-size:23pt; font-weight:700; color:var(--green); border:.6mm solid var(--green); padding:0 3mm; margin-left:2mm; }
+  .tag { display:inline-block; font-size:21pt; color:var(--gold); border:.5mm solid var(--gold); padding:0 2.5mm; margin-left:2mm; }
+
+  /* how */
+  .pipe { display:grid; grid-template-columns:repeat(4,1fr); margin:0 0 10mm; }
+  .pipe div { border-top:2.2mm solid var(--navy); padding:4mm 4mm 0 0; }
+  .pipe div:nth-child(3) { border-top-color:var(--gold); }
+  .pipe b { display:block; font-size:32pt; color:var(--navy); }
+  .pipe span { font-size:23pt; color:var(--muted); }
+  .three { display:grid; grid-template-columns:repeat(3,1fr); gap:12mm; }
+  .three div { border-top:.6mm solid var(--rule); padding-top:4mm; }
+  .three h3 { margin:0 0 2mm; font-size:30pt; color:var(--navy); }
+  .three p { font-size:24pt; }
+
+  /* results */
+  table { border-collapse:collapse; width:100%; font-size:24pt; }
+  th, td { border-bottom:.5mm solid var(--rule); padding:2.5mm 3mm; text-align:left; }
+  th { color:var(--muted); font-weight:500; font-size:22pt; }
+  .small { font-size:21pt; color:var(--muted); }
+
+  .end { display:grid; grid-template-columns:1fr 1fr 124mm; gap:14mm; align-items:start; }
+  .qr { display:flex; gap:8mm; font-size:20pt; color:var(--muted); text-align:center; }
+  .qr img, .qr .box { width:52mm; height:52mm; display:block; margin:0 auto 2mm; border:.5mm solid var(--rule); background:#fff; padding:2mm; }
+  .qr .box { display:flex; align-items:center; justify-content:center; font-size:18pt; }
+
+  .feat { display:grid; grid-template-columns:repeat(3,1fr); gap:10mm 14mm; }
+  .feat > div { border-top:.8mm solid var(--navy); padding-top:4mm; position:relative; }
+  .feat .fno { position:absolute; right:0; top:2mm; font-size:44pt; color:var(--gold); line-height:1; }
+  .feat h3 { margin:0 0 2mm; font-size:32pt; color:var(--navy); }
+  .feat p { font-size:24pt; margin:0; }
+  .qr div { flex:none; }
+  footer { position:absolute; left:45mm; right:45mm; bottom:0; background:var(--paper); color:var(--muted); border-top:.6mm solid var(--gold); font-size:20pt; padding:7mm 0 9mm; display:flex; justify-content:space-between; gap:16mm; }
+  footer b { color:var(--navy); font-weight:500; }
+</style>
+</head>
+<body>
+
+<header class="mast">
+  <p class="kicker">2026 캡스톤 페스티벌 · 단국대학교 소프트웨어학과</p>
+  <div class="titlerow">
+    <svg viewBox="0 0 64 64" fill="none" stroke="#b08d3c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M32 8v44M20 56h24M14 16h36"/><circle cx="32" cy="8" r="2.2" fill="#b08d3c"/>
+      <path d="M14 16l-8 18h16zM50 16l-8 18h16z"/><path d="M6 34a8 4 0 0 0 16 0M42 34a8 4 0 0 0 16 0"/>
+    </svg>
+    <h1 class="serif">LawGround</h1>
+  </div>
+  <p class="lede serif">기출 선지 하나를 넣으면,<br><em>현행 법령</em>에서 근거 조문을 찾아 정답을 검증합니다.</p>
+  <p class="team">공인중개사 기출 법령 근거 검색·검증 서비스 &nbsp;|&nbsp; 팀 <b>졸업시켜조</b> &nbsp;·&nbsp; <b>임수종</b> AI·검색·평가 &nbsp;·&nbsp; <b>윤영주</b> 백엔드·파이프라인·화면</p>
+</header>
+
+<section class="nums">
+  <div><div class="num serif">93<small>%</small></div><div class="numcap">1과목 337문제<br>근거 조문 상위 5개 적중</div></div>
+  <div><div class="num serif">89<small>%</small></div><div class="numcap">부동산공법 465문제<br>근거 조문 상위 5개 적중</div></div>
+  <div><div class="num serif">2,422<small>개</small></div><div class="numcap">기준일별로 관리하는<br>현행 법령 조문</div></div>
+</section>
+
+<main>
+  <div class="ch"><span class="no">제1장</span><h2 class="serif">왜 만들었나</h2></div>
+  <div class="cols">
+    <div>
+      <p class="lab">수험생의 문제</p>
+      <ul>
+        <li>선지 하나를 확인하려면 법률·시행령·시행규칙을 오가며 조문을 찾아야 한다.</li>
+        <li>법령이 개정되면 기출 해설이 현행 법령과 어긋난다.</li>
+        <li>범용 챗봇은 근거 없이 그럴듯하게 틀린다. 법 공부에서 가장 위험한 일이다.</li>
+      </ul>
+    </div>
+    <div>
+      <p class="lab gold">LawGround의 답</p>
+      <ul>
+        <li><b>검색</b> — 현행 조문 2,422개 중 근거 후보 5개</li>
+        <li><b>검증</b> — 후보 조문 <u>안에서만</u> 판정하고, 인용을 원문과 글자 단위로 대조</li>
+        <li><b>설명</b> — 선지별 일치·불일치, 고친 문장, 변형 유형</li>
+        <li><b>학습</b> — 같은 조문을 물은 비슷한 기출</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="ch"><span class="no">제2장</span><h2 class="serif">한 문제 따라가기</h2><span class="aside">제36회 9번 · 실제 실행 결과</span></div>
+  <div class="follow">
+    <figure class="shot" style="margin:0">
+      <img src="../images/result.png" alt="" onerror="this.outerHTML='<div class=&quot;ph&quot;>분석 결과 화면 캡처 자리<br>(docs/images/result.png)</div>'">
+    </figure>
+    <div class="steps">
+      <div class="step"><span class="badge">1</span><div><h3>입력</h3><p>시험지 문장을 붙여넣으면 본문과 선지 5개가 채워진다. 제시한 정답 1번, 기준일 선택.</p></div></div>
+      <div class="step"><span class="badge">2</span><div><h3>판정 <span class="verdict">근거 확인</span></h3><p>정답 1번 "출산하면 6개월을 초과해 휴업할 수 있다"를 조문으로 확인.</p><div class="quote">시행령 제18조 "4. 임신 또는 출산"</div></div></div>
+      <div class="step"><span class="badge">3</span><div><h3>선지별 분석 <span class="tag">주체·권한</span></h3><p>2번: 10일 이내에 <s>이전하기 전의</s> <ins>이전후</ins> 등록관청에 신고</p><div class="quote">공인중개사법 제20조 "…이전 후의 중개사무소를 관할하는 시장ㆍ군수 또는 구청장…에게 신고하여야 한다."</div></div></div>
+      <div class="step"><span class="badge">4</span><div><h3>비슷한 기출</h3><p>같은 조문을 물은 제26회 10번 · 제29회 16번 · 제28회 15번. 공부 팁: "누가 하는지"가 바뀌어 출제된다.</p></div></div>
+    </div>
+  </div>
+
+  <div class="ch"><span class="no">제3장</span><h2 class="serif">주요 기능</h2></div>
+  <div class="feat">
+    <div><span class="fno serif">一</span><h3>붙여넣기 입력</h3><p>시험지 문장을 그대로 붙여넣으면 본문, 선지 5개, 과목, 문제 유형이 채워진다. 정답 번호와 법령 기준일만 확인하면 된다.</p></div>
+    <div><span class="fno serif">二</span><h3>근거 조문 검색</h3><p>기준일에 시행 중인 조문 2,422개 중 근거 후보 5개를 찾는다. 조문 원문, 시행일, 국가법령정보센터 링크를 함께 보여 준다.</p></div>
+    <div><span class="fno serif">三</span><h3>정답 판정</h3><p>제시한 정답을 <b>근거 확인 · 근거와 불일치 · 판단 보류</b>로 판정한다. 근거가 부족하면 단정하지 않는다.</p></div>
+    <div><span class="fno serif">四</span><h3>선지별 분석</h3><p>선지마다 조문과 일치·불일치를 표시하고, 틀린 선지는 고친 문장과 변형 유형(시점·기한, 조건 추가, 주체·권한, 개념 오인, 숫자·수치 오류)을 붙인다.</p></div>
+    <div><span class="fno serif">五</span><h3>비슷한 기출</h3><p>25~36회 기출 선지 3,950개 중 같은 조문을 물은 선지를 최대 3개 보여 준다. 달라진 글자를 표시하고 공부 팁을 준다.</p></div>
+    <div><span class="fno serif">六</span><h3>내 문제 라이브러리</h3><p>Google 로그인으로 문제를 저장·수정하고, 분석 단계를 실시간으로 본다. 근거가 비슷한 내 문제를 추천한다.</p></div>
+  </div>
+
+  <div class="ch"><span class="no">제4장</span><h2 class="serif">어떻게 동작하나</h2></div>
+  <div class="pipe">
+    <div><b>준비</b><span>기준일·법령 범위 고정</span></div>
+    <div><b>검색</b><span>단어 + 의미 → 결합 → 재순위</span></div>
+    <div><b>검증</b><span>후보 조문 안에서 LLM 판정</span></div>
+    <div><b>저장</b><span>판정·근거 한 번에 저장</span></div>
+  </div>
+  <div class="three">
+    <div><h3>하이브리드 검색</h3><p>형태소 단어 검색(BM25)과 bge-m3 의미 검색을 RRF로 묶고 bge-reranker로 다시 정렬한다.</p></div>
+    <div><h3>환각 차단</h3><p>LLM은 후보 조문만 보고 판정한다. 인용 문구·위치·시행일을 서버가 원문과 다시 대조하고, 다르면 저장하지 않는다.</p></div>
+    <div><h3>멈추지 않는 처리</h3><p>Spring이 큐(RabbitMQ)로 작업을 넘기고 단계마다 checkpoint를 남긴다. 실패해도 끝난 단계부터 다시 한다.</p></div>
+  </div>
+  <p class="small" style="margin-top:6mm">Java 21 · Spring Boot 3.5 · PostgreSQL 16 + pgvector · RabbitMQ · Python FastAPI · Gemini · GitHub Actions CI</p>
+
+  <div class="ch"><span class="no">제5장</span><h2 class="serif">검색 정확도와 기대효과</h2><span class="aside">25~36회 기출 802문제</span></div>
+  <div class="cols">
+    <div>
+      <p class="lab">근거 조문 검색 (Recall@5)</p>
+      <svg viewBox="0 0 420 220" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans KR, Malgun Gothic, sans-serif" font-size="13">
+        <g font-size="12.5" fill="#5a6271">
+          <rect x="10" y="2" width="12" height="12" fill="#14284b"/><text x="27" y="13">BM25(단어)</text>
+          <rect x="128" y="2" width="12" height="12" fill="#b9bfca"/><text x="145" y="13">Dense(의미)</text>
+          <rect x="252" y="2" width="12" height="12" fill="#b08d3c"/><text x="269" y="13">Hybrid(결합)</text>
+        </g>
+        <line x1="10" y1="190" x2="410" y2="190" stroke="#d6c9a8" stroke-width="1.2"/>
+        <g font-size="14">
+          <rect x="35" y="58" width="44" height="132" fill="#14284b"/><text x="57" y="51" text-anchor="middle" font-weight="700" fill="#14284b">93</text>
+          <rect x="85" y="70" width="44" height="120" fill="#b9bfca"/><text x="107" y="63" text-anchor="middle" fill="#5a6271">90</text>
+          <rect x="135" y="62" width="44" height="128" fill="#b08d3c"/><text x="157" y="55" text-anchor="middle" fill="#8a6c27">92</text>
+          <text x="107" y="210" text-anchor="middle" fill="#1b2230">1과목</text>
+          <rect x="235" y="74" width="44" height="116" fill="#14284b"/><text x="257" y="67" text-anchor="middle" font-weight="700" fill="#14284b">89</text>
+          <rect x="285" y="110" width="44" height="80" fill="#b9bfca"/><text x="307" y="103" text-anchor="middle" fill="#5a6271">80</text>
+          <rect x="335" y="86" width="44" height="104" fill="#b08d3c"/><text x="357" y="79" text-anchor="middle" fill="#8a6c27">86</text>
+          <text x="307" y="210" text-anchor="middle" fill="#1b2230">부동산공법</text>
+        </g>
+      </svg>
+      <p class="small">단위 %, 세로축 60%부터. 법률 용어가 글자 그대로 맞아야 하는 공법에서 단어 검색이 9%p 높았다.</p>
+    </div>
+    <div>
+      <p class="lab gold">기대효과</p>
+      <ul>
+        <li>선지마다 근거 조문을 바로 확인해 법령 찾는 시간을 줄인다.</li>
+        <li>기준일의 현행 조문으로 다시 판정해 낡은 해설을 걸러 낸다.</li>
+        <li>같은 조문의 기출을 묶어 출제 변형을 익히게 한다.</li>
+      </ul>
+      <p class="lab" style="margin-top:8mm">다음 단계</p>
+      <ul>
+        <li>근거 조문이 여럿인 문제의 검색 보강</li>
+        <li>판례·서식, 민법·세법 과목 확장, 37회 기출 추가</li>
+      </ul>
+      <div class="qr" style="margin-top:8mm">
+        <div><img src="qr-github.svg" alt="GitHub QR">GitHub</div>
+        <div><div class="box">영상 QR</div>시연 영상</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div>본 기출문제의 저작권은 <b>한국산업인력공단(Q-Net)</b>에 있으며, 출처를 밝히고 사용하였습니다. 일부 재가공. 법령 원문: 국가법령정보센터</div>
+  <div style="white-space:nowrap">github.com/lawground-team/LawGround</div>
+</footer>
+</body>
+</html>
