@@ -207,11 +207,24 @@ public class LiveJobWorker {
             throw new LiveWorkerFailure(INDEX_NOT_READY);
         if (result.status() == LiveRetrievalService.Status.LAW_VERSION_UNAVAILABLE)
             throw new LiveWorkerFailure(LAW_VERSION_UNAVAILABLE);
+        // Rerank is skipped (no revision, no scores) only when candidates did not exceed topK.
+        boolean skipped = result.rerankerRevision() == null;
         if (result.status() == LiveRetrievalService.Status.RETRIEVED) {
-            if (!Objects.equals(result.rerankerRevision(), config.rerankerModelRevision())
-                    || result.hits().isEmpty()
-                    || result.hits().size()
-                            != Math.min(config.topK(), result.rerankedCandidateCount()))
+            if (result.hits().isEmpty()
+                    || (skipped
+                            ? result.rerankedCandidateCount() != 0
+                                    || result.hits().size()
+                                            != Math.min(
+                                                    config.candidateLimit(),
+                                                    result.fusedCandidateCount())
+                                    || result.hits().size() > config.topK()
+                            : !Objects.equals(
+                                            result.rerankerRevision(),
+                                            config.rerankerModelRevision())
+                                    || result.hits().size()
+                                            != Math.min(
+                                                    config.topK(),
+                                                    result.rerankedCandidateCount())))
                 throw new LiveWorkerFailure(CHECKPOINT_INVALID);
         } else if (!result.hits().isEmpty()
                 || result.rerankedCandidateCount() != 0
@@ -229,7 +242,9 @@ public class LiveJobWorker {
                     || hit.sourceText().isBlank()
                     || !Double.isFinite(hit.rrfScore())
                     || hit.rrfScore() <= 0
-                    || !Double.isFinite(hit.rerankScore()))
+                    || (skipped
+                            ? hit.rerankScore() != null
+                            : hit.rerankScore() == null || !Double.isFinite(hit.rerankScore())))
                 throw new LiveWorkerFailure(CHECKPOINT_INVALID);
         }
     }

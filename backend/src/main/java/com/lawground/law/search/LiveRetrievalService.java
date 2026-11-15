@@ -5,6 +5,8 @@ import com.lawground.integration.ai.config.AiProperties;
 import com.lawground.integration.ai.dto.AiDtos.*;
 import java.time.LocalDate;
 import java.util.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /** Retrieval only. Does not submit jobs, persist legal verdicts or implement /verify. */
@@ -13,12 +15,19 @@ public class LiveRetrievalService {
     private final LiveIndexStore store;
     private final AiInternalClient client;
     private final AiProperties properties;
+    private final boolean skipRerankWithoutCut;
 
+    @Autowired
     public LiveRetrievalService(
-            LiveIndexStore store, AiInternalClient client, AiProperties properties) {
+            LiveIndexStore store,
+            AiInternalClient client,
+            AiProperties properties,
+            @Value("${lawground.analysis.live.skip-rerank-without-cut:false}")
+                    boolean skipRerankWithoutCut) {
         this.store = store;
         this.client = client;
         this.properties = properties;
+        this.skipRerankWithoutCut = skipRerankWithoutCut;
     }
 
     public record Query(
@@ -67,7 +76,8 @@ public class LiveRetrievalService {
             UUID lawVersionId,
             String sourceText,
             double rrfScore,
-            double rerankScore) {
+            /* null when rerank was skipped (candidates <= topK). */
+            Double rerankScore) {
         @Override
         public String toString() {
             return "RetrievalHit[content omitted]";
@@ -141,16 +151,19 @@ public class LiveRetrievalService {
             scores.put(candidate.chunkId(), candidate.score());
             request.add(new RerankCandidate(candidate.chunkId(), original.sourceText()));
         }
+        // Opt-in: with no more candidates than topK, rerank could only reorder the very set the
+        // verifier gets, so skip the CPU model call (~80s on the demo laptop). Fused order is kept.
+        boolean skip = skipRerankWithoutCut && request.size() <= query.topK();
         var ranked =
-                client.rerank(
-                        UUID.randomUUID(),
-                        query.text(),
-                        request,
-                        Math.min(query.topK(), request.size()));
+                skip ? null : client.rerank(UUID.randomUUID(), query.text(), request, query.topK());
         store.requireUnchanged(
                 query.lawIds(), query.referenceDate(), profile, corpus.manifestHash());
+        var order =
+                skip
+                        ? request.stream().map(c -> new RerankItem(c.chunkId(), 0)).toList()
+                        : ranked.ranked();
         var hits =
-                ranked.ranked().stream()
+                order.stream()
                         .map(
                                 item -> {
                                     var source = candidates.get(item.chunkId());
@@ -160,7 +173,7 @@ public class LiveRetrievalService {
                                             source.lawVersionId(),
                                             source.sourceText(),
                                             scores.get(item.chunkId()),
-                                            item.score());
+                                            skip ? null : item.score());
                                 })
                         .toList();
         return new Result(
@@ -168,9 +181,9 @@ public class LiveRetrievalService {
                 corpus.manifestHash(),
                 corpus.versionIds(),
                 profile,
-                ranked.modelRevision(),
+                skip ? null : ranked.modelRevision(),
                 result.fused().size(),
-                request.size(),
+                skip ? 0 : request.size(),
                 hits);
     }
 }

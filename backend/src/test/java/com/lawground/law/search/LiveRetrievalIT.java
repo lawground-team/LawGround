@@ -299,6 +299,35 @@ class LiveRetrievalIT {
     }
 
     @Test
+    void optInSkipsRerankOnlyWhenNothingIsCut(
+            @Autowired com.lawground.integration.ai.client.AiInternalClient client,
+            @Autowired com.lawground.integration.ai.config.AiProperties ai) {
+        var imported = corpus("LAW_GO_KR", "VERIFIED", "alpha", "beta");
+        imported.chunkIds().forEach(indexes::indexChunk);
+        var skipping = new LiveRetrievalService(store, client, ai, true);
+        paths.clear();
+        var kept = skipping.search(query(Set.of(lawId(imported)), 2));
+        assertThat(kept.status()).isEqualTo(LiveRetrievalService.Status.RETRIEVED);
+        assertThat(kept.rerankerRevision()).isNull();
+        assertThat(kept.rerankedCandidateCount()).isZero();
+        assertThat(kept.hits()).hasSize(2).allSatisfy(h -> assertThat(h.rerankScore()).isNull());
+        assertThat(paths).doesNotContain("rerank");
+        paths.clear();
+        var cut =
+                skipping.search(
+                        new LiveRetrievalService.Query(
+                                Set.of(lawId(imported)),
+                                LocalDate.of(2025, 1, 1),
+                                "alpha",
+                                LawImportService.CHUNKER,
+                                2,
+                                1));
+        assertThat(cut.rerankerRevision()).isEqualTo(RERANK);
+        assertThat(cut.hits()).hasSize(1);
+        assertThat(paths).contains("rerank");
+    }
+
+    @Test
     void candidateBudgetIsExplicitAndRecorded() {
         var imported = corpus("LAW_GO_KR", "VERIFIED", "alpha", "beta");
         imported.chunkIds().forEach(indexes::indexChunk);

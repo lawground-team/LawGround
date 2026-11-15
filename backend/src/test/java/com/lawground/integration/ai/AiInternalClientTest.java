@@ -460,7 +460,7 @@ class AiInternalClientTest {
         return new AiProperties(
                 base,
                 TOKEN,
-                Duration.ofSeconds(3),
+                Duration.ofSeconds(30), // connect: a loaded slow PC exceeded 3s on localhost
                 new AiProperties.Timeouts(
                         operationTimeout,
                         operationTimeout,
