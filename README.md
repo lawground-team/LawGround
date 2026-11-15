@@ -470,66 +470,123 @@ PR과 main push마다 GitHub Actions가 다음을 검사합니다.
 
 ## 16. AI 코딩 도구 활용
 
-학과 기준(본인 작성 코드 50% 이상, AI 활용 부분 구체 기재)에 따라 AI 코딩 도구를 쓴 부분을 밝힙니다. AI가 함께 작성한 커밋에는 `Co-Authored-By: Claude` 표시가 있습니다.
+학과 기준(본인 작성 코드 50% 이상, AI로 구현한 부분 구체 기재)에 따라 AI 코딩 도구를 쓴 부분을 기능·코드 단위로 밝힙니다.
 
-<!-- TODO(임수종): 아래 표는 커밋 기록으로 만든 초안. 사실과 다른 칸을 고치고 빈칸을 채운 뒤 이 주석을 지운다 -->
+<!-- TODO(임수종·윤영주): 아래 표는 git 기록(blame·커밋 표시)으로 만든 초안이다. `TODO` 칸을 사실대로 채우고, 표시가 없지만 AI를 쓴 코드는 "AI 활용" 칸을 고친 뒤 이 주석을 지운다 -->
 
 ### 16.1 개요
 
 | 항목 | 내용 |
 |---|---|
-| 사용 도구 | Claude Code (Anthropic) `TODO 그 밖에 쓴 도구(Codex, ChatGPT 등)와 쓴 사람` |
-| 활용 이유 | `TODO` (예: 2인 팀이 백엔드·AI 서버·평가를 모두 구현해야 해서, 반복 코드·평가 도구·문서 작성 시간을 줄이기 위해) |
-| 사람이 정한 것 | 서비스 범위(1과목·공법), 시스템 구조와 단계, API 계약, 평가 방법(Recall@5·판정 시험), 범위 밖 판정 기준, 기능 우선순위 |
-| AI에 맡긴 것 | 정해진 설계에 따른 코드 작성, 테스트 작성, 데이터 변환·평가 스크립트, 측정 기록 문서 정리 |
-| 반영 원칙 | AI가 만든 코드는 팀원이 읽고 테스트·CI를 통과시킨 뒤 PR로 반영. 정답 라벨은 AI 초안만으로 확정하지 않고, 사람이 검수한 표본만 "사람 검수"로 표기 |
+| 사용 도구 | Claude Code (Anthropic) — 임수종, 2026-11-08 이후 커밋에 표시 · `TODO 그 밖에 쓴 도구(Codex, ChatGPT 등), 쓴 사람, 기간` |
+| 활용 이유 | `TODO` (예: 2인 팀이 백엔드·AI 서버·평가를 모두 구현해야 해서 반복 코드, 평가 스크립트, 문서 작성 시간을 줄이기 위해) |
+| 사람이 정한 것 | 서비스 범위(1과목·공법), 시스템 구조와 분석 단계, API 계약, 평가 방법(Recall@5·판정 시험), 범위 밖 판정 기준, 기능 우선순위 |
+| AI에 맡긴 것 | 정해진 설계에 따른 코드·테스트 작성, 데이터 변환·측정 스크립트, 측정 기록 문서 정리 |
+| 반영 절차 | AI가 만든 코드는 팀원이 읽고 로컬 테스트와 CI를 통과시킨 뒤 PR로 반영 |
+| 라벨 원칙 | 정답 조문 라벨은 AI 초안만으로 확정하지 않고, 사람이 검수한 표본만 "사람 검수"로 표기 |
+| 커밋 표시 | AI가 함께 작성한 커밋에는 `Co-Authored-By: Claude` 표시 |
 
-### 16.2 커밋별 활용 내역 — 임수종 (AI 서버·검색·평가)
+### 16.2 측정 방법과 요약
 
-| 날짜 | 커밋 | 작업 | AI 활용 | AI가 한 일 | 사람이 한 일 |
-|---|---|---|---|---|---|
-| 09-27 | `fc609cf` `2f681b0` | 초기 저장소 세팅, CI 스킵 조건 | `TODO` | `TODO` | `TODO` |
-| 10-11 | `75ddd9d` | ai-service 뼈대와 계약 Mock 서버 | `TODO` | `TODO` | API 계약 협의 |
-| 10-13 | `df944d7` | Kiwi 토크나이저, 임베딩·재순위 모델 코드 | `TODO` | `TODO` | 모델 선택(bge-m3, bge-reranker) |
-| 10-27 | `d498bac` | 검색 평가 도구 (Recall@k) | `TODO` | `TODO` | 평가 지표 결정 |
-| 10-27 | `c8c222a` | Gemini 검증 백엔드, 판정 시험, 법령 변환기 | `TODO` | `TODO` | 판정 기준·프롬프트 방향 |
-| 11-08 | `d7d7098` `594df8b` | 기출 PDF 변환기, 검색 단계 측정, 재순위 속도 개선 | Claude Code | 변환·측정 스크립트 작성 | 결과 확인, 적용 여부 결정 |
-| 11-09 | `4ad4b72` `4054fe5` `ac20d26` `79442ea` | 측정 결과·시연 순서·발표 초안 문서 | Claude Code | 측정 실행, 문서 정리 | 측정 조건 결정, 내용 검토 |
-| 11-09 | `1ee93ae` `17da180` | 공법 라벨 사람 검수 기록 | Claude Code (기록만) | 검수 표본 구성, 결과 기록 | **15문제 직접 검수** |
-| 11-09 | `a48a8cb` `485f119` `00dbd94` | 0.2.0 확장 계약 제안, 기획 결정 기록 | Claude Code | 계약 초안 작성 | 공법 포함, 태그 5종, 출처 표기 결정 |
-| 11-09 | `09d4147` | 공법 지원 (과목 추가, 긴 별표 분할, 선지 태그 5종) | Claude Code | 구현·테스트 | 범위·태그 체계 결정 |
-| 11-09 | `470c6ed` `60ef9c7` | 문장 확인·변형 비교·기출 선지 은행, 팀 전달 가이드 | Claude Code | 구현·테스트·문서 | 기능 정의 |
-| 11-11 | `128b1dd` `f32eb19` | 공법 과목·태그 화면, 붙여넣기 입력, 백엔드 검사 수정 | Claude Code | 구현·테스트 | 화면 요구 사항, 동작 확인 |
-| 11-11 | `8134f88` | 잘림 없을 때 재순위 생략 옵션 | Claude Code | 구현·테스트 | 속도 개선 방향 결정 |
-| 11-12 | `943e465` `22ed1ad` | 비슷한 기출 보기 (Python·Spring·화면), 통합 테스트 | Claude Code | 구현·테스트 | 기능 선택, 결과 확인 |
-| 11-15 | `0599a52` | README 재구성 | Claude Code | 초안 작성, 그림 | 목차·방식 결정, 수정 |
+현재 main의 코드 파일(Java·Python·JS·SQL·CSS·HTML·YAML 등)을 `git blame`으로 줄마다 마지막으로 바꾼 커밋을 찾고, 그 커밋에 AI 표시가 있는지로 나눴습니다.
 
-### 16.3 커밋별 활용 내역 — 윤영주 (백엔드·파이프라인·화면)
+> ⚠️ **"표시 없음"은 AI를 쓰지 않았다는 뜻이 아닙니다.** 표시 없이 AI로 만든 코드가 있으면 아래 표의 "AI 활용" 칸에 따로 적습니다.
 
-| 날짜 | 커밋 | 작업 | AI 활용 | AI가 한 일 | 사람이 한 일 |
-|---|---|---|---|---|---|
-| 09-28 | `9437288` | Spring 백엔드 기반 구조 | `TODO` | `TODO` | `TODO` |
-| 10-05 | `ad5aee3` | 1주차 계약, 문제 등록·조회 API | `TODO` | `TODO` | `TODO` |
-| 10-12 | `efc9f44` | 문제 관리, Mock 큐, 법령 검색 기반 | `TODO` | `TODO` | `TODO` |
-| 10-13 | `c25f060` | Google 로그인, 문제 관리 화면 | `TODO` | `TODO` | `TODO` |
-| 10-26 | `4dea36b` | Spring AI HTTP 연결, LIVE 색인·검색 | `TODO` | `TODO` | `TODO` |
-| 10-26 | `2f710d2` | 검색 큐 워커, checkpoint 복구 | `TODO` | `TODO` | `TODO` |
-| 10-26 | `d96bee1` | 검증 API 연결, 판정·인용 저장 | `TODO` | `TODO` | `TODO` |
-| 10-26 | `8f0137d` | 골든셋 평가 실행·집계 | `TODO` | `TODO` | `TODO` |
-| 10-26 | `2afda51` | 관련 문제 추천 API | `TODO` | `TODO` | `TODO` |
-| 10-26 | `80441e4` | 선지별 분석 검증·원자 저장 | `TODO` | `TODO` | `TODO` |
-| 10-26 | `92832c7` | 분석 화면, 기출 배치 | `TODO` | `TODO` | `TODO` |
-| 11-09 | `f2dcfdf` | Spring 재순위 제한 120초 | `TODO` | `TODO` | `TODO` |
+| 구분 | AI 표시 커밋 | 표시 없음 — 임수종 | 표시 없음 — 윤영주 | 합계 |
+|---|---:|---:|---:|---:|
+| 서비스 코드·설정·계약 | 2,854 | 3,567 | 15,332 | 21,753 |
+| 테스트 코드 | 1,184 | 1,782 | 10,402 | 13,368 |
+| 합계 | 4,038 (11.5%) | 5,349 | 25,734 | 35,121 |
 
-### 16.4 AI를 쓰지 않은 작업
+### 16.3 기능·코드별 상세 — Python AI 서버 (임수종)
+
+| 기능 | 코드 | 현재 줄 수<br>AI 표시 / 표시 없음 | AI 활용 | AI가 한 일 | 사람이 한 일 |
+|---|---|---:|---|---|---|
+| 서버 뼈대·요청 처리 | `app/main.py`, `app/common.py` | 43 / 249 | 일부 | 0.2.0 엔드포인트(`verify-statement`·`variation-diff`·`similar-items`) 라우트 추가 | 서버 구조, 내부 토큰·계약 버전 검사, 기존 라우트 `TODO 확인` |
+| 요청·응답 모델 | `app/contract/models.py`, `app/contract/checks.py` | 215 / 372 | 일부 | 공법 과목 값, 선지 태그, 0.2.0 요청·응답 모델 추가 | 0.1.0 계약 모델 `TODO 확인` |
+| 계약 Mock 서버 | `app/mock/logic.py`, `app/mock/server.py` | 22 / 130 | 일부 | 0.2.0 Mock 응답 추가 | Mock 서버 설계·구현 `TODO 확인` |
+| 형태소 분석 | `app/services/tokenizer.py` | 0 / 77 | `TODO 확인` | `TODO` | Kiwi 토큰화 규칙 |
+| 임베딩 | `app/services/embedder.py`, `app/services/hf.py` | 25 / 43 | 일부 | 공법 대량 색인용 미리 계산한 임베딩 사용 경로 | bge-m3 로딩·계산 `TODO 확인` |
+| 재순위·모델 관리 | `app/services/reranker.py`, `app/services/registry.py` | 7 / 101 | 일부 | 공법·태그 설정 반영 | bge-reranker 로딩, 모델 버전 고정 `TODO 확인` |
+| 검증 (Gemini) | `app/services/verifier.py` | 75 / 312 | 일부 | 공법 지원, 선지 태그 5종 프롬프트(v2) | 판정 프롬프트, 인용 위치 계산, Gemini 호출 `TODO 확인` |
+| 문장 하나 확인 | `app/services/statement.py` | 133 / 0 | Claude Code | 문장 판정 로직·응답 구성 | 기능 정의, 판정 기준 |
+| 변형 비교 | `app/services/variation.py` | 131 / 0 | Claude Code | 글자 단위 비교, 변형 태그 추정, 공부 팁 | 태그 체계 5종 결정 |
+| 비슷한 기출 | `app/services/similar.py` | 109 / 0 | Claude Code | 은행 로드, 자기 문제 제외, 점수 계산(유사도 + 같은 조문) | 기능 선택, 결과 확인(36-09·36-27·공법 사례) |
+| 골든셋 평가 계산 | `app/evaluation.py` | 0 / 491 | `TODO 확인` | `TODO` | `TODO` |
+| 내부 API 명세 0.1.0 | `ai-service/openapi.yaml` | 1 / 1,093 | `TODO 확인` | `TODO` | 윤영주와 계약 협의 |
+| 내부 API 명세 0.2.0 초안 | `ai-service/openapi-0.2.0-draft.yaml` | 642 / 0 | Claude Code | 명세 작성 | 확장 범위 결정 |
+
+### 16.4 기능·코드별 상세 — 평가·데이터 스크립트 (임수종)
+
+| 기능 | 코드 (`ai-service/scripts/`) | 현재 줄 수<br>AI 표시 / 표시 없음 | AI 활용 | AI가 한 일 | 사람이 한 일 |
+|---|---|---:|---|---|---|
+| 검색 정확도 평가 | `eval_retrieval.py` | 0 / 123 | `TODO 확인` | `TODO` | Recall@k·신뢰구간 지표 결정 |
+| 판정 시험 | `verify_probe.py` | 34 / 174 | 일부 | 공법 문제 지원 | 시험 설계(정답·틀린 번호 넣기) `TODO 확인` |
+| 법령 가져오기 변환 | `law_to_import.py` | 13 / 135 | 일부 | 긴 별표 여러 조각 분할 | 국가법령정보 응답 변환 `TODO 확인` |
+| 시험용 데이터 생성 | `gen_fixtures.py` | 0 / 108 | `TODO 확인` | `TODO` | `TODO` |
+| 서버 동작 점검 | `smoke.py` | 0 / 90 | `TODO 확인` | `TODO` | `TODO` |
+| OpenAPI 내보내기 | `export_openapi.py` | 10 / 15 | 일부 | 0.2.0 명세 내보내기 | `TODO` |
+| 기출 PDF → 문제 변환 | `exam_pdf_to_jsonl.py` | 111 / 0 | Claude Code | PDF 글자 추출, 문제·선지 분리 | 결과 확인·수정 |
+| 기출 선지 은행 생성 | `build_choice_bank.py` | 94 / 0 | Claude Code | 선지 3,950개 정오·근거 조문 묶기 | 사용 범위 결정 |
+| 검색 단계 시간 측정 | `search_stage_probe.py` | 112 / 0 | Claude Code | 단계별 시간 측정 | 측정 조건 결정, 결과 해석 |
+| 분석 일괄 실행 | `run_analysis.py` | 145 / 0 | Claude Code | 문제 등록·분석 요청·결과 수집 | 실행 문제 선정 |
+| 모델 메모리 점검 | `model_scan.py` | 70 / 0 | Claude Code | 모델 로딩 메모리 측정 | `TODO` |
+| 환경변수 설정 도우미 | `env_set.py` | 100 / 0 | Claude Code | `.env` 값 설정 스크립트 | `TODO` |
+
+### 16.5 기능·코드별 상세 — Spring 백엔드 (윤영주, 일부 임수종)
+
+경로는 `backend/src/main/java/com/lawground/` 기준입니다.
+
+| 기능 | 코드 | 현재 줄 수<br>AI 표시 / 표시 없음 | AI 활용 | AI가 한 일 | 사람이 한 일 |
+|---|---|---:|---|---|---|
+| Google 로그인·세션 | `auth/`, `member/` | 0 / 684 | `TODO 확인` | `TODO` | `TODO` |
+| 문제 저장·라이브러리 | `question/` | 2 / 775 | `TODO 확인` (AI 표시는 공법 과목 값 2줄) | `TODO` | `TODO` |
+| 공통 설정·오류·보안 | `global/`, `LawGroundApplication.java` | 4 / 1,042 | `TODO 확인` (AI 표시는 비슷한 기출 경로 허용 4줄) | `TODO` | `TODO` |
+| 법령 저장·조회 | `law/service/`, `law/dto/`, `law/controller/` | 0 / 346 | `TODO 확인` | `TODO` | `TODO` |
+| 하이브리드 검색 (BM25·벡터·RRF) | `law/search/` | 24 / 954 | `TODO 확인` (AI 표시는 재순위 생략 옵션 24줄) | `TODO` | `TODO` |
+| AI 서버 HTTP 연결 | `integration/` | 49 / 983 | `TODO 확인` (AI 표시는 0.2.0 호출·태그 전달) | `TODO` | `TODO` |
+| 작업 큐·워커·재시도 | `job/` | 41 / 1,511 | `TODO 확인` (AI 표시는 공법 법령 범위·재순위 생략 설정) | `TODO` | `TODO` |
+| 분석 실행·결과 저장 | `trace/` | 13 / 929 | `TODO 확인` (AI 표시는 선지 태그 저장) | `TODO` | `TODO` |
+| 관련 문제 추천 | `recommendation/` (비슷한 기출 제외) | 0 / 358 | `TODO 확인` | `TODO` | `TODO` |
+| 비슷한 기출 API | `recommendation/SimilarChoiceController.java` | 71 / 0 | Claude Code | 선지 문장·근거 조문 키 구성, AI 서버 호출, 오류 처리 | 기능 정의 (임수종) |
+| 골든셋 평가 | `evaluation/` | 0 / 939 | `TODO 확인` | `TODO` | `TODO` |
+| 기출 일괄 실행 | `batch/` | 0 / 480 | `TODO 확인` | `TODO` | `TODO` |
+| 법령 가져오기 실행기 | `bootstrap/LawImportRunner.java` | 155 / 0 | Claude Code | 공법 법령 파일 일괄 가져오기 | 실행·확인 (임수종) |
+| AI 연결 점검 | `bootstrap/AiConnectionSmoke.java` | 0 / 171 | `TODO 확인` | `TODO` | `TODO` |
+| DB 스키마 V001~V009 | `db/migration/` | 0 / 582 | `TODO 확인` | `TODO` | `TODO` |
+| DB 스키마 V010 (공법 과목) | `V010__public_law_subject.sql` | 3 / 0 | Claude Code | 과목 값 추가 | 공법 포함 결정 |
+| 설정 | `application*.yml` | 2 / 186 | `TODO 확인` | `TODO` | `TODO` |
+
+### 16.6 기능·코드별 상세 — 화면·계약·CI
+
+| 기능 | 코드 | 현재 줄 수<br>AI 표시 / 표시 없음 | AI 활용 | AI가 한 일 | 사람이 한 일 |
+|---|---|---:|---|---|---|
+| 사용자 화면 | `frontend/src/` (`app.js`, `analysis.js`, `domain.js`, `api.js`, `styles.css`, `index.html`) | 97 / 486 | `TODO 확인` (AI 표시는 아래 3개 기능) | `TODO` | `TODO` |
+| └ 붙여넣기 → 선지 자동 분리 | `domain.js` | 포함 | Claude Code | 문장 분리 규칙 | 요구 사항 |
+| └ 공법 과목·선지 태그 표시 | `app.js`, `analysis.js` | 포함 | Claude Code | 화면 구현 | 요구 사항 |
+| └ 비슷한 기출 보기 | `app.js`, `analysis.js`, `styles.css` | 포함 | Claude Code | 버튼·펼침·다른 글자 표시 | 화면 확인 |
+| 붙여넣기 분리 시제품 | `docs/prototypes/paste_split.html` | 297 / 0 | Claude Code | 시제품 페이지 | 동작 확인 |
+| 사용자·내부 API 계약 | `docs/api/*.openapi.yaml` | 4 / 4,409 | `TODO 확인` | `TODO` | 팀 계약 협의 |
+| 저장소·계약 검사 | `scripts/` | 0 / 465 | `TODO 확인` | `TODO` | `TODO` |
+| CI·실행 환경 | `.github/workflows/ci.yml`, `docker-compose.yml` | 0 / 179 | `TODO 확인` | `TODO` | `TODO` |
+
+### 16.7 테스트 코드
+
+| 범위 | 위치 | 현재 줄 수<br>AI 표시 / 표시 없음 | AI 활용 | 비고 |
+|---|---|---:|---|---|
+| 백엔드 | `backend/src/test/` | 195 / 10,178 | `TODO 확인` | AI 표시: 비슷한 기출 통합 테스트, 재순위 생략·공법 테스트 |
+| AI 서버 | `ai-service/tests/` | 943 / 1,782 | 일부 | AI 표시: 0.2.0 기능·은행·공법·변환 테스트 |
+| 화면 | `frontend/tests/` | 46 / 131 | `TODO 확인` | AI 표시: 붙여넣기·태그·비슷한 기출 테스트 |
+
+### 16.8 AI를 쓰지 않은 작업
 
 | 작업 | 담당 |
 |---|---|
-| 정답 조문 라벨 사람 검수 (1과목 20문제, 공법 15문제) | `TODO` |
-| 36회 공법 스캔본 40문제 판독·입력 | `TODO 확인: AI가 이미지를 읽어 옮겼다면 16.2로 옮김` |
+| 정답 조문 라벨 사람 검수 (1과목 20문제) | `TODO` |
+| 정답 조문 라벨 사람 검수 (공법 15문제) | 임수종 `TODO 확인` |
+| 36회 공법 스캔본 40문제 판독·입력 | `TODO 확인: AI가 이미지를 읽어 옮겼다면 AI 활용으로 옮김` |
 | 범위 밖 문제 판정 기준 결정 | 팀 |
-| 발표·시연 | 팀 |
-| `TODO` | |
+| 서비스 기획, 기능 우선순위, 발표·시연 | 팀 |
 
 ## 17. 한계와 향후 과제
 
