@@ -569,7 +569,6 @@ PR과 main push마다 GitHub Actions가 다음을 검사합니다.
 
 학과 기준(본인 작성 코드 50% 이상, AI로 구현한 부분 구체 기재)에 따라 AI 코딩 도구를 쓴 부분을 기능·코드 단위로 밝힙니다.
 
-<!-- TODO(임수종·윤영주): 아래 표는 git 기록(blame·커밋 표시)으로 만든 초안이다. `TODO` 칸을 사실대로 채우고, 표시가 없지만 AI를 쓴 코드는 "AI 활용" 칸을 고친 뒤 이 주석을 지운다 -->
 
 ### 17.1 개요
 
@@ -637,44 +636,44 @@ PR과 main push마다 GitHub Actions가 다음을 검사합니다.
 
 | 기능 | 코드 | 현재 줄 수<br>AI 표시 / 표시 없음 | AI 활용 | AI가 한 일 | 사람이 한 일 |
 |---|---|---:|---|---|---|
-| Google 로그인·세션 | `auth/`, `member/` | 0 / 684 | `TODO 확인` | `TODO` | `TODO` |
-| 문제 저장·라이브러리 | `question/` | 2 / 775 | `TODO 확인` (AI 표시는 공법 과목 값 2줄) | `TODO` | `TODO` |
-| 공통 설정·오류·보안 | `global/`, `LawGroundApplication.java` | 4 / 1,042 | `TODO 확인` (AI 표시는 비슷한 기출 경로 허용 4줄) | `TODO` | `TODO` |
-| 법령 저장·조회 | `law/service/`, `law/dto/`, `law/controller/` | 0 / 346 | `TODO 확인` | `TODO` | `TODO` |
-| 하이브리드 검색 (BM25·벡터·RRF) | `law/search/` | 24 / 954 | `TODO 확인` (AI 표시는 재순위 생략 옵션 24줄) | `TODO` | `TODO` |
-| AI 서버 HTTP 연결 | `integration/` | 49 / 983 | `TODO 확인` (AI 표시는 0.2.0 호출·태그 전달) | `TODO` | `TODO` |
-| 작업 큐·워커·재시도 | `job/` | 41 / 1,511 | `TODO 확인` (AI 표시는 공법 법령 범위·재순위 생략 설정) | `TODO` | `TODO` |
-| 분석 실행·결과 저장 | `trace/` | 13 / 929 | `TODO 확인` (AI 표시는 선지 태그 저장) | `TODO` | `TODO` |
-| 관련 문제 추천 | `recommendation/` (비슷한 기출 제외) | 0 / 358 | `TODO 확인` | `TODO` | `TODO` |
+| Google 로그인·세션 | `auth/`, `member/` | 0 / 684 | 일부 | 로컬 개발용 로그인 구현, 코드 작성 보조 | Google OIDC 연동 방식 설계, 회원·로그인 계정 연결 구조 설계, 세션(JDBC)·CSRF 정책 결정, AI 코드 검토·테스트 실행 |
+| 문제 저장·라이브러리 | `question/` | 2 / 775 | 일부 (AI 표시는 공법 과목 값 2줄) | 라이브러리 목록·검색·페이지 구현 | 문제·선지 저장 구조 설계, revision으로 동시 수정 막는 방식 설계, 입력 검증 규칙 결정, AI 코드 검토·테스트 실행 |
+| 공통 설정·오류·보안 | `global/`, `LawGroundApplication.java` | 4 / 1,042 | 일부 (AI 표시는 비슷한 기출 경로 허용 4줄) | 오류 처리·필터 코드 작성 보조 | 오류 응답 형식·오류 코드 설계, 요청 ID 추적 구현, 입력 문자 정책 결정, AI 코드 검토·테스트 실행 |
+| 법령 저장·조회 | `law/service/`, `law/dto/`, `law/controller/` | 0 / 346 | 일부 | 코드 작성 보조 | 시행일 버전 관리 규칙 결정, 법령 가져오기 서비스 구현, AI 코드 검토·테스트 실행 |
+| 하이브리드 검색 (BM25·벡터·RRF) | `law/search/` | 24 / 954 | 일부 (AI 표시는 재순위 생략 옵션 24줄) | RRF 결합 구현 | BM25·pgvector 검색 쿼리 구현, 색인 일관성(manifest) 검사 설계, AI 코드 검토·테스트 실행 |
+| AI 서버 HTTP 연결 | `integration/` | 49 / 983 | 일부 (AI 표시는 0.2.0 호출·태그 전달) | 검증 응답 검사 구현 | 내부 API 계약 협의(임수종과), HTTP 클라이언트 구현(시간 제한·재시도), 모델 버전 대조 방식 설계, AI 코드 검토·테스트 실행 |
+| 작업 큐·워커·재시도 | `job/` | 41 / 1,511 | 일부 (AI 표시는 공법 법령 범위·재순위 생략 설정) | 코드 작성 보조 | 작업 상태 흐름 설계, 리스·fencing 방식 설계, checkpoint·재시도 정책 결정, 복구 스케줄러 구현 |
+| 분석 실행·결과 저장 | `trace/` | 13 / 929 | 일부 (AI 표시는 선지 태그 저장) | 결과 응답 구성, 인용 대조 코드 작성 | 분석 접수 API·멱등 키 설계, 결과 원자 저장 구현, AI 코드 검토·테스트 실행 |
+| 관련 문제 추천 | `recommendation/` (비슷한 기출 제외) | 0 / 358 | 일부 | 조회 쿼리 구현 | 추천 기준(근거 조문 + 임베딩) 결정, 권한·시행기간 필터 결정 |
 | 비슷한 기출 API | `recommendation/SimilarChoiceController.java` | 71 / 0 | Claude Code | 선지 문장·근거 조문 키 구성, AI 서버 호출, 오류 처리 | 기능 정의 (임수종) |
-| 골든셋 평가 | `evaluation/` | 0 / 939 | `TODO 확인` | `TODO` | `TODO` |
-| 기출 일괄 실행 | `batch/` | 0 / 480 | `TODO 확인` | `TODO` | `TODO` |
+| 골든셋 평가 | `evaluation/` | 0 / 939 | 직접 작성 | — | 평가셋 고정·누수 검사 설계, 평가 실행·집계 구현 |
+| 기출 일괄 실행 | `batch/` | 0 / 480 | 직접 작성 | — | 배치 실행·재개 방식 설계, 집계 구현, AI 코드 검토·테스트 실행 |
 | 법령 가져오기 실행기 | `bootstrap/LawImportRunner.java` | 155 / 0 | Claude Code | 공법 법령 파일 일괄 가져오기 | 실행·확인 (임수종) |
-| AI 연결 점검 | `bootstrap/AiConnectionSmoke.java` | 0 / 171 | `TODO 확인` | `TODO` | `TODO` |
-| DB 스키마 V001~V009 | `db/migration/` | 0 / 582 | `TODO 확인` | `TODO` | `TODO` |
+| AI 연결 점검 | `bootstrap/AiConnectionSmoke.java` | 0 / 171 | 대부분 | 점검 항목 결정, 점검 코드 구현 | — |
+| DB 스키마 V001~V009 | `db/migration/` | 0 / 582 | 일부 | 작성 보조 | 테이블·제약 조건 설계, 결과 수정 금지 트리거 설계, 마이그레이션 SQL 작성 |
 | DB 스키마 V010 (공법 과목) | `V010__public_law_subject.sql` | 3 / 0 | Claude Code | 과목 값 추가 | 공법 포함 결정 |
-| 설정 | `application*.yml` | 2 / 186 | `TODO 확인` | `TODO` | `TODO` |
+| 설정 | `application*.yml` | 2 / 186 | 대부분 | 설정 파일 작성 | AI 작성분 검토 |
 
 ### 17.6 기능·코드별 상세 — 화면·계약·CI
 
 | 기능 | 코드 | 현재 줄 수<br>AI 표시 / 표시 없음 | AI 활용 | AI가 한 일 | 사람이 한 일 |
 |---|---|---:|---|---|---|
-| 사용자 화면 | `frontend/src/` (`app.js`, `analysis.js`, `domain.js`, `api.js`, `styles.css`, `index.html`) | 97 / 486 | `TODO 확인` (AI 표시는 아래 3개 기능) | `TODO` | `TODO` |
+| 사용자 화면 | `frontend/src/` (`app.js`, `analysis.js`, `domain.js`, `api.js`, `styles.css`, `index.html`) | 97 / 486 | 일부 (AI 표시는 아래 3개 기능) | 화면 코드 작성 보조 | 화면 흐름·구성 설계, 디자인(색·배치) 결정, 화면 구현, API 연결 구현 |
 | └ 붙여넣기 → 선지 자동 분리 | `domain.js` | 포함 | Claude Code | 문장 분리 규칙 | 요구 사항 |
 | └ 공법 과목·선지 태그 표시 | `app.js`, `analysis.js` | 포함 | Claude Code | 화면 구현 | 요구 사항 |
 | └ 비슷한 기출 보기 | `app.js`, `analysis.js`, `styles.css` | 포함 | Claude Code | 버튼·펼침·다른 글자 표시 | 화면 확인 |
 | 붙여넣기 분리 시제품 | `docs/prototypes/paste_split.html` | 297 / 0 | Claude Code | 시제품 페이지 | 동작 확인 |
-| 사용자·내부 API 계약 | `docs/api/*.openapi.yaml` | 4 / 4,409 | `TODO 확인` | `TODO` | 팀 계약 협의 |
-| 저장소·계약 검사 | `scripts/` | 0 / 465 | `TODO 확인` | `TODO` | `TODO` |
-| CI·실행 환경 | `.github/workflows/ci.yml`, `docker-compose.yml` | 0 / 179 | `TODO 확인` | `TODO` | `TODO` |
+| 사용자·내부 API 계약 | `docs/api/*.openapi.yaml` | 4 / 4,409 | 일부 | 명세 작성 | 사용자 API 설계, 내부 API 협의(임수종과), AI 작성분 검토 |
+| 저장소·계약 검사 | `scripts/` | 0 / 465 | 일부 | 검사 스크립트 구현 | 검사 규칙(비밀값·제외 파일) 결정, AI 코드 검토 |
+| CI·실행 환경 | `.github/workflows/ci.yml`, `docker-compose.yml` | 0 / 179 | 일부 | CI 단계 구성, docker-compose 구성 | 워크플로 작성 |
 
 ### 17.7 테스트 코드
 
 | 범위 | 위치 | 현재 줄 수<br>AI 표시 / 표시 없음 | AI 활용 | 비고 |
 |---|---|---:|---|---|
-| 백엔드 | `backend/src/test/` | 195 / 10,178 | `TODO 확인` | AI 표시: 비슷한 기출 통합 테스트, 재순위 생략·공법 테스트 |
+| 백엔드 | `backend/src/test/` | 195 / 10,178 | 일부 (윤영주: 테스트 시나리오 결정, 테스트 코드 작성, 실패 원인 수정, AI 작성분 검토) | AI 표시: 비슷한 기출 통합 테스트, 재순위 생략·공법 테스트 |
 | AI 서버 | `ai-service/tests/` | 943 / 1,782 | 일부 | AI 표시: 0.2.0 기능·은행·공법·변환 테스트 |
-| 화면 | `frontend/tests/` | 46 / 131 | `TODO 확인` | AI 표시: 붙여넣기·태그·비슷한 기출 테스트 |
+| 화면 | `frontend/tests/` | 46 / 131 | 일부 (윤영주: 테스트 시나리오 결정, 테스트 코드 작성, 실패 원인 수정, AI 작성분 검토) | AI 표시: 붙여넣기·태그·비슷한 기출 테스트 |
 
 ### 17.8 AI를 쓰지 않은 작업
 
