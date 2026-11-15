@@ -1,4 +1,4 @@
-import {escapeHtml as e, displayTime, safeLawLink} from './domain.js';
+import {escapeHtml as e, displayTime, safeLawLink, SOURCE_NOTICE} from './domain.js';
 
 // choice-tags-v1 (2026-11-09 확정). 모르는 코드는 화면에 내지 않는다.
 export const TAG_LABELS = {TIMING:'시점·기한', CONDITION:'조건 추가', ACTOR:'주체·권한', CONCEPT:'개념 오인', NUMBER:'숫자·수치 오류'};
@@ -51,7 +51,7 @@ export function resultMarkup(result) {
   const cards=(snapshot.choices ?? []).map(choice=>{
     const c=analyses.get(choice.number), [label,tone]=relation[c?.relation] ?? ['설명 미제공','neutral'];
     const refs=(c?.evidenceIds ?? []).filter(id=>evidence.has(id));
-    return `<article class="analysis-choice"><div class="choice-analysis-heading"><span class="choice-number">${choice.number}</span><span class="badge ${tone}">${label}</span>${tagChips(c?.tags)}${choice.number===snapshot.providedAnswerNumber?'<span class="helper">제공 정답</span>':''}</div><p class="original-choice">${e(c?.originalText ?? choice.text)}</p>${c?`<p>${e(c.explanation)}</p>`:''}${c?.relation==='CONTRADICTS' && refs.length && c.correctedText?`<p class="corrected-choice"><strong>근거에 따른 정정</strong><br>${e(c.correctedText)}</p>`:''}${refs.length?`<div class="choice-references">${refs.map((id,i)=>`<a href="#quote-${e(id)}" data-quote-ref="${e(id)}">근거 ${i+1} 보기</a>`).join('')}</div>`:''}</article>`;
+    return `<article class="analysis-choice"><div class="choice-analysis-heading"><span class="choice-number">${choice.number}</span><span class="badge ${tone}">${label}</span>${tagChips(c?.tags)}${choice.number===snapshot.providedAnswerNumber?'<span class="helper">제공 정답</span>':''}</div><p class="original-choice">${e(c?.originalText ?? choice.text)}</p>${c?`<p>${e(c.explanation)}</p>`:''}${c?.relation==='CONTRADICTS' && refs.length && c.correctedText?`<p class="corrected-choice"><strong>근거에 따른 정정</strong><br>${e(c.correctedText)}</p>`:''}<div class="choice-references">${refs.map((id,i)=>`<a href="#quote-${e(id)}" data-quote-ref="${e(id)}">근거 ${i+1} 보기</a>`).join('')}<button type="button" class="link-button" data-similar="${choice.number}" aria-expanded="false" aria-controls="similar-${choice.number}">비슷한 기출 보기</button></div><div class="similar-box" id="similar-${choice.number}" hidden></div></article>`;
   }).join('');
   const quotes=(result.evidences ?? []).map(ev=>{
     const url=safeLawLink(ev.sourceUrl);
@@ -63,4 +63,15 @@ export function resultMarkup(result) {
 export function recommendationsMarkup(items,error) {
   if(error)return `<section class="panel related-panel"><h2>관련 문제</h2><p>${error.status===409?'문제가 수정되어 이 과거 결과로 추천할 수 없어요. 현재 문제에서 다시 분석해 주세요.':'관련 문제를 불러오지 못했어요.'}</p><button class="button secondary" data-action="refresh-run">다시 확인</button></section>`;
   return `<section class="panel related-panel"><h2>관련 문제</h2>${items.length?`<div class="related-grid">${items.map(item=>`<a class="related-card" data-nav href="/questions/${e(item.questionId)}"><strong>${e(item.stemPreview)}</strong><p>${e(item.reason)}</p><span class="helper">법령 기준일 ${e(item.referenceDate)} · 문제 보기 →</span></a>`).join('')}</div>`:'<p class="helper">접근 가능한 관련 문제가 아직 없어요. 추천을 만들기 위해 임의의 문제를 채우지 않아요.</p>'}</section>`;
+}
+
+// "비슷한 기출": diff 위치는 code point [start,end) 라 Array.from 으로 자른다.
+const marked=(text,spans)=>{const cp=Array.from(text);let out='',at=0;for(const [a,b] of [...spans].sort((x,y)=>x[0]-y[0])){if(a<at||b<=a)continue;out+=e(cp.slice(at,a).join(''))+`<mark>${e(cp.slice(a,b).join(''))}</mark>`;at=b;}return out+e(cp.slice(at).join(''));};
+export function similarMarkup(data,error) {
+  if(error)return `<p class="helper">비슷한 기출을 불러오지 못했어요.${error.status===503?' 기출 데이터가 준비되지 않았어요.':''}</p>`;
+  const items=data?.items ?? [];
+  if(!items.length)return '<p class="helper">같은 쟁점의 비슷한 기출을 찾지 못했어요. 엉뚱한 문제로 채우지 않아요.</p>';
+  const truth={TRUE:['기출에서 옳은 문장','green'],FALSE:['기출에서 틀린 문장','orange']};
+  return `<div class="similar-list">${items.map(it=>{const [label,tone]=truth[it.truth] ?? ['판정 없음','neutral'];
+    return `<div class="similar-card"><div class="choice-analysis-heading"><strong>제${e(String(it.exam))}회 ${e(String(it.questionNumber))}번 ${e(String(it.choiceNumber))}</strong><span class="badge ${tone}">${label}</span>${it.match==='SAME_ARTICLE'?'<span class="helper">같은 근거 조문</span>':''}${tagChips([...new Set((it.diff ?? []).map(d=>d.type))].map(code=>({code})))}</div><p class="helper">${e(it.stemHead ?? '')}</p><p>${marked(it.text,(it.diff ?? []).map(d=>[d.itemStart,d.itemEnd]))}</p></div>`;}).join('')}</div>${data.tip?`<p class="similar-tip"><strong>공부 팁</strong> ${e(data.tip.text)}</p>`:''}<p class="helper source-notice">${e(SOURCE_NOTICE)} 표시한 부분은 이 선지와 글자가 다른 곳이에요(자동 비교).</p>`;
 }

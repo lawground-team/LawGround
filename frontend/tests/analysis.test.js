@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {AnalysisRequests,pollDelay,resultMarkup,recommendationsMarkup} from '../src/analysis.js';
+import {AnalysisRequests,pollDelay,resultMarkup,recommendationsMarkup,similarMarkup} from '../src/analysis.js';
 const uuid=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const question={id:uuid(1),revision:1};
 const storage=()=>{const m=new Map();return {getItem:k=>m.get(k)??null,setItem:(k,v)=>m.set(k,v),removeItem:k=>m.delete(k),key:i=>[...m.keys()][i],get length(){return m.size;}};};
@@ -24,4 +24,10 @@ test('result uses frozen originals and escaped text without fabricated correctio
   const html=resultMarkup({inputSnapshot:q,questionRevision:1,referenceDate:'2025-01-01',verdict:'HOLD',summary:'<img onerror=x>',evidences:[],choiceAnalyses:[{choiceNumber:1,originalText:'old 😀',relation:'INSUFFICIENT',explanation:'cannot verify',correctedText:'must not display',evidenceIds:[]}]});
   assert.ok(html.includes('old 😀'));assert.ok(html.includes('&lt;script&gt;'));assert.ok(!html.includes('<script>'));assert.ok(!html.includes('must not display'));assert.ok(!html.includes('선택률'));assert.ok(!html.includes('오답률'));
   assert.ok(recommendationsMarkup([],null).includes('관련 문제가 아직 없어요'));
+});
+test('similar items mark changed spans by code point, escape text and show the source notice',()=>{
+  const html=similarMarkup({items:[{exam:36,questionNumber:1,choiceNumber:2,stemHead:'<b>',text:'😀시장은 3년<x>',truth:'FALSE',match:'SAME_ARTICLE',diff:[{type:'ACTOR',itemStart:1,itemEnd:4},{type:'TIMING',itemStart:5,itemEnd:7}]}],tip:{text:'팁'}});
+  assert.match(html,/😀<mark>시장은<\/mark> <mark>3년<\/mark>&lt;x&gt;/);
+  assert.match(html,/기출에서 틀린 문장/);assert.match(html,/주체·권한/);assert.match(html,/Q-Net/);assert.doesNotMatch(html,/<b>/);
+  assert.match(similarMarkup({items:[]}),/찾지 못했어요/);
 });

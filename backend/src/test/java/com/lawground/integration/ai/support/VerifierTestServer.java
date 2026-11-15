@@ -22,7 +22,9 @@ public final class VerifierTestServer implements AutoCloseable {
     public final ObjectMapper json = new ObjectMapper().findAndRegisterModules();
     public final List<String> posts = new CopyOnWriteArrayList<>(),
             violations = new CopyOnWriteArrayList<>();
-    public final List<JsonNode> verifyRequests = new CopyOnWriteArrayList<>();
+    public final List<JsonNode> verifyRequests = new CopyOnWriteArrayList<>(),
+            similarRequests = new CopyOnWriteArrayList<>();
+    public volatile int similarStatus;
     public volatile String readiness = "ready";
     public volatile int verifyStatus;
     public volatile String retryAfter;
@@ -60,6 +62,8 @@ public final class VerifierTestServer implements AutoCloseable {
         posts.clear();
         violations.clear();
         verifyRequests.clear();
+        similarRequests.clear();
+        similarStatus = 0;
     }
 
     @Override
@@ -71,7 +75,8 @@ public final class VerifierTestServer implements AutoCloseable {
         String path = exchange.getRequestURI().getPath().substring("/internal/v1/".length());
         if (!KEY.equals(exchange.getRequestHeaders().getFirst("X-Internal-Token")))
             violations.add("token");
-        if (!"0.1.0-draft".equals(exchange.getRequestHeaders().getFirst("X-Contract-Version")))
+        if (!(path.equals("similar-items") ? "0.2.0-draft" : "0.1.0-draft")
+                .equals(exchange.getRequestHeaders().getFirst("X-Contract-Version")))
             violations.add("contract");
         int status = 200;
         Object out;
@@ -143,6 +148,17 @@ public final class VerifierTestServer implements AutoCloseable {
                             .put("end", source.codePointCount(0, source.length()));
                     out = transform.apply(node);
                 }
+            } else if (path.equals("similar-items")) {
+                similarRequests.add(in);
+                status = similarStatus == 0 ? 200 : similarStatus;
+                out =
+                        status == 200
+                                ? Map.of(
+                                        "items",
+                                        List.of(Map.of("itemId", "synthetic-1")),
+                                        "tip",
+                                        "합성 팁")
+                                : Map.of("code", "MODEL_NOT_READY", "message", "off");
             } else if (path.equals("tokenize")) {
                 var items = new ArrayList<TokenItem>();
                 for (var text : in.path("texts"))

@@ -89,7 +89,10 @@ public class SecurityConfiguration {
                     requests.requestMatchers(HttpMethod.PUT, "/api/v1/questions/*").authenticated();
                     requests.requestMatchers(HttpMethod.DELETE, "/api/v1/questions/*")
                             .authenticated();
-                    requests.requestMatchers(HttpMethod.GET, "/api/v1/trace-runs/*/recommendations")
+                    requests.requestMatchers(
+                                    HttpMethod.GET,
+                                    "/api/v1/trace-runs/*/recommendations",
+                                    "/api/v1/trace-runs/*/choices/*/similar-items")
                             .authenticated();
                     requests.requestMatchers(
                                     "/api/v1/questions/*/trace-runs",
