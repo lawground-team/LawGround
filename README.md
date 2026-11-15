@@ -647,9 +647,9 @@ PR과 main push마다 GitHub Actions가 다음을 검사합니다.
 | 관련 문제 추천 | `recommendation/` (비슷한 기출 제외) | 0 / 358 | 일부 | 조회 쿼리 구현 | 추천 기준(근거 조문 + 임베딩) 결정, 권한·시행기간 필터 결정 |
 | 비슷한 기출 API | `recommendation/SimilarChoiceController.java` | 71 / 0 | Claude Code | 선지 문장·근거 조문 키 구성, AI 서버 호출, 오류 처리 | 기능 정의 (임수종) |
 | 골든셋 평가 | `evaluation/` | 0 / 939 | 직접 작성 | — | 평가셋 고정·누수 검사 설계, 평가 실행·집계 구현 |
-| 기출 일괄 실행 | `batch/` | 0 / 480 | 직접 작성 | — | 배치 실행·재개 방식 설계, 집계 구현, AI 코드 검토·테스트 실행 |
+| 기출 일괄 실행 | `batch/` | 0 / 480 | 일부 | 코드 작성 보조 | 배치 실행·재개 방식 설계, 집계 구현, AI 코드 검토·테스트 실행 |
 | 법령 가져오기 실행기 | `bootstrap/LawImportRunner.java` | 155 / 0 | Claude Code | 공법 법령 파일 일괄 가져오기 | 실행·확인 (임수종) |
-| AI 연결 점검 | `bootstrap/AiConnectionSmoke.java` | 0 / 171 | 대부분 | 점검 항목 결정, 점검 코드 구현 | — |
+| AI 연결 점검 | `bootstrap/AiConnectionSmoke.java` | 0 / 171 | 대부분 | 점검 항목 결정, 점검 코드 구현 | 실행해서 동작 확인 |
 | DB 스키마 V001~V009 | `db/migration/` | 0 / 582 | 일부 | 작성 보조 | 테이블·제약 조건 설계, 결과 수정 금지 트리거 설계, 마이그레이션 SQL 작성 |
 | DB 스키마 V010 (공법 과목) | `V010__public_law_subject.sql` | 3 / 0 | Claude Code | 과목 값 추가 | 공법 포함 결정 |
 | 설정 | `application*.yml` | 2 / 186 | 대부분 | 설정 파일 작성 | AI 작성분 검토 |
