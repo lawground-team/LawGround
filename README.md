@@ -444,7 +444,7 @@ LawGround/
 - 라벨 초안은 AI가 BM25 후보를 참고해 만들었습니다.
 - 1과목: 표본 20문제를 **사람이 검수**해 18 일치, 2건은 조문 추가.
 - 공법: 표본 15문제를 **사람이 검수**해 15 모두 일치.
-- 36회 공법은 글자 층이 없는 스캔본이라 페이지 이미지를 보고 40문제를 직접 판독해 입력했습니다.
+- 36회 공법은 글자 층이 없는 스캔본이라, Claude Code가 페이지 이미지를 판독해 40문제를 옮겨 적고 사람이 확인했습니다(OCR 프로그램 미사용).
 - 검수하지 않은 나머지 라벨은 AI 초안입니다.
 
 > 기출 원문·라벨·선지 은행은 저작권 때문에 저장소에 올리지 않았습니다. 받는 방법과 실행 방법은 [팀 전달 실행 가이드](docs/handoff/2026-11-09_영주_전달_실행가이드.md), 법령 출처는 [데이터 출처 안내](docs/runbooks/data-sources.md)를 참고하세요.
@@ -576,8 +576,8 @@ PR과 main push마다 GitHub Actions가 다음을 검사합니다.
 
 | 항목 | 내용 |
 |---|---|
-| 사용 도구 | Claude Code (Anthropic) — 임수종, 2026-11-08 이후 커밋에 표시 · `TODO 그 밖에 쓴 도구(Codex, ChatGPT 등), 쓴 사람, 기간` |
-| 활용 이유 | `TODO` (예: 2인 팀이 백엔드·AI 서버·평가를 모두 구현해야 해서 반복 코드, 평가 스크립트, 문서 작성 시간을 줄이기 위해) |
+| 사용 도구 | Claude Code (Anthropic) 하나만 사용. 2026-11-08 이후 커밋에는 `Co-Authored-By: Claude` 표시 |
+| 활용 이유 | 2인 팀이 백엔드·AI 서버·평가를 모두 구현해야 해서, 반복 코드·평가 스크립트·문서 작성 시간을 줄이기 위해 |
 | 사람이 정한 것 | 서비스 범위(1과목·공법), 시스템 구조와 분석 단계, API 계약, 평가 방법(Recall@5·판정 시험), 범위 밖 판정 기준, 기능 우선순위 |
 | AI에 맡긴 것 | 정해진 설계에 따른 코드·테스트 작성, 데이터 변환·측정 스크립트, 측정 기록 문서 정리 |
 | 반영 절차 | AI가 만든 코드는 팀원이 읽고 로컬 테스트와 CI를 통과시킨 뒤 PR로 반영 |
@@ -603,32 +603,33 @@ PR과 main push마다 GitHub Actions가 다음을 검사합니다.
 | 서버 뼈대·요청 처리 | `app/main.py`, `app/common.py` | 43 / 249 | 일부 | 0.2.0 엔드포인트(`verify-statement`·`variation-diff`·`similar-items`) 라우트 추가 | 서버 구조, 내부 토큰·계약 버전 검사, 기존 라우트 `TODO 확인` |
 | 요청·응답 모델 | `app/contract/models.py`, `app/contract/checks.py` | 215 / 372 | 일부 | 공법 과목 값, 선지 태그, 0.2.0 요청·응답 모델 추가 | 0.1.0 계약 모델 `TODO 확인` |
 | 계약 Mock 서버 | `app/mock/logic.py`, `app/mock/server.py` | 22 / 130 | 일부 | 0.2.0 Mock 응답 추가 | Mock 서버 설계·구현 `TODO 확인` |
-| 형태소 분석 | `app/services/tokenizer.py` | 0 / 77 | `TODO 확인` | `TODO` | Kiwi 토큰화 규칙 |
+| 형태소 분석 | `app/services/tokenizer.py` | 0 / 77 | 일부 | `TODO` | Kiwi 토큰화 규칙 |
 | 임베딩 | `app/services/embedder.py`, `app/services/hf.py` | 25 / 43 | 일부 | 공법 대량 색인용 미리 계산한 임베딩 사용 경로 | bge-m3 로딩·계산 `TODO 확인` |
 | 재순위·모델 관리 | `app/services/reranker.py`, `app/services/registry.py` | 7 / 101 | 일부 | 공법·태그 설정 반영 | bge-reranker 로딩, 모델 버전 고정 `TODO 확인` |
 | 검증 (Gemini) | `app/services/verifier.py` | 75 / 312 | 일부 | 공법 지원, 선지 태그 5종 프롬프트(v2) | 판정 프롬프트, 인용 위치 계산, Gemini 호출 `TODO 확인` |
 | 문장 하나 확인 | `app/services/statement.py` | 133 / 0 | Claude Code | 문장 판정 로직·응답 구성 | 기능 정의, 판정 기준 |
 | 변형 비교 | `app/services/variation.py` | 131 / 0 | Claude Code | 글자 단위 비교, 변형 태그 추정, 공부 팁 | 태그 체계 5종 결정 |
 | 비슷한 기출 | `app/services/similar.py` | 109 / 0 | Claude Code | 은행 로드, 자기 문제 제외, 점수 계산(유사도 + 같은 조문) | 기능 선택, 결과 확인(36-09·36-27·공법 사례) |
-| 골든셋 평가 계산 | `app/evaluation.py` | 0 / 491 | `TODO 확인` | `TODO` | `TODO` |
-| 내부 API 명세 0.1.0 | `ai-service/openapi.yaml` | 1 / 1,093 | `TODO 확인` | `TODO` | 윤영주와 계약 협의 |
+| 골든셋 평가 계산 | `app/evaluation.py` | 0 / 491 | 일부 | `TODO` | `TODO` |
+| 내부 API 명세 0.1.0 | `ai-service/openapi.yaml` | 1 / 1,093 | 일부 | `TODO` | 윤영주와 계약 협의 |
 | 내부 API 명세 0.2.0 초안 | `ai-service/openapi-0.2.0-draft.yaml` | 642 / 0 | Claude Code | 명세 작성 | 확장 범위 결정 |
 
 ### 17.4 기능·코드별 상세 — 평가·데이터 스크립트 (임수종)
 
 | 기능 | 코드 (`ai-service/scripts/`) | 현재 줄 수<br>AI 표시 / 표시 없음 | AI 활용 | AI가 한 일 | 사람이 한 일 |
 |---|---|---:|---|---|---|
-| 검색 정확도 평가 | `eval_retrieval.py` | 0 / 123 | `TODO 확인` | `TODO` | Recall@k·신뢰구간 지표 결정 |
+| 검색 정확도 평가 | `eval_retrieval.py` | 0 / 123 | 일부 | `TODO` | Recall@k·신뢰구간 지표 결정 |
 | 판정 시험 | `verify_probe.py` | 34 / 174 | 일부 | 공법 문제 지원 | 시험 설계(정답·틀린 번호 넣기) `TODO 확인` |
 | 법령 가져오기 변환 | `law_to_import.py` | 13 / 135 | 일부 | 긴 별표 여러 조각 분할 | 국가법령정보 응답 변환 `TODO 확인` |
-| 시험용 데이터 생성 | `gen_fixtures.py` | 0 / 108 | `TODO 확인` | `TODO` | `TODO` |
-| 서버 동작 점검 | `smoke.py` | 0 / 90 | `TODO 확인` | `TODO` | `TODO` |
+| 시험용 데이터 생성 | `gen_fixtures.py` | 0 / 108 | 일부 | `TODO` | `TODO` |
+| 서버 동작 점검 | `smoke.py` | 0 / 90 | 일부 | `TODO` | `TODO` |
 | OpenAPI 내보내기 | `export_openapi.py` | 10 / 15 | 일부 | 0.2.0 명세 내보내기 | `TODO` |
 | 기출 PDF → 문제 변환 | `exam_pdf_to_jsonl.py` | 111 / 0 | Claude Code | PDF 글자 추출, 문제·선지 분리 | 결과 확인·수정 |
 | 기출 선지 은행 생성 | `build_choice_bank.py` | 94 / 0 | Claude Code | 선지 3,950개 정오·근거 조문 묶기 | 사용 범위 결정 |
 | 검색 단계 시간 측정 | `search_stage_probe.py` | 112 / 0 | Claude Code | 단계별 시간 측정 | 측정 조건 결정, 결과 해석 |
 | 분석 일괄 실행 | `run_analysis.py` | 145 / 0 | Claude Code | 문제 등록·분석 요청·결과 수집 | 실행 문제 선정 |
 | 모델 메모리 점검 | `model_scan.py` | 70 / 0 | Claude Code | 모델 로딩 메모리 측정 | `TODO` |
+| 36회 공법 스캔본 입력 | (데이터, 코드 아님) | — | Claude Code | 페이지 이미지 판독, 40문제 옮겨 적기 | 결과 확인 `TODO 확인` |
 | 환경변수 설정 도우미 | `env_set.py` | 100 / 0 | Claude Code | `.env` 값 설정 스크립트 | `TODO` |
 
 ### 17.5 기능·코드별 상세 — Spring 백엔드 (윤영주, 일부 임수종)
@@ -682,7 +683,6 @@ PR과 main push마다 GitHub Actions가 다음을 검사합니다.
 |---|---|
 | 정답 조문 라벨 사람 검수 (1과목 20문제) | `TODO` |
 | 정답 조문 라벨 사람 검수 (공법 15문제) | 임수종 `TODO 확인` |
-| 36회 공법 스캔본 40문제 판독·입력 | `TODO 확인: AI가 이미지를 읽어 옮겼다면 AI 활용으로 옮김` |
 | 범위 밖 문제 판정 기준 결정 | 팀 |
 | 서비스 기획, 기능 우선순위, 발표·시연 | 팀 |
 
