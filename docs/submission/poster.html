@@ -2,220 +2,280 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<title>LawGround 포스터</title>
+<title>LawGround | 2026 캡스톤디자인 포스터</title>
 <style>
   @page { size: 900mm 1400mm; margin: 0; }
   :root {
-    --ink:#1d2127; --muted:#5f6670; --gold:#cbb185; --gold-d:#8c7140; --gold-l:#efe4cc;
-    --paper:#fcfaf5; --white:#ffffff; --rule:#dccfb0; --red:#9a3b30; --green:#2f6b4f;
+    --ink: #192536;
+    --muted: #4c5a69;
+    --bronze: #775329;
+    --gold: #cbb183;
+    --paper: #fbfaf7;
+    --wash: #f3ede2;
+    --line: #ded5c7;
+    --green: #206345;
   }
   * { box-sizing: border-box; }
-  html, body { margin:0; background:var(--paper); }
-  body { width:900mm; height:1400mm; overflow:hidden; position:relative; color:var(--ink);
-         font-family:"Noto Sans KR","Malgun Gothic",sans-serif; font-size:27pt; line-height:1.5; }
-  .pad { padding:0 45mm; position:relative; }
+  html, body { margin: 0; background: var(--paper); }
+  body {
+    position: relative;
+    width: 900mm;
+    min-height: 1400mm;
+    padding: 37mm 43mm 32mm;
+    display: flex;
+    flex-direction: column;
+    color: var(--ink);
+    font-family: "Malgun Gothic", "Noto Sans KR", sans-serif;
+    font-size: 30pt;
+    line-height: 1.48;
+    word-break: keep-all;
+  }
+  h1, h2, h3, p, figure { margin: 0; }
+  h2, h3, b, strong { font-weight: 700; }
+  a { color: inherit; text-underline-offset: .15em; }
+  .mast { padding-bottom: 18mm; border-bottom: 1mm solid var(--ink); }
+  .mast-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    color: var(--muted);
+    font-size: 25pt;
+    font-weight: 700;
+    padding-bottom: 9mm;
+  }
+  h1 { font-size: 177pt; line-height: .98; letter-spacing: -.062em; }
+  .tagline { margin-top: 11mm; font-size: 57pt; line-height: 1.2; letter-spacing: -.045em; }
+  .tagline strong { color: var(--bronze); }
+  .authors { margin-top: 11mm; color: var(--muted); font-size: 26pt; }
+  .authors b { color: var(--ink); }
 
-  /* masthead */
-  .mast { margin:0 45mm; padding:30mm 0 14mm; border-bottom:.8mm solid var(--gold); position:relative; }
-  body::before, body::after { content:""; position:absolute; pointer-events:none; z-index:5; }
-  body::before { inset:16mm; border:1.2mm solid var(--gold); }
-  body::after  { inset:20mm; border:.4mm solid var(--gold); }
-  .band { position:absolute; left:0; right:0; top:0; height:395mm; overflow:hidden;
-          background:linear-gradient(180deg, #f1e7d1 0%, #f6efe0 70%, rgba(252,250,245,0) 100%); }
-  .band svg { position:absolute; right:30mm; top:40mm; width:330mm; height:330mm; opacity:.13; }
-  .mast { z-index:1; }
-  .titlerow { display:flex; align-items:center; gap:12mm; margin-top:8mm; }
-  .titlerow svg { width:62mm; height:62mm; flex:none; }
-  h1 { margin:0; font-size:190pt; line-height:.95; font-weight:900; letter-spacing:-4pt; color:var(--ink); }
-  .lede { font-size:64pt; font-weight:900; margin:12mm 0 4mm; line-height:1.2; letter-spacing:-1pt; }
-  .lede em { font-style:normal; color:var(--gold-d); }
-  .sub { font-size:33pt; color:var(--muted); margin:0 0 8mm; font-weight:500; }
-  .team { font-size:26pt; color:var(--muted); margin:0; }
-  .team b { color:var(--ink); }
+  .overview {
+    margin-top: 16mm;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16mm;
+    padding: 14mm 15mm;
+    background: var(--wash);
+    border-left: 1.5mm solid var(--gold);
+  }
+  .overview h3 { font-size: 32pt; letter-spacing: -.035em; margin-bottom: 3mm; }
+  .overview p { color: var(--muted); }
+  .overview .response { padding-left: 16mm; border-left: .45mm solid var(--line); }
 
-  /* numbers */
-  .nums { position:relative; display:grid; grid-template-columns:repeat(5,1fr); margin:10mm 45mm 0; background:var(--white); border:.6mm solid var(--rule); }
-  .nums > div { padding:9mm 4mm 8mm; text-align:center; border-right:.6mm solid var(--rule); }
-  .nums > div:last-child { border-right:0; }
-  .num { font-size:84pt; font-weight:900; line-height:1; letter-spacing:-2pt; }
-  .num small { font-size:36pt; color:var(--gold-d); margin-left:1mm; letter-spacing:0; }
-  .numcap { font-size:20pt; color:var(--muted); margin-top:3mm; line-height:1.35; }
+  main { flex: 1; }
+  .section-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 5mm 10mm;
+    margin: 20mm 0 11mm;
+    border-bottom: .45mm solid var(--line);
+    padding-bottom: 6mm;
+  }
+  .section-head h2 { font-size: 46pt; line-height: 1.2; letter-spacing: -.047em; }
+  .section-head p { color: var(--muted); font-size: 24pt; }
+  .row-top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.80fr);
+    gap: 15mm;
+    align-items: stretch;
+  }
+  .step-title { display: flex; align-items: baseline; gap: 5mm; margin: 0 0 6mm; }
+  .step-title small { font-size: 23pt; font-weight: 700; color: var(--bronze); }
+  .step-title h3 { font-size: 35pt; line-height: 1.18; letter-spacing: -.04em; }
+  .shot {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: .6mm solid var(--line);
+    background: #fff;
+    border-radius: 3.5mm;
+  }
+  figcaption { color: var(--muted); font-size: 28pt; margin-top: 6mm; line-height: 1.45; }
+  figcaption strong { color: var(--ink); }
+  .input-help {
+    margin-top: 10mm;
+    border-top: .55mm solid var(--gold);
+    padding-top: 8mm;
+    color: var(--muted);
+    font-size: 27pt;
+  }
+  .input-help b { color: var(--ink); display: block; font-size: 29pt; margin-bottom: 3mm; }
+  .row-bottom {
+    margin-top: 16mm;
+    padding: 13mm 14mm;
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    gap: 14mm;
+    align-items: center;
+    background: #f5f0e8;
+    border-top: .6mm solid var(--line);
+    border-bottom: .6mm solid var(--line);
+  }
+  .row-bottom .shot { max-width: 446mm; }
+  .pair-notes { color: var(--muted); font-size: 30pt; }
+  .pair-notes p + p { margin-top: 7mm; }
+  .pair-notes b { color: var(--ink); }
+  .quote { margin: 8mm 0; border-left: 1mm solid var(--gold); padding-left: 8mm; font-size: 33pt; color: var(--ink); }
 
-  .ch { display:flex; align-items:baseline; gap:7mm; margin:13mm 0 7mm; padding-bottom:3mm; border-bottom:.8mm solid var(--ink); }
-  .ch .no { font-size:28pt; color:var(--gold-d); font-weight:700; white-space:nowrap; }
-  .ch h2 { margin:0; font-size:54pt; font-weight:900; letter-spacing:-1pt; }
-  .ch .aside { margin-left:auto; font-size:22pt; color:var(--muted); }
-  .cols { display:grid; grid-template-columns:1fr 1fr; gap:16mm; }
-  p { margin:0 0 4mm; }
-  ul { margin:0; padding-left:10mm; }
-  li { margin:0 0 3mm; }
-  li::marker { color:var(--gold); }
-  .lab { font-size:31pt; font-weight:700; margin:0 0 4mm; }
-  .lab.gold { color:var(--gold-d); }
-  .card { background:var(--white); border:.6mm solid var(--rule); padding:9mm 10mm; }
+  .eval-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 15mm; }
+  .eval-grid h3 { font-size: 31pt; margin-bottom: 3mm; letter-spacing: -.03em; }
+  .eval-intro { font-size: 26pt; color: var(--muted); margin-bottom: 5mm; }
+  table { border-collapse: collapse; width: 100%; font-size: 27pt; font-variant-numeric: tabular-nums; }
+  th, td { text-align: right; padding: 4.5mm 3.5mm; border-bottom: .45mm solid var(--line); }
+  th:first-child, td:first-child { text-align: left; }
+  thead th { color: var(--muted); font-size: 21pt; background: var(--wash); }
+  tbody td:nth-child(2) { font-weight: 700; color: var(--bronze); }
+  tbody th small { display: block; color: var(--muted); font-size: 19pt; font-weight: 400; }
+  .evaluate-note { color: var(--muted); font-size: 22pt; margin-top: 5mm; line-height: 1.48; }
+  .verify {
+    padding: 9mm 12mm;
+    border-left: 1.4mm solid var(--gold);
+    background: #f3ede2;
+  }
+  .verify .big { display: inline-block; font-size: 68pt; line-height: 1; letter-spacing: -.04em; color: var(--bronze); }
+  .verify .count { font-size: 27pt; margin-left: 3mm; }
+  .verify .note { margin-top: 5mm; color: var(--muted); font-size: 26pt; }
+  .finding {
+    margin-top: 11mm;
+    padding: 9mm 12mm;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18mm;
+    background: #f5f0e8;
+    color: var(--muted);
+    font-size: 25pt;
+  }
+  .finding b { display: block; color: var(--ink); font-size: 28pt; margin-bottom: 2mm; }
+  .methods {
+    margin-top: 12mm;
+    border-top: .5mm solid var(--line);
+    padding-top: 7mm;
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 15mm;
+    font-size: 25pt;
+    color: var(--muted);
+  }
+  .methods b { color: var(--ink); display: block; margin-bottom: 2mm; }
 
-  /* follow one question */
-  .shot { background:var(--white); border:.6mm solid var(--rule); margin:0 0 9mm; }
-  .shot img { display:block; width:100%; }
-  .shot .ph { height:300mm; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:28pt; text-align:center; }
-  .steps { display:grid; grid-template-columns:1fr 1fr; gap:8mm 14mm; }
-  .step { display:grid; grid-template-columns:16mm 1fr; gap:5mm; }
-  .badge { width:14mm; height:14mm; border-radius:50%; background:var(--gold-d); color:#fff; font-size:24pt; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:1.5mm; }
-  .step h3 { margin:0 0 1.5mm; font-size:30pt; }
-  .step p { font-size:24pt; margin:0; }
-  .quote { font-size:23pt; border-left:1.4mm solid var(--gold); padding:1.5mm 0 1.5mm 5mm; margin-top:2.5mm; background:var(--white); }
-  s { color:var(--red); text-decoration-thickness:.5mm; }
-  ins { text-decoration:none; color:var(--green); font-weight:700; border-bottom:.6mm solid var(--green); }
-  .verdict { display:inline-block; font-size:22pt; font-weight:700; color:var(--green); border:.6mm solid var(--green); padding:0 3mm; margin-left:2mm; vertical-align:middle; }
-  .tag { display:inline-block; font-size:20pt; color:var(--gold-d); border:.5mm solid var(--gold); padding:0 2.5mm; margin-left:2mm; vertical-align:middle; }
-
-  .flow { display:grid; grid-template-columns:1fr 12mm 1fr 12mm 1.25fr; align-items:start; }
-  .arrow { font-size:54pt; color:var(--gold-d); text-align:center; padding-top:120mm; }
-  .fh { font-size:32pt; font-weight:700; margin:0 0 4mm; display:flex; align-items:center; gap:4mm; }
-  .fh .badge { margin-top:0; }
-  .fcol .shot { margin:0; height:250mm; overflow:hidden; }
-  .fcol .shot img { height:100%; object-fit:cover; object-position:top; }
-  .fcol .shot .ph { height:100%; }
-  .fc { font-size:22pt; margin:4mm 0 0; }
-  .fcol.key .shot { border:1.4mm solid var(--gold); }
-  .fcol.key .fh { color:var(--gold-d); }
-  .hl { margin-top:10mm; background:var(--gold-l); border-left:3mm solid var(--gold-d); padding:8mm 12mm; }
-  .hl-k { font-size:22pt; font-weight:700; color:var(--gold-d); letter-spacing:1pt; margin:0 0 2mm; }
-  .hl-t { font-size:40pt; font-weight:900; margin:0 0 3mm; line-height:1.3; }
-  .hl-p { font-size:24pt; margin:0 0 4mm; }
-  .hl-tags span { display:inline-block; font-size:21pt; background:#fff; border:.5mm solid var(--gold); color:var(--gold-d); padding:.5mm 4mm; margin:0 3mm 0 0; }
-  /* tech */
-  .three { display:grid; grid-template-columns:repeat(3,1fr); gap:10mm; }
-  .three .card h3 { margin:0 0 3mm; font-size:32pt; }
-  .three .card p { font-size:24pt; margin:0; }
-  .three .card .k { display:block; font-size:21pt; color:var(--gold-d); font-weight:700; margin-bottom:2mm; letter-spacing:1pt; }
-
-  .small { font-size:21pt; color:var(--muted); }
-  .qrbox { display:flex; gap:8mm; align-items:center; margin-top:10mm; }
-  .qrbox .box { width:52mm; height:52mm; border:.5mm solid var(--rule); background:#fff; display:flex; align-items:center; justify-content:center; font-size:18pt; color:var(--muted); flex:none; }
-  .qrbox p { font-size:23pt; color:var(--muted); margin:0; }
-
-  footer { position:absolute; left:45mm; right:45mm; bottom:22mm; border-top:.6mm solid var(--gold); color:var(--muted); font-size:20pt; padding:5mm 0 2mm; }
-  footer b { color:var(--ink); font-weight:500; }
+  footer {
+    margin-top: 17mm;
+    border-top: .8mm solid var(--ink);
+    padding-top: 9mm;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 12mm;
+    font-size: 22pt;
+  }
+  footer b { color: var(--ink); }
+  footer .credits { color: var(--muted); }
+  footer .credits p + p { margin-top: 2.5mm; }
+  .qr { display: flex; align-items: center; gap: 6mm; line-height: 1.35; }
+  .qr img { display: block; width: 46mm; height: 46mm; padding: 4.5mm; background: #fff; }
+  .qr span { color: var(--muted); font-size: 18pt; }
 </style>
 </head>
 <body>
-<div class="band" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none" stroke="#8c7140" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M32 8v44M20 56h24M14 16h36"/><circle cx="32" cy="8" r="2.2" fill="#8c7140"/>
-  <path d="M14 16l-8 18h16zM50 16l-8 18h16z"/><path d="M6 34a8 4 0 0 0 16 0M42 34a8 4 0 0 0 16 0"/></svg></div>
-
 <header class="mast">
-  <div class="titlerow">
-    <svg viewBox="0 0 64 64" fill="none" stroke="#cbb185" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M32 8v44M20 56h24M14 16h36"/><circle cx="32" cy="8" r="2.2" fill="#cbb185"/>
-      <path d="M14 16l-8 18h16zM50 16l-8 18h16z"/><path d="M6 34a8 4 0 0 0 16 0M42 34a8 4 0 0 0 16 0"/>
-    </svg>
-    <h1>LawGround</h1>
+  <div class="mast-meta">
+    <p>단국대학교 소프트웨어학과 · 2026 캡스톤디자인</p>
+    <p>졸업시켜조</p>
   </div>
-  <p class="lede">조문은 그대로, <em>선지만 바뀐다</em>. 그 차이를 보는 것이 공부다.</p>
-  <p class="sub">공인중개사 문제 풀이 및 선지 분석을 통한 합격으로 향하는 길, AI와 함께하세요!</p>
-  <p class="team">팀 <b>졸업시켜조</b> &nbsp;·&nbsp; <b>임수종</b> AI·검색·평가 &nbsp;·&nbsp; <b>윤영주</b> 백엔드·파이프라인·화면</p>
+  <h1>LawGround</h1>
+  <p class="tagline">공인중개사 문제의 <strong>정답 근거를 법령에서</strong> 찾다</p>
+  <p class="authors"><b>임수종</b> · <b>윤영주</b> &ensp; / &ensp; 지도교수 <b>박규식</b></p>
 </header>
-
-<section class="nums">
-  <div><div class="num">93<small>%</small></div><div class="numcap">1과목 근거 조문을<br>5개 안에 찾은 비율 (Recall@5)</div></div>
-  <div><div class="num">89<small>%</small></div><div class="numcap">부동산공법 근거 조문을<br>5개 안에 찾은 비율 (Recall@5)</div></div>
-  <div><div class="num">2,422<small>개</small></div><div class="numcap">기준일별로 관리하는<br>현행 법령 조문</div></div>
-  <div><div class="num">3,950<small>개</small></div><div class="numcap">비슷한 기출을 찾는<br>기출 선지</div></div>
-  <div><div class="num">802<small>문제</small></div><div class="numcap">평가에 쓴 기출<br>(25~36회)</div></div>
-</section>
-
-<main class="pad">
-  <div class="ch"><span class="no">제1장</span><h2>왜 만들었나</h2></div>
-  <div class="cols">
-    <div class="card">
-      <p class="lab">수험생의 문제</p>
-      <ul>
-        <li>선지 하나를 확인하려면 법률·시행령·시행규칙을 오가며 조문을 찾아야 한다.</li>
-        <li>법령이 개정되면 기출 해설이 현행 법령과 어긋난다.</li>
-        <li>범용 챗봇은 근거 없이 그럴듯하게 틀린다.</li>
-      </ul>
+<main>
+  <section class="overview" aria-label="개발 배경과 기능">
+    <div>
+      <h3>정답을 알아도 근거는 찾기 어렵다</h3>
+      <p>선지 하나를 확인하려면 법률·시행령·시행규칙을 오가야 한다. 법령이 개정되면 같은 기출도 기준일에 따라 해설이 달라질 수 있다.</p>
     </div>
-    <div class="card">
-      <p class="lab gold">LawGround의 답</p>
-      <ul>
-        <li><b>검색</b> — 현행 조문 2,422개 중 근거 후보 5개</li>
-        <li><b>검증</b> — 후보 조문 <u>안에서만</u> 판정, 인용을 원문과 대조</li>
-        <li><b>설명</b> — 선지별 일치·불일치, 고친 문장, 변형 유형</li>
-        <li><b style="color:var(--gold-d)">학습 — 같은 조문을 물은 비슷한 기출</b></li>
-      </ul>
+    <div class="response">
+      <h3>선지에서 근거 조문까지 한 화면에</h3>
+      <p>기준일에 맞는 조문을 찾아 제공된 정답을 검증한다. 틀린 선지의 이유와 고친 문장을 보여 주고, 같은 조문을 다룬 기출을 연결한다.</p>
     </div>
-  </div>
-
-  <div class="ch"><span class="no">제2장</span><h2>한 문제 따라가기</h2><span class="aside">제36회 9번 · 실제 실행 결과</span></div>
-  <div class="flow">
-    <div class="fcol"><p class="fh"><span class="badge">1</span>문제 넣기</p>
-      <figure class="shot"><img src="../images/input.png" alt="문제 입력 화면"></figure>
-      <p class="fc">시험지 문장을 붙여넣으면 본문과 선지 5개가 채워진다. 정답 1번·기준일 선택.</p></div>
-    <div class="arrow">→</div>
-    <div class="fcol"><p class="fh"><span class="badge">2</span>분석 결과 <span class="verdict">근거 확인</span></p>
-      <figure class="shot"><img src="../images/result.png" alt="" onerror="this.outerHTML='<div class=&quot;ph&quot;>분석 결과 화면<br>캡처 자리</div>'"></figure>
-      <p class="fc">2번 <span class="tag">주체·권한</span> 10일 이내에 <s>이전하기 전의</s> <ins>이전 후</ins> 등록관청에 신고 — 공인중개사법 제20조 인용.</p></div>
-    <div class="arrow">→</div>
-    <div class="fcol key"><p class="fh"><span class="badge">3</span>비슷한 기출</p>
-      <figure class="shot"><img src="../images/similar.png" alt="" onerror="this.outerHTML='<div class=&quot;ph&quot;>비슷한 기출 화면<br>캡처 자리</div>'"></figure>
-      <p class="fc">같은 근거 조문을 물은 제26회 10번 · 제29회 16번 · 제28회 15번.</p></div>
-  </div>
-  <div class="hl">
-    <p class="hl-k">공부에서 제일 중요한 것</p>
-    <p class="hl-t">한 조문이 <b>어떻게 바뀌어 출제되는지</b> 한 화면에서 비교한다.</p>
-    <p class="hl-p">같은 근거 조문을 물은 기출 선지를 모아 보여 주고, 각 선지가 어떤 방식으로 틀리게 바뀌었는지 표시한다.
-      문제 하나를 풀면 그 조문에서 나올 함정을 함께 익힌다.</p>
-    <p class="hl-tags"><span>시점·기한</span><span>조건 추가</span><span>주체·권한</span><span>개념 오인</span><span>숫자·수치</span></p>
-  </div>
-
-  <div class="ch"><span class="no">제3장</span><h2>핵심 기술</h2></div>
-  <div class="three">
-    <div class="card"><span class="k">SEARCH</span><h3>하이브리드 검색</h3><p>형태소 단어 검색(BM25)과 bge-m3 의미 검색을 RRF로 묶고, bge-reranker로 다시 정렬해 근거 후보 5개를 고른다.</p></div>
-    <div class="card"><span class="k">VERIFY</span><h3>환각 차단</h3><p>LLM은 후보 조문만 보고 판정한다. 인용 문구·위치·시행일을 서버가 원문과 다시 대조하고, 다르면 저장하지 않는다.</p></div>
-    <div class="card"><span class="k">PIPELINE</span><h3>멈추지 않는 처리</h3><p>Spring이 큐(RabbitMQ)로 작업을 넘기고 단계마다 checkpoint를 남긴다. 실패해도 끝난 단계부터 다시 한다.</p></div>
-  </div>
-
-  <div class="ch"><span class="no">제4장</span><h2>검색 정확도와 기대효과</h2><span class="aside">25~36회 기출 802문제</span></div>
-  <div class="cols">
-    <div class="card">
-      <p class="lab">근거 조문 검색 (Recall@5)</p>
-      <svg viewBox="0 0 420 220" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans KR, Malgun Gothic, sans-serif" font-size="13">
-        <g font-size="12.5" fill="#5f6670">
-          <rect x="10" y="2" width="12" height="12" fill="#1d2127"/><text x="27" y="13">BM25(단어)</text>
-          <rect x="128" y="2" width="12" height="12" fill="#c9ccd1"/><text x="145" y="13">Dense(의미)</text>
-          <rect x="252" y="2" width="12" height="12" fill="#cbb185"/><text x="269" y="13">Hybrid(결합)</text>
-        </g>
-        <line x1="10" y1="190" x2="410" y2="190" stroke="#dccfb0" stroke-width="1.2"/>
-        <g font-size="14">
-          <rect x="35" y="58" width="44" height="132" fill="#1d2127"/><text x="57" y="51" text-anchor="middle" font-weight="700" fill="#1d2127">93</text>
-          <rect x="85" y="70" width="44" height="120" fill="#c9ccd1"/><text x="107" y="63" text-anchor="middle" fill="#5f6670">90</text>
-          <rect x="135" y="62" width="44" height="128" fill="#cbb185"/><text x="157" y="55" text-anchor="middle" fill="#8c7140">92</text>
-          <text x="107" y="210" text-anchor="middle" fill="#1d2127">1과목</text>
-          <rect x="235" y="74" width="44" height="116" fill="#1d2127"/><text x="257" y="67" text-anchor="middle" font-weight="700" fill="#1d2127">89</text>
-          <rect x="285" y="110" width="44" height="80" fill="#c9ccd1"/><text x="307" y="103" text-anchor="middle" fill="#5f6670">80</text>
-          <rect x="335" y="86" width="44" height="104" fill="#cbb185"/><text x="357" y="79" text-anchor="middle" fill="#8c7140">86</text>
-          <text x="307" y="210" text-anchor="middle" fill="#1d2127">부동산공법</text>
-        </g>
-      </svg>
-      <p class="small">단위 %, 세로축 60%부터. 법률 용어가 글자 그대로 맞아야 하는 공법에서 단어 검색이 9%p 높았다.</p>
+  </section>
+  <section aria-labelledby="example-title">
+    <div class="section-head">
+      <h2 id="example-title">한 문제를 분석해 보면</h2>
+      <p>실제 실행 화면 · 제33조 연습문제 · 기준일 2024.10.26.</p>
     </div>
-    <div class="card">
-      <p class="lab gold">기대효과</p>
-      <ul>
-        <li>선지마다 근거 조문을 바로 확인해, 법령을 찾는 시간을 줄인다.</li>
-        <li>기준일의 현행 조문으로 다시 판정해, 개정으로 낡은 해설을 걸러 낸다.</li>
-        <li>같은 조문을 물은 기출을 묶어 보여 줘, 출제 변형을 스스로 익히게 한다.</li>
-        <li>근거 안에서만 판정하고 인용을 재확인하는 구조는 다른 법률 학습 도구에도 쓸 수 있다.</li>
-      </ul>
-      <div class="qrbox"><img class="box" src="qr-github.svg" alt="GitHub QR"><p>GitHub<br><b style="color:var(--ink);font-size:20pt">github.com/lawground-team/LawGround</b></p></div>
-      <div class="qrbox" style="margin-top:5mm"><div class="box">영상 QR</div><p>시연 영상</p></div>
+    <div class="row-top">
+      <div>
+        <div class="step-title"><small>01</small><h3>문제 입력</h3></div>
+        <figure>
+          <img class="shot" src="../images/poster/input.jpg" alt="문제를 붙여넣은 뒤 본문과 선지 다섯 개를 채운 실제 화면">
+          <figcaption>문제를 붙여넣어 <strong>본문과 선지 5개</strong>를 채운다. 제공된 정답과 법령 기준일을 확인해 저장한다.</figcaption>
+        </figure>
+        <p class="input-help"><b>분석 중에도 이동 가능</b>진행 상태를 확인하고, 결과가 준비되면 내 라이브러리에서 다시 연다.</p>
+      </div>
+      <div>
+        <div class="step-title"><small>02</small><h3>정답과 오답의 근거 확인</h3></div>
+        <figure>
+          <img class="shot" src="../images/poster/result.jpg" alt="근거 확인 판정, 1번 선지의 정정과 공인중개사법 제33조 근거를 함께 보여 주는 실제 결과">
+          <figcaption>제공 정답 <strong>3번</strong>의 근거는 <strong>공인중개사법 제33조 제1항 제6호</strong>다. 1번의 ‘직접 거래는 금지행위에 해당하지 않는다’는 문장도 같은 조문으로 바로잡는다.</figcaption>
+        </figure>
+      </div>
     </div>
-  </div>
+    <div class="row-bottom">
+      <figure>
+        <img class="shot" src="../images/poster/similar.jpg" alt="연습문제의 3번 선지와 같은 조문을 다룬 제35회 6번의 5번 선지를 나란히 보여 주는 실제 화면">
+      </figure>
+      <div class="pair-notes">
+        <div class="step-title"><small>03</small><h3>비슷한 기출 비교</h3></div>
+        <p><b>제35회 6번의 5번 선지</b>도 같은 조문을 다룬다.</p>
+        <div class="quote">“개업공인중개사가 거래당사자 쌍방을 대리한 경우”</div>
+        <p>표현이 달라져도 <b>거래당사자 쌍방을 대리했는지</b>를 확인하면 같은 쟁점임을 알 수 있다.</p>
+      </div>
+    </div>
+  </section>
+  <section aria-labelledby="evaluation-title">
+    <div class="section-head">
+      <h2 id="evaluation-title">검색·판정 평가</h2>
+      <p>25~36회 기출 · 검색 평가 802문제</p>
+    </div>
+    <div class="eval-grid">
+      <div>
+        <h3>정답 근거가 상위 5개에 포함된 비율</h3>
+        <p class="eval-intro">오프라인 검색 평가 · Recall@5</p>
+        <table aria-label="과목별 검색 방법의 Recall at 5 비교">
+          <thead><tr><th scope="col">평가 과목</th><th scope="col">단어 BM25</th><th scope="col">의미 검색</th><th scope="col">혼합 검색</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">중개사법령 및 중개실무 <small>337문제</small></th><td>93%</td><td>90%</td><td>92%</td></tr>
+            <tr><th scope="row">부동산공법 <small>465문제</small></th><td>89%</td><td>80%</td><td>86%</td></tr>
+          </tbody>
+        </table>
+        <p class="evaluate-note">BM25의 95% 신뢰구간은 중개사법령 및 중개실무 90~95%, 부동산공법 86~92%였다.</p>
+      </div>
+      <div class="verify">
+        <h3>틀린 정답을 승인한 사례</h3>
+        <p><span class="big">0</span><span class="count">건 / 틀린 정답을 넣은 16문제</span></p>
+        <p class="note">정답 조문을 후보에 포함한 판정 시험에서 14문제는 불일치, 2문제는 보류였다. 전체 판정 시험은 37문제로 진행했다.</p>
+      </div>
+    </div>
+    <div class="finding">
+      <p><b>공법에서는 단어 검색이 9%p 앞섰다</b>평가한 465문제에서 BM25의 Recall@5는 89%, 의미 검색은 80%였다.</p>
+      <p><b>판정 시험은 근거가 주어진 조건에서 진행했다</b>실서비스에서는 정답 근거가 후보에 빠질 수 있다. 검색 결과와 판정 결과를 각각 측정했다.</p>
+    </div>
+    <div class="methods">
+      <p><b>서비스의 검색·검증 방식</b>PostgreSQL 단어·벡터 검색으로 후보를 모은다. AI가 후보 조문을 근거로 판정하고, 서버가 인용과 시행일을 원문에서 확인한다. 근거가 부족하면 판단을 보류한다.</p>
+      <p><b>서비스 데이터 범위</b>보고서 기준 법령 조문 2,422개와 기출 선지 3,950개를 구축했다.</p>
+    </div>
+  </section>
 </main>
-
 <footer>
-  <div>본 기출문제의 저작권은 <b>한국산업인력공단(Q-Net)</b>에 있으며, 출처를 밝히고 사용하였습니다. 일부 재가공. &nbsp;|&nbsp; 법령 원문: <b>국가법령정보센터</b>(law.go.kr)</div>
+  <div class="credits">
+    <p>법령 원문 <b>국가법령정보센터</b> · 기출 자료 <b>한국산업인력공단(Q-Net)</b></p>
+    <p>기출문제 저작권은 한국산업인력공단에 있으며, 입력 편의를 위해 일부 재가공했다.</p>
+  </div>
+  <a class="qr" href="https://github.com/lawground-team/LawGround">
+    <img src="qr-github.svg" alt="LawGround GitHub 저장소 QR">
+    <div><b>GitHub 저장소</b><br><span>lawground-team/LawGround</span></div>
+  </a>
 </footer>
 </body>
 </html>
