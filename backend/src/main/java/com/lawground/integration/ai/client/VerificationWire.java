@@ -7,6 +7,16 @@ import java.util.*;
 
 /** Shape/provenance checks do not establish semantic or legal correctness. */
 public final class VerificationWire {
+    /**
+     * Agreed 2026-11-09 with the Python verifier: five choice tags, only on CONTRADICTS choices.
+     */
+    public static final String TAG_SET_VERSION = "choice-tags-v1";
+
+    public static final Set<String> TAG_CODES =
+            Set.of("TIMING", "CONDITION", "ACTOR", "CONCEPT", "NUMBER");
+
+    private static final int MAX_TAGS_PER_CHOICE = 2;
+
     private VerificationWire() {}
 
     public static void request(Request in) {
@@ -18,7 +28,7 @@ public final class VerificationWire {
                 || in.candidates().isEmpty()
                 || in.candidates().size() > 5) throw invalid();
         var q = in.questionSnapshot();
-        if (!"BROKER_LAW".equals(q.subject())
+        if (!Set.of("BROKER_LAW", "PUBLIC_LAW").contains(q.subject() == null ? "" : q.subject())
                 || !Set.of("SELECT_CORRECT", "SELECT_INCORRECT")
                         .contains(q.questionType() == null ? "" : q.questionType())
                 || !text(q.stem(), 10000)
@@ -71,7 +81,8 @@ public final class VerificationWire {
         if (!pin.promptVersion().equals(out.promptVersion()))
             throw new AiClientException(
                     AiClientException.Kind.VERSION_MISMATCH, 0, "PROMPT_VERSION_MISMATCH", false);
-        if (out.tagSetVersion() != null)
+        if (out.tagSetVersion() != null
+                && (!TAG_SET_VERSION.equals(out.tagSetVersion()) || out.choiceAnalyses() == null))
             throw new AiClientException(
                     AiClientException.Kind.PROTOCOL,
                     0,
@@ -108,7 +119,14 @@ public final class VerificationWire {
                     || c.tags() == null
                     || c.evidenceKeys() == null
                     || c.evidenceKeys().size() > 20) throw protocol();
-            if (!c.tags().isEmpty())
+            if (!c.tags().isEmpty()
+                    && (out.tagSetVersion() == null
+                            || c.relation() != Relation.CONTRADICTS
+                            || c.tags().size() > MAX_TAGS_PER_CHOICE
+                            || c.tags().stream()
+                                    .anyMatch(t -> t == null || !TAG_CODES.contains(t.code()))
+                            || c.tags().stream().map(Tag::code).distinct().count()
+                                    != c.tags().size()))
                 throw new AiClientException(
                         AiClientException.Kind.PROTOCOL, 0, "VERIFICATION_TAGS_UNSUPPORTED", false);
             var references = new HashSet<String>();

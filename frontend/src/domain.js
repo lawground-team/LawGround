@@ -13,10 +13,13 @@ export function displayTime(value) {
 }
 
 const normalize = text => String(text ?? '').replace(/\r\n?/g, '\n').trim();
+export const SUBJECTS = {BROKER_LAW:'공인중개사법령 및 중개실무', PUBLIC_LAW:'부동산공법'};
+export const subjectLabel = subject => SUBJECTS[subject] ?? SUBJECTS.BROKER_LAW;
+export const SOURCE_NOTICE = '본 기출문제의 저작권은 한국산업인력공단(Q-Net)에 있으며, 출처를 밝히고 사용하였습니다. 입력 편의를 위해 일부 재가공됨.';
 export const emptyQuestion = () => ({subject:'BROKER_LAW', stem:'', questionType:'SELECT_CORRECT', choices:Array.from({length:5}, (_,i) => ({number:i+1,text:''})), providedAnswerNumber:null, referenceDate:koreaToday()});
 
 export function questionPayload(draft) {
-  return {subject:'BROKER_LAW', stem:normalize(draft.stem), questionType:draft.questionType,
+  return {subject:SUBJECTS[draft.subject] ? draft.subject : 'BROKER_LAW', stem:normalize(draft.stem), questionType:draft.questionType,
     choices:Array.from({length:5},(_,i) => ({number:i+1,text:normalize(draft.choices?.find(c => c.number === i+1)?.text)})),
     providedAnswerNumber:draft.providedAnswerNumber == null ? null : Number(draft.providedAnswerNumber), referenceDate:draft.referenceDate};
 }
@@ -74,4 +77,48 @@ export function errorMessage(error) {
   if (error.status === 428) return '문제의 최신 버전을 다시 불러와 주세요.';
   if (error.network) return error.writing ? '저장 결과를 확인하지 못했어요. 내 라이브러리에서 먼저 확인해 주세요.' : '서버에 연결하지 못했어요. 잠시 후 다시 확인해 주세요.';
   return '요청을 완료하지 못했어요. 입력 내용과 연결 상태를 확인해 주세요.';
+}
+
+// 붙여넣기 → 지문·선지 5개 자동 분리 (docs/prototypes/paste_split.html 에서 검증한 규칙). 정답 번호·기준일은 추측하지 않는다.
+const CIRCLED = '①②③④⑤';
+const MARKER_STYLES = [
+  n => new RegExp(CIRCLED[n - 1], 'g'),
+  n => new RegExp(`[(（]\\s*${n}\\s*[)）]`, 'g'),
+  n => new RegExp(`(?:^|(?<=\\s))${n}\\s*[)）]`, 'g'),
+  n => new RegExp(`(?:^|(?<=\\s))${n}\\s*[.．](?=\\s)`, 'g'),
+];
+const squeeze = s => s.replace(/\s+/g, ' ').trim();
+function findMarkers(text, style) {
+  const out = []; let from = 0;
+  for (let n = 1; n <= 5; n++) {
+    const re = style(n); re.lastIndex = from;
+    const m = re.exec(text); if (!m) return null;
+    out.push({start:m.index, end:m.index + m[0].length}); from = m.index + m[0].length;
+  }
+  return out;
+}
+export function splitPastedQuestion(raw) {
+  const text = String(raw ?? '').replace(/\r\n?/g, '\n').replace(/\u00a0/g, ' ').trim().replace(/^\s*(?:문\s*)?\d{1,3}\s*[.)번]\s*(?=\S)/, '');
+  for (const style of MARKER_STYLES) {
+    const m = findMarkers(text, style); if (!m) continue;
+    const stem = text.slice(0, m[0].start).replace(/[ \t]+\n/g, '\n').replace(/\n{2,}/g, '\n').trim();
+    return {stem, choices:m.map((x, i) => squeeze(text.slice(x.end, i < 4 ? m[i + 1].start : text.length)))};
+  }
+  return null;
+}
+export function detectQuestionType(stem) {
+  const s = String(stem).replace(/\s+/g, '');
+  if (/(옳지않은|틀린|잘못된|아닌것|않는것|없는것|않은것)/.test(s)) return 'SELECT_INCORRECT';
+  if (/(옳은|맞는|바른|해당하는것|있는것)/.test(s)) return 'SELECT_CORRECT';
+  return null;
+}
+const SUBJECT_WORDS = {
+  PUBLIC_LAW:['국토의계획','국토계획','도시·군','도시군','용도지역','용도지구','개발행위','지구단위','기반시설','도시개발','환지','정비사업','재건축','재개발','정비구역','건축법','건축물','건폐율','용적률','주택법','주택조합','사업계획승인','분양가','농지','농업경영'],
+  BROKER_LAW:['공인중개사','중개','중개보수','중개사무소','거래신고','토지거래허가','외국인','분묘','매수신청대리','확인·설명','확인설명','전속중개','주택임대차','포상금'],
+};
+export function detectSubject(text) {
+  const s = String(text).replace(/\s+/g, '');
+  const score = k => SUBJECT_WORDS[k].reduce((a, w) => a + s.split(w).length - 1, 0);
+  const p = score('PUBLIC_LAW'), b = score('BROKER_LAW');
+  return p > b ? 'PUBLIC_LAW' : b > p ? 'BROKER_LAW' : null;
 }

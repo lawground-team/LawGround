@@ -82,6 +82,73 @@ class VerificationChoiceTest {
         VerificationWire.response(response(choices(), null), in, pin);
     }
 
+    List<ChoiceAnalysis> withTags(int number, List<Tag> tags) {
+        var list = new ArrayList<>(choices());
+        var c = list.get(number - 1);
+        list.set(
+                number - 1,
+                new ChoiceAnalysis(
+                        number,
+                        c.relation(),
+                        c.explanation(),
+                        c.correctedText(),
+                        tags,
+                        c.evidenceKeys()));
+        return list;
+    }
+
+    @Test
+    void agreedTagSetIsAcceptedOnContradictingChoicesOnly() {
+        var in = request();
+        VerificationWire.response(
+                response(
+                        withTags(2, List.of(new Tag("TIMING"), new Tag("NUMBER"))),
+                        "choice-tags-v1"),
+                in,
+                pin);
+        VerificationWire.response(response(choices(), "choice-tags-v1"), in, pin);
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "on-supports",
+                "three",
+                "duplicate",
+                "unknown-code",
+                "no-version",
+                "no-choices"
+            })
+    void rejectsTagsOutsideTheAgreedRules(String kind) {
+        Response out =
+                switch (kind) {
+                    case "on-supports" ->
+                            response(withTags(1, List.of(new Tag("ACTOR"))), "choice-tags-v1");
+                    case "three" ->
+                            response(
+                                    withTags(
+                                            2,
+                                            List.of(
+                                                    new Tag("TIMING"),
+                                                    new Tag("NUMBER"),
+                                                    new Tag("ACTOR"))),
+                                    "choice-tags-v1");
+                    case "duplicate" ->
+                            response(
+                                    withTags(2, List.of(new Tag("ACTOR"), new Tag("ACTOR"))),
+                                    "choice-tags-v1");
+                    case "unknown-code" ->
+                            response(withTags(2, List.of(new Tag("OTHER"))), "choice-tags-v1");
+                    case "no-version" -> response(withTags(2, List.of(new Tag("ACTOR"))), null);
+                    case "no-choices" -> response(null, "choice-tags-v1");
+                    default -> throw new AssertionError(kind);
+                };
+        assertThatThrownBy(() -> VerificationWire.response(out, request(), pin))
+                .isInstanceOfSatisfying(
+                        AiClientException.class,
+                        e -> assertThat(e.kind()).isEqualTo(AiClientException.Kind.PROTOCOL));
+    }
+
     @ParameterizedTest
     @ValueSource(
             strings = {

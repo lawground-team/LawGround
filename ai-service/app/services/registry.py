@@ -5,6 +5,7 @@
   RERANK_BACKEND  = off | bge-reranker | mock
   HYDE_BACKEND    = off | mock        (LLM 미정, 실제 구현 없음)
   VERIFY_BACKEND  = off | mock | gemini   (gemini: LLM_API_KEY, LLM_MODEL 필요. 선택: LLM_MODEL_REVISION, LLM_TIMEOUT_SECONDS, LLM_MAX_INPUT_CHARS, VERIFY_TAGS)
+  EMBED_PRECOMPUTED = "texts.json;vectors.npy" (선택) 같은 커밋으로 미리 계산한 벡터를 글자가 같은 텍스트에만 재사용
   EMBED_MODEL_REVISION / RERANK_MODEL_REVISION = Hugging Face 커밋 해시(40자 hex). 비우면 캐시된 최신 스냅샷의 해시를 쓴다.
 """
 import os
@@ -65,6 +66,10 @@ def load_configured():
     if backend("EMBED_BACKEND") == "bge-m3" and _state["embedder"] is None:
         from app.services.embedder import BgeM3Embedder
         _state["embedder"] = BgeM3Embedder(pinned_revision=os.environ.get("EMBED_MODEL_REVISION") or None)
+        pre = os.environ.get("EMBED_PRECOMPUTED", "").strip()            # "texts.json;vectors.npy" (선택, 대량 색인용)
+        if pre:
+            texts_json, npy = pre.split(";", 1)
+            _state["embedder"].load_precomputed(texts_json, npy)
     if backend("RERANK_BACKEND") == "bge-reranker" and _state["reranker"] is None:
         from app.services.reranker import BgeReranker
         _state["reranker"] = BgeReranker(pinned_revision=os.environ.get("RERANK_MODEL_REVISION") or None)

@@ -6,13 +6,19 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties("lawground.analysis.live")
 public record LiveAnalysisProperties(
-        boolean enabled, Set<UUID> lawIds, Integer candidateLimit, Integer topK) {
+        boolean enabled,
+        Set<UUID> lawIds,
+        Integer candidateLimit,
+        Integer topK,
+        Set<UUID> publicLawIds) {
     public LiveAnalysisProperties {
         lawIds = lawIds == null ? Set.of() : Set.copyOf(lawIds);
+        publicLawIds = publicLawIds == null ? Set.of() : Set.copyOf(publicLawIds);
         candidateLimit = candidateLimit == null ? 5 : candidateLimit;
         topK = topK == null ? Math.min(5, candidateLimit) : topK;
         if ((enabled && lawIds.isEmpty())
                 || lawIds.size() > 100
+                || publicLawIds.size() > 100
                 || candidateLimit < 1
                 || candidateLimit > 30
                 || topK < 1
@@ -20,5 +26,10 @@ public record LiveAnalysisProperties(
                 || topK > candidateLimit)
             throw new IllegalArgumentException(
                     "Explicit live corpus and bounded candidate budget required");
+    }
+
+    /** BROKER_LAW keeps the original law-ids setting; PUBLIC_LAW is optional until imported. */
+    public Set<UUID> lawIdsFor(String subject) {
+        return "PUBLIC_LAW".equals(subject) ? publicLawIds : lawIds;
     }
 }
