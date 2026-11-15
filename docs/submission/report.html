@@ -4,352 +4,357 @@
 <meta charset="utf-8">
 <title>LawGround 결과보고서</title>
 <style>
-  @font-face { font-family:"RBody"; font-weight:400; src:local("HANBatang"), local("함초롬바탕"); }
-  @font-face { font-family:"RBody"; font-weight:700; src:local("HANBatangB"), url("file:///C:/Windows/Fonts/HANBatangB.ttf"); }
-  @page { size:A4; margin:22mm 20mm 20mm; @bottom-center { content: counter(page); font-family:"Malgun Gothic",sans-serif; font-size:9pt; color:#444; } }
+  @page { size: A4; margin: 20mm 19mm 19mm; @bottom-center { content: counter(page); font: 9pt "Malgun Gothic"; color: #566070; } }
   @page :first { @bottom-center { content: none; } }
-  * { box-sizing:border-box; }
-  body { margin:0; background:#fff; color:#000; font-family:"RBody","Batang",serif; font-size:10pt; line-height:1.62; text-align:justify; word-break:keep-all; }
-  h1,h2,h3,h4,th,.cover,.toc,figcaption,.caption { font-family:"Malgun Gothic","맑은 고딕",sans-serif; }
-  h1 { font-size:15pt; margin:11mm 0 5mm; padding-bottom:2mm; border-bottom:.5mm solid #000; break-after:avoid; }
-  h1.pb { break-before:page; margin-top:0; }
-  .ai table { font-size:8pt; } .ai th { font-size:7.8pt; } .ai td, .ai th { padding:.8mm 1.4mm; }
-  h2 { font-size:12.5pt; margin:7mm 0 2.5mm; break-after:avoid; }
-  h3 { font-size:11pt; margin:5mm 0 2mm; break-after:avoid; }
-  h4 { font-size:10.5pt; margin:4mm 0 1.5mm; break-after:avoid; }
-  p { margin:0 0 2.5mm; text-indent:0; }
-  ul, ol { margin:1mm 0 3mm; padding-left:6mm; }
-  li { margin:0 0 1mm; }
-  table { border-collapse:collapse; width:100%; margin:2mm 0 4mm; font-size:9pt; line-height:1.5; break-inside:auto; }
-  tr { break-inside:avoid; }
-  th, td { border:.25mm solid #555; padding:1.2mm 2mm; text-align:left; vertical-align:top; }
-  th { background:#e8e8e8; font-weight:700; font-size:8.8pt; }
-  code { font-family:Consolas,monospace; font-size:8.6pt; }
-  blockquote { margin:2mm 0 3mm; padding:1.5mm 4mm; border-left:.8mm solid #888; background:#f4f4f4; font-size:9.5pt; }
-  .note { font-size:8.6pt; color:#333; }
-  figure { margin:3mm 0 5mm; break-inside:avoid; text-align:center; }
-  figure img { max-width:100%; border:.25mm solid #999; }
-  figcaption, .caption { font-size:9pt; margin-top:1.5mm; }
-  .todo { background:#fff2a8; }
-  .ph { border:.3mm dashed #777; height:48mm; display:flex; align-items:center; justify-content:center; font-family:"Malgun Gothic",sans-serif; font-size:10pt; color:#555; }
-  /* cover */
-  .cover { height:250mm; display:flex; flex-direction:column; text-align:center; }
-  .cover .top { margin-top:20mm; font-size:11pt; letter-spacing:1pt; }
-  .cover .title { margin-top:40mm; font-size:30pt; font-weight:700; letter-spacing:1pt; }
-  .cover .sub { margin-top:6mm; font-size:14pt; }
-  .cover .rule { margin:14mm auto 0; width:60%; border-top:.5mm solid #000; }
-  .cover table { margin:auto auto 10mm; width:62%; font-size:10.5pt; }
-  .cover th { width:28%; text-align:center; }
-  .toc { break-before:page; }
-  .toc h1 { break-before:avoid; }
-  .toc ol { list-style:none; padding:0; font-size:10.5pt; line-height:2.1; }
-  .toc ol ol { padding-left:7mm; font-size:10pt; line-height:1.8; }
-  svg text { font-family:"Malgun Gothic",sans-serif; }
+  * { box-sizing: border-box; }
+  body { margin: 0; color: #1c2635; background: #fff; font: 10.5pt/1.55 "Malgun Gothic","Noto Sans KR",sans-serif; word-break: keep-all; }
+  h1, h2, h3 { line-height: 1.28; break-after: avoid; }
+  h1 { margin: 8mm 0 4mm; padding-bottom: 2mm; border-bottom: .4mm solid #425978; font-size: 16pt; }
+  h2 { margin: 5.4mm 0 2mm; font-size: 12.5pt; }
+  h3 { margin: 4mm 0 1.8mm; font-size: 11pt; }
+  p { margin: 0 0 2.8mm; orphans: 2; widows: 2; }
+  ul, ol { margin: 0 0 3mm; padding-left: 6mm; }
+  li { margin: 0 0 1.3mm; }
+  a { color: #244c82; text-underline-offset: .12em; }
+  code { font: 8.5pt/1.4 Consolas, monospace; overflow-wrap: anywhere; word-break: break-word; }
+  table { width: 100%; border-collapse: collapse; margin: 2mm 0 3.7mm; font-size: 9.25pt; line-height: 1.45; }
+  th, td { padding: 1.35mm 1.8mm; border: .22mm solid #bec9d7; text-align: left; vertical-align: top; }
+  th { color: #243954; background: #edf1f6; font-weight: 700; }
+  tr { break-inside: avoid; }
+  thead { display: table-header-group; }
+  blockquote { margin: 1.5mm 0 3mm; padding: 2.4mm 3.6mm; border-left: .85mm solid #7591b6; background: #f1f4f8; font-size: 9.7pt; }
+  figure { margin: 3.3mm 0 5mm; break-inside: avoid; }
+  figure img { display: block; margin: 0 auto; width: 100%; height: auto; border: .24mm solid #bdc8d7; }
+  figure img.narrow { width: 78%; }
+  figcaption { margin-top: 1.6mm; text-align: center; font-size: 9pt; font-weight: 600; }
+  .capture-block { break-inside: avoid; }
+  .note { font-size: 9pt; color: #4a586b; }
+  .pb { break-before: page; margin-top: 0; }
+  .cover { height: 250mm; display: flex; flex-direction: column; text-align: center; }
+  .cover .top { margin-top: 18mm; color: #485c76; font-size: 12pt; font-weight: 700; }
+  .cover .title { margin-top: 42mm; color: #213c60; font-size: 36pt; font-weight: 700; letter-spacing: -.035em; }
+  .cover .sub { margin-top: 3mm; font-size: 15pt; }
+  .cover .rule { margin: 11mm auto 0; width: 52%; border-top: .65mm solid #5d7698; }
+  .cover table { margin: auto auto 16mm; width: 67%; font-size: 11pt; }
+  .cover th, .cover td { padding: 2.5mm 3.5mm; }
+  .cover th { width: 30%; text-align: center; }
+  .toc { break-before: page; }
+  .toc h1 { margin-top: 0; }
+  .toc ol { padding: 0; list-style: none; line-height: 2.05; }
+  .toc li { border-bottom: .2mm solid #d7dfeb; padding: 0 1mm; }
+  .toc li a { display: block; text-decoration: none; }
+  .diagram { display: grid; grid-template-columns: repeat(4,1fr); gap: 2.4mm; }
+  .diagram > div { padding: 2.5mm 2.1mm; border: .25mm solid #ccd8e6; background: #f1f5fa; font-size: 8.5pt; }
+  .diagram b { display: block; color: #203e65; margin-bottom: .7mm; font-size: 9.5pt; }
+  .ai table { font-size: 8.1pt; }
+  .ai th, .ai td { padding: .95mm 1.3mm; }
+  .keep-next { break-after: avoid; }
+  .ending { font-size: 10pt; line-height: 1.43; }
+  .ending h1 { margin: 5mm 0 2.5mm; font-size: 15pt; padding-bottom: 1.4mm; }
+  .ending h2 { margin-top: 3.8mm; }
+  .ending th, .ending td { padding-top: .95mm; padding-bottom: .95mm; }
+  .ending li { margin-bottom: .75mm; }
 </style>
 </head>
 <body>
-
 <section class="cover">
   <div class="top">2026 캡스톤디자인 졸업작품 결과보고서</div>
   <div class="title">LawGround</div>
   <div class="sub">공인중개사 기출 선지의 법령 근거 검색·검증 서비스</div>
   <div class="rule"></div>
-  <table>
+  <table aria-label="제출 정보">
     <tr><th>팀명</th><td>졸업시켜조</td></tr>
-    <tr><th>팀원</th><td>32213775 임수종<br><span class="todo">TODO 학번</span> 윤영주</td></tr>
-    <tr><th>지도교수</th><td><span class="todo">TODO</span></td></tr>
+    <tr><th>팀원</th><td>32213775 임수종<br>32232888 윤영주</td></tr>
+    <tr><th>지도교수</th><td>박규식</td></tr>
     <tr><th>소속</th><td>단국대학교 소프트웨어학과</td></tr>
     <tr><th>제출일</th><td>2026. 11. 16.</td></tr>
   </table>
 </section>
 
-<section class="toc">
+<nav class="toc" aria-label="목차">
   <h1>목차</h1>
   <ol>
-    <li>요약</li>
-    <li>1. 서론
-      <ol><li>1.1 개발 배경</li><li>1.2 개발 목표</li><li>1.3 범위</li><li>1.4 팀 구성과 역할</li></ol></li>
-    <li>2. 관련 서비스와 차별점</li>
-    <li>3. 시스템 설계
-      <ol><li>3.1 전체 구조</li><li>3.2 분석 파이프라인</li><li>3.3 하이브리드 검색</li><li>3.4 검증과 인용 확인</li><li>3.5 법령 데이터와 데이터베이스</li></ol></li>
-    <li>4. 주요 기능과 구현
-      <ol><li>4.1 기능 개요</li><li>4.2 기능별 구현</li><li>4.3 기술 스택</li><li>4.4 보안과 저작권</li><li>4.5 테스트와 CI</li></ol></li>
-    <li>5. 실행 예시 — 제36회 9번</li>
-    <li>6. 검색 정확도 평가</li>
-    <li>7. 설계 결정과 이유</li>
-    <li>8. AI 코딩 도구 활용 내역</li>
-    <li>9. 한계와 향후 과제</li>
-    <li>10. 결론</li>
-    <li>출처 표기 · 부록 A. 실행 방법</li>
+    <li><a href="#summary">요약</a></li>
+    <li><a href="#intro">1. 서론</a></li>
+    <li><a href="#related">2. 관련 서비스와 차별점</a></li>
+    <li><a href="#design">3. 시스템 설계</a></li>
+    <li><a href="#features">4. 주요 기능과 구현</a></li>
+    <li><a href="#examples">5. 실행 예시</a></li>
+    <li><a href="#evaluation">6. 검색·판정 평가</a></li>
+    <li><a href="#decisions">7. 설계 결정</a></li>
+    <li><a href="#ai">8. AI 코딩 도구 활용 내역</a></li>
+    <li><a href="#limits">9. 한계와 향후 과제</a></li>
+    <li><a href="#conclusion">10. 결론</a></li>
+    <li><a href="#sources">출처 표기</a></li>
+    <li><a href="#run">부록 A. 실행 방법</a></li>
   </ol>
-</section>
+</nav>
 
-<h1 class="pb">요약</h1>
-<p>공인중개사 수험생이 기출 선지 하나가 왜 옳고 그른지 확인하려면 법률·시행령·시행규칙을 오가며 조문을 직접 찾아야 한다. 법령은 자주 개정되므로 교재 해설이 현행 법령과 어긋나는 경우도 생긴다. 범용 LLM에 물으면 근거 없이 그럴듯한 답을 받을 위험이 있다.</p>
-<p>LawGround는 문제와 선지, 제시된 정답 번호를 입력하면 국가법령정보센터에서 받은 현행 조문 2,422개 중 근거 후보 5개를 검색한다. LLM은 그 후보 조문 안에서만 정답이 법령과 맞는지 판정하고, 서버는 LLM이 낸 인용 문구가 원문과 글자 단위로 같은지 다시 확인한다. 결과 화면은 판정과 근거 조문 원문, 선지별 일치·불일치, 틀린 선지의 고친 문장과 변형 유형, 같은 조문을 물은 비슷한 기출을 함께 보여 준다.</p>
-<p>검색은 형태소 기반 단어 검색(BM25)과 의미 검색(bge-m3)을 RRF로 결합하고 재순위 모델로 정렬한다. 25~36회 공인중개사 2차 1교시 기출 802문제로 평가한 결과, 정답 근거 조문이 검색 상위 5개 안에 드는 비율(Recall@5)은 1과목 93%, 부동산공법 89%였다. 시스템은 Spring Boot 백엔드, Python FastAPI 모델 서버, PostgreSQL(pgvector), RabbitMQ로 구성되며, 분석은 큐 기반 작업으로 단계마다 checkpoint를 남겨 실패해도 이어서 처리한다.</p>
+<h1 id="summary" class="pb">요약</h1>
+<p>LawGround는 공인중개사 문제의 정답 근거를 찾는 학습 서비스다. 사용자는 본문, 선지 5개, 제공 정답, 법령 기준일을 입력한다. 서비스는 기준일에 시행 중인 조문을 검색한다. 후보 조문으로 정답을 검증하고, 근거 원문과 선지별 해설을 표시한다.</p>
+<p>검색에는 PostgreSQL 단어·벡터 검색을 사용한다. 판정에는 Gemini를 사용한다. Spring 워커가 인용 문구와 위치를 원문과 대조한다. 기준일에 적용할 법령을 확인하고 결과를 저장한다. 근거를 확정하기 어려운 경우에는 판단을 보류한다.</p>
+<p>제25~36회 기출 802문제의 오프라인 평가에서 BM25의 Recall@5는 공인중개사법령 및 중개실무 93%, 부동산공법 89%였다. 정답 조문을 후보에 포함한 별도 판정 시험에서는 틀린 정답을 입력한 16문제 중 잘못 승인한 사례가 0건이었다.</p>
 
-<h1>1. 서론</h1>
+<h1 id="intro">1. 서론</h1>
 <h2>1.1 개발 배경</h2>
-<ul>
-  <li><b>조문 찾기의 부담.</b> 공인중개사 2차 시험의 공인중개사법령과 부동산공법은 조문 내용을 그대로 묻는 문제가 대부분이다. 선지 하나를 확인하려면 해당 법률과 시행령, 시행규칙을 오가며 조문을 찾아야 한다.</li>
-  <li><b>법령 개정.</b> 법령이 개정되면 과거 기출의 정답이나 해설이 현행 법령과 달라진다. 수험생이 이를 스스로 가려내기 어렵다.</li>
-  <li><b>LLM의 환각.</b> 범용 챗봇은 근거 없이 그럴듯한 답을 낼 수 있다. 법률 학습에서는 틀린 내용을 맞다고 하는 것이 가장 위험하다.</li>
-</ul>
+<p>수험생은 선지의 정오를 확인하기 위해 법률, 시행령, 시행규칙을 따로 찾아야 한다. 법령이 개정되면 출제 당시 기준과 현재 기준이 달라질 수 있다. 정답과 적용 조문을 연결해 확인하는 기능이 필요하다.</p>
 <h2>1.2 개발 목표</h2>
 <table>
-  <tr><th style="width:28%">목표</th><th>기준</th></tr>
-  <tr><td>근거를 찾는다</td><td>정답 근거 조문이 검색 상위 5개 안에 들어 있을 것</td></tr>
-  <tr><td>틀린 답을 승인하지 않는다</td><td>근거가 부족하면 단정하지 않고 판단 보류</td></tr>
-  <tr><td>근거를 보여 준다</td><td>판정마다 원문 인용과 위치를 제시하고, 인용이 원문과 다르면 저장하지 않음</td></tr>
-  <tr><td>기준일을 지킨다</td><td>사용자가 고른 기준일에 시행 중인 조문으로만 판정</td></tr>
-  <tr><td>공부로 이어진다</td><td>선지별 설명, 변형 유형, 같은 조문의 비슷한 기출</td></tr>
+  <thead><tr><th style="width:25%">목표</th><th>구현 기준</th></tr></thead>
+  <tbody>
+    <tr><td>근거 검색</td><td>기준일에 시행 중인 법령에서 근거 후보를 최대 5개 찾는다.</td></tr>
+    <tr><td>정답 검증</td><td>후보 조문에서 제공 정답의 근거를 확인한다. 근거가 부족하면 판단을 보류한다.</td></tr>
+    <tr><td>근거 제시</td><td>판정에 사용한 인용을 원문과 대조한다. 화면에 조문, 시행일, 출처를 표시한다.</td></tr>
+    <tr><td>복습 지원</td><td>선지별 해설과 정정을 제공한다. 같은 조문을 다룬 기출 선지를 비교한다.</td></tr>
+  </tbody>
 </table>
-<h2>1.3 범위</h2>
-<p>공인중개사 2차 1교시 두 과목(공인중개사법령 및 중개실무, 부동산공법)을 다룬다. 판례·서식·다른 법률 소관 문제와 민법·세법 과목은 범위 밖이다.</p>
+<h2>1.3 지원 범위</h2>
+<p>공인중개사 2차 1교시의 공인중개사법령 및 중개실무와 부동산공법을 지원한다. 검토 범위는 적재한 법령의 조문으로 판단할 수 있는 문제다.</p>
 <h2>1.4 팀 구성과 역할</h2>
 <table>
-  <tr><th style="width:14%">이름</th><th style="width:16%">학번</th><th style="width:22%">역할</th><th>담당</th></tr>
-  <tr><td>임수종</td><td>32213775</td><td>AI·검색·평가</td><td>Python AI 서버(형태소·임베딩·재순위·검증), 법령 수집 변환, 평가 데이터셋·라벨·지표, 확장 기능(문장 확인·변형 비교·비슷한 기출)</td></tr>
-  <tr><td>윤영주</td><td><span class="todo">TODO</span></td><td>백엔드·파이프라인·화면</td><td>Spring 백엔드, 로그인·문제 관리, 분석 작업 큐·워커, 검색·검증 연결과 결과 저장, 추천·평가·배치, 사용자 화면</td></tr>
+  <thead><tr><th>이름</th><th>학번</th><th>담당</th></tr></thead>
+  <tbody>
+    <tr><td>임수종</td><td>32213775</td><td>Python AI 서버, 법령 수집·변환, 평가 데이터 및 지표, 유사 기출·변형 비교</td></tr>
+    <tr><td>윤영주</td><td>32232888</td><td>Spring API, 로그인, DB, 작업 큐·워커, 검색·검증 연동, 결과 저장, 추천·평가·배치, 사용자 화면</td></tr>
+  </tbody>
 </table>
 
-<h1>2. 관련 서비스와 차별점</h1>
+<h1 id="related">2. 관련 서비스와 차별점</h1>
 <table>
-  <tr><th style="width:20%">대상</th><th style="width:30%">특징</th><th>LawGround와의 차이</th></tr>
-  <tr><td>국가법령정보센터</td><td>조문 원문·연혁 제공, 키워드 검색</td><td>선지 문장으로 근거 조문을 찾아 주지 않는다. LawGround는 이 원문을 그대로 근거로 쓴다.</td></tr>
-  <tr><td>기출 해설서·해설 사이트</td><td>사람이 쓴 해설</td><td>출간 이후의 개정을 반영하지 못한다. LawGround는 기준일의 현행 조문으로 다시 확인한다.</td></tr>
-  <tr><td>범용 LLM 챗봇</td><td>자연어 질문과 답변</td><td>근거가 검증되지 않는다. LawGround는 검색한 후보 조문 안에서만 판정하고, 인용이 원문과 일치하는지 검사한다.</td></tr>
+  <thead><tr><th style="width:24%">대상</th><th style="width:31%">주요 기능</th><th>LawGround의 적용 방식</th></tr></thead>
+  <tbody>
+    <tr><td>국가법령정보센터</td><td>조문 원문과 연혁 제공</td><td>문제의 선지를 입력받아 관련 조문을 연결한다.</td></tr>
+    <tr><td>기출 해설 자료</td><td>시험 문제 해설 제공</td><td>사용자가 선택한 기준일과 법령 버전으로 다시 판정한다.</td></tr>
+    <tr><td>범용 LLM 챗봇</td><td>자연어 질의에 응답</td><td>검색한 후보 조문을 근거로 사용하고 인용을 원문과 대조한다.</td></tr>
+  </tbody>
 </table>
-<p>방법론으로는 검색 증강 생성(RAG)을 따른다. 법률 문장은 용어가 글자 그대로 일치해야 찾히는 경우가 많아 단어 검색을 기본으로 하고, 표현이 바뀐 선지를 보완하기 위해 의미 검색을 결합했다.</p>
+<p>서비스는 검색 증강 생성(RAG) 방식을 적용한다. 법령 검색과 판정을 별도 단계로 구성한다.</p>
 
-<h1>3. 시스템 설계</h1>
+<h1 id="design">3. 시스템 설계</h1>
 <h2>3.1 전체 구조</h2>
-<figure>
-<svg viewBox="0 0 760 250" width="100%" xmlns="http://www.w3.org/2000/svg" font-size="12">
-  <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#222"/></marker></defs>
-  <g fill="#fff" stroke="#222" stroke-width="1.2">
-    <rect x="10" y="95" width="120" height="60"/><rect x="175" y="95" width="150" height="60"/>
-    <rect x="370" y="20" width="160" height="50"/><rect x="370" y="100" width="160" height="50"/>
-    <rect x="370" y="180" width="160" height="50"/><rect x="580" y="60" width="170" height="60"/>
-    <rect x="580" y="160" width="170" height="60"/>
-  </g>
-  <g text-anchor="middle" fill="#000">
-    <text x="70" y="120" font-weight="bold">브라우저</text><text x="70" y="138" font-size="10.5">문제 입력·결과 화면</text>
-    <text x="250" y="120" font-weight="bold">Spring Boot</text><text x="250" y="138" font-size="10.5">접수·상태·저장·권한</text>
-    <text x="450" y="42" font-weight="bold">RabbitMQ</text><text x="450" y="59" font-size="10.5">분석 작업 큐</text>
-    <text x="450" y="122" font-weight="bold">PostgreSQL</text><text x="450" y="139" font-size="10.5">pgvector · 단어 색인 · 결과</text>
-    <text x="450" y="202" font-weight="bold">국가법령정보 API</text><text x="450" y="219" font-size="10.5">조문 수집·시행일 버전</text>
-    <text x="665" y="85" font-weight="bold">Python FastAPI</text><text x="665" y="102" font-size="10.5">형태소·임베딩·재순위</text>
-    <text x="665" y="185" font-weight="bold">Gemini</text><text x="665" y="202" font-size="10.5">후보 조문 안에서 판정</text>
-  </g>
-  <g stroke="#222" stroke-width="1.2" fill="none" marker-end="url(#a)">
-    <path d="M130,125H173"/><path d="M325,112L368,52"/><path d="M325,125H368"/><path d="M450,178V152"/>
-    <path d="M325,102C380,84 520,84 578,88"/><path d="M665,120V158"/>
-  </g>
-</svg>
-<figcaption>그림 1. 시스템 구성과 호출 관계</figcaption>
-</figure>
-<p>Spring Boot는 로그인, 문제 관리, 분석 접수와 상태 조회, 결과 저장을 맡고, Python FastAPI 서버는 형태소 분석·임베딩·재순위·LLM 검증 같은 모델 계산만 맡는다. 두 서버는 OpenAPI로 정한 내부 계약으로만 통신하며, 모든 내부 요청에 내부 토큰과 계약 버전 헤더를 검사한다. 모델은 커밋 해시로 버전을 고정하고 Spring이 시작할 때 Python 서버의 모델 버전과 대조한다.</p>
-
+<table>
+  <thead><tr><th style="width:24%">구성</th><th style="width:28%">역할</th><th>연결</th></tr></thead>
+  <tbody>
+    <tr><td>브라우저</td><td>문제 입력, 상태 조회, 결과 확인</td><td>Spring의 화면과 REST API를 사용한다.</td></tr>
+    <tr><td>Spring Boot</td><td>로그인, 권한, 분석 접수와 실행</td><td>동일 프로세스에 API·발행기·분석 워커를 둔다.</td></tr>
+    <tr><td>RabbitMQ</td><td>분석 메시지 전달</td><td>발행기가 교환기에 작업 ID를 보낸다. LIVE 큐에서 Spring 워커가 수신한다.</td></tr>
+    <tr><td>PostgreSQL</td><td>데이터 저장과 검색</td><td>Spring이 문제, 조문, 색인, 실행 상태, 결과를 조회하거나 저장한다.</td></tr>
+    <tr><td>Python FastAPI</td><td>형태소 분석, 임베딩, 재순위, 검증, 유사 기출</td><td>Spring에서 내부 HTTP API로 호출한다. 판정 단계에서 Gemini API를 사용한다.</td></tr>
+  </tbody>
+</table>
+<p>로컬 시연에서는 PostgreSQL과 RabbitMQ를 Docker Compose로 실행한다. Spring Boot와 FastAPI는 호스트에서 각각 실행한다. Spring과 FastAPI는 내부 토큰과 계약 버전을 확인한다.</p>
 <h2>3.2 분석 파이프라인</h2>
 <figure>
-<svg viewBox="0 0 760 120" width="100%" xmlns="http://www.w3.org/2000/svg" font-size="12">
-  <defs><marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#222"/></marker></defs>
-  <g fill="#fff" stroke="#222" stroke-width="1.2">
-    <rect x="10" y="30" width="150" height="60"/><rect x="205" y="30" width="150" height="60"/><rect x="400" y="30" width="150" height="60"/><rect x="595" y="30" width="155" height="60"/>
-  </g>
-  <g text-anchor="middle">
-    <text x="85" y="55" font-weight="bold">PREPARE 준비</text><text x="85" y="74" font-size="10.5">기준일·법령 범위 고정</text>
-    <text x="280" y="55" font-weight="bold">SEARCH 검색</text><text x="280" y="74" font-size="10.5">BM25+벡터→RRF→재순위</text>
-    <text x="475" y="55" font-weight="bold">VERIFY 검증</text><text x="475" y="74" font-size="10.5">후보 조문 안에서 판정</text>
-    <text x="672" y="55" font-weight="bold">PERSIST 저장</text><text x="672" y="74" font-size="10.5">판정·근거 원자 저장</text>
-    <text x="380" y="112" font-size="10.5">단계마다 checkpoint 저장 · 실패 시 끝난 단계는 재사용</text>
-  </g>
-  <g stroke="#222" stroke-width="1.2" marker-end="url(#b)"><path d="M160,60H203"/><path d="M355,60H398"/><path d="M550,60H593"/></g>
-</svg>
-<figcaption>그림 2. 분석 작업 단계</figcaption>
+  <div class="diagram" aria-label="분석 처리 네 단계">
+    <div><b>1. 준비</b>실행 시점의 문제·기준일·법령 버전을 고정한다.</div>
+    <div><b>2. 검색</b>단어·벡터 순위를 결합해 후보 조문을 고른다.</div>
+    <div><b>3. 검증</b>후보 조문으로 정답과 선지의 관계를 확인한다.</div>
+    <div><b>4. 저장</b>판정·선지 분석·인용을 한 번에 저장한다.</div>
+  </div>
+  <figcaption>그림 1. 분석 작업 단계</figcaption>
 </figure>
-<p>분석 요청은 멱등 키와 함께 접수되어 DB에 실행(run)과 작업(job)을 만들고 즉시 202 응답을 돌려준다. 작업은 RabbitMQ로 전달되고 워커가 네 단계를 차례로 처리한다. 단계마다 결과를 checkpoint로 저장하므로 검증 단계가 실패해 재시도할 때 시간이 오래 걸리는 검색을 다시 하지 않는다. 리스와 fencing token으로 두 워커가 같은 작업을 동시에 저장하지 못하게 했고, 리스가 끊기거나 발행되지 않은 작업은 복구 스케줄러가 다시 큐에 넣는다. 최종 결과(판정·선지 분석·근거 인용)는 하나의 트랜잭션으로 저장하며 DB 트리거로 이후 수정·삭제를 막는다.</p>
-
+<p>Spring은 실행과 작업을 DB에 저장하고 HTTP 202로 접수 결과를 반환한다. DB 커밋 후 작업 메시지를 RabbitMQ에 발행한다. 워커는 단계별 체크포인트를 남긴다. 재시도 시 완료된 단계를 재사용한다. 브라우저는 Spring API에서 작업 진행 상태를 주기적으로 조회한다.</p>
 <h2>3.3 하이브리드 검색</h2>
-<ul>
-  <li><b>조문 분할:</b> 법령을 조문 단위로 저장하고, 별표처럼 긴 조문은 여러 조각으로 나눈다.</li>
-  <li><b>단어 검색(BM25):</b> Kiwi 형태소 분석으로 만든 토큰을 PostgreSQL 단어 색인으로 찾는다.</li>
-  <li><b>의미 검색(Dense):</b> <code>BAAI/bge-m3</code> 1024차원 벡터를 pgvector 코사인 거리로 찾는다.</li>
-  <li><b>결합과 재순위:</b> 두 결과를 RRF로 결합하고 <code>BAAI/bge-reranker-v2-m3</code>로 다시 정렬해 상위 5개를 고른다. 결합 후보가 이미 5개 이하라 잘리는 것이 없으면 재순위를 생략하는 옵션을 두었다.</li>
-  <li><b>기준일:</b> 사용자가 고른 기준일에 시행 중인 조문만 검색 대상으로 삼는다.</li>
-</ul>
-
-<h2>3.4 검증과 인용 확인</h2>
-<ul>
-  <li>LLM(Gemini)에는 검색된 후보 조문만 근거로 주고, 판정(근거 확인·근거와 불일치·판단 보류), 사유 코드, 선지별 분석, 인용 문구를 JSON으로 받는다.</li>
-  <li>Python 서버가 인용 문구를 원문에서 다시 찾아 위치(offset)를 계산하고, Spring이 인용·위치·시행일이 실제 원문과 맞는지 한 번 더 대조한다. 맞지 않으면 결과를 저장하지 않는다.</li>
-  <li>선지별 분석은 일치·불일치·근거 부족을 표시하고, 불일치 선지에는 근거에 따른 고친 문장과 변형 유형 태그 5종(시점·기한, 조건 추가, 주체·권한, 개념 오인, 숫자·수치 오류)을 붙인다.</li>
-</ul>
-
-<h2>3.5 법령 데이터와 데이터베이스</h2>
-<table>
-  <tr><th style="width:24%">과목</th><th>법령</th><th style="width:20%">조문 수</th></tr>
-  <tr><td>공인중개사법령 및 중개실무</td><td>공인중개사법, 부동산 거래신고 등에 관한 법률 (각 법·시행령·시행규칙)</td><td>267</td></tr>
-  <tr><td>부동산공법</td><td>국토계획법, 도시개발법, 도시정비법, 건축법, 주택법, 농지법 (각 법·시행령·시행규칙)</td><td>2,155 (별표 106 포함)</td></tr>
-</table>
-<p>국가법령정보 API에서 받은 조문은 시행일별 버전으로 저장한다(<code>laws → law_versions → law_articles → law_chunks</code>). 사용자 데이터는 <code>members → questions → question_choices</code>, 분석 결과는 <code>trace_runs → processing_jobs / evidence_results / choice_analyses</code>로 저장한다. 스키마는 Flyway 마이그레이션 V001~V010으로 관리한다.</p>
-
-<h1>4. 주요 기능과 구현</h1>
-<h2>4.1 기능 개요</h2>
-<table>
-  <tr><th style="width:20%">기능</th><th>설명</th></tr>
-  <tr><td>붙여넣기 입력</td><td>시험지 문장을 붙여넣으면 본문, 선지 5개, 과목, 문제 유형이 자동으로 채워진다. 정답 번호와 법령 기준일만 확인하면 된다.</td></tr>
-  <tr><td>근거 조문 검색</td><td>기준일에 시행 중인 조문 2,422개 중 근거 후보 5개를 찾고, 조문 원문·시행일·국가법령정보센터 링크를 보여 준다.</td></tr>
-  <tr><td>정답 판정</td><td>제시된 정답을 근거 확인·근거와 불일치·판단 보류로 판정한다. 판단 보류는 기술 오류와 구분해 정상 판정으로 보여 준다.</td></tr>
-  <tr><td>선지별 분석</td><td>선지마다 조문과의 일치·불일치를 표시하고, 틀린 선지는 고친 문장과 변형 유형을 붙인다.</td></tr>
-  <tr><td>비슷한 기출</td><td>25~36회 기출 선지 3,950개 중 같은 조문을 물은 선지를 최대 3개 보여 주고, 달라진 글자 표시와 공부 팁을 준다.</td></tr>
-  <tr><td>내 문제 라이브러리</td><td>Google 로그인으로 문제를 저장·수정하고 분석 진행 단계를 실시간으로 본다. 근거가 비슷한 내 문제를 추천한다.</td></tr>
-</table>
-
-<h2>4.2 기능별 구현</h2>
-<h3>(1) 붙여넣기 입력</h3>
-<p>화면 모듈(<code>frontend/src/domain.js</code>)이 붙여넣은 문장에서 문제 번호, 선지 기호(①~⑤), 과목을 나타내는 법령명, "옳은 것/틀린 것" 같은 문제 유형 표현을 찾아 입력 칸을 채운다. 서버는 본문·선지 길이와 문자 정책, 과목 값을 다시 검사한다.</p>
-<figure><img src="../images/input.png" alt="문제 입력 화면" style="width:56%"><figcaption>그림 3. 문제 입력 화면 — 붙여넣은 문장이 과목·유형·본문·선지 5개로 채워진 모습</figcaption></figure>
-<h3>(2) 근거 조문 검색과 (3) 정답 판정</h3>
-<p>3장의 파이프라인으로 처리한다. 화면은 실행 ID로 작업 단계를 다시 조회하므로 새로고침하거나 다른 화면으로 이동해도 진행 상태가 이어진다. 결과 화면은 실행 당시 문제 snapshot을 보여 주어, 이후 수정한 문제와 혼동하지 않게 한다.</p>
-<figure><div class="ph">분석 결과 화면 캡처 자리 (docs/images/result.png)</div><figcaption>그림 4. 분석 결과 화면 — 판정, 근거 조문, 선지별 분석</figcaption></figure>
-<h3>(4) 선지별 분석</h3>
-<p>검증 응답의 선지별 분석은 Spring이 근거 인용 ID와 연결해 원자 저장한다(<code>choice_analyses</code>, <code>choice_analysis_evidences</code>). 고친 문장은 불일치 선지에 실제 근거가 연결된 경우에만 표시한다.</p>
-<h3>(5) 비슷한 기출</h3>
-<p>Python 서버(<code>app/services/similar.py</code>)가 기출 선지 은행을 메모리에 두고, 같은 과목에서 (1) 입력한 문제 자신을 제외하고 (2) 글자 유사도에 같은 근거 조문이면 가산점을 더해 (3) 문제당 1개씩 최대 3개를 고른다. 조문이 다른 선지는 유사도가 충분히 높을 때만 낸다. LLM을 쓰지 않아 응답이 약 0.1초이며, 맞는 기출이 없으면 억지로 채우지 않는다. 변형 비교 모듈(<code>variation.py</code>)이 달라진 글자 구간과 변형 유형, 공부 팁을 만든다.</p>
-<figure><div class="ph">비슷한 기출 펼친 화면 캡처 자리 (docs/images/similar.png)</div><figcaption>그림 5. 선지별 비슷한 기출</figcaption></figure>
-<h3>(6) 내 문제 라이브러리</h3>
-<p>Google OIDC 로그인과 Spring Session JDBC로 세션을 관리하고, CSRF를 검사한다. 문제는 revision으로 동시 수정을 막으며, 남의 문제나 분석 결과는 404로 숨긴다. 관련 문제 추천은 근거 조문과 문제 임베딩을 함께 사용한다.</p>
-
-<h2>4.3 기술 스택</h2>
-<table>
-  <tr><th style="width:18%">영역</th><th>기술</th></tr>
-  <tr><td>백엔드</td><td>Java 21, Spring Boot 3.5 (MVC · Security · OAuth2 Client · Session JDBC · AMQP · JPA · Flyway)</td></tr>
-  <tr><td>데이터</td><td>PostgreSQL 16 + pgvector 0.8, RabbitMQ 4.2</td></tr>
-  <tr><td>AI 서버</td><td>Python, FastAPI, kiwipiepy, BAAI/bge-m3, BAAI/bge-reranker-v2-m3, Gemini API</td></tr>
-  <tr><td>화면</td><td>HTML · CSS · ES 모듈 (프레임워크 없음, Spring이 정적 파일로 제공)</td></tr>
-  <tr><td>품질</td><td>JUnit 5, MockMvc, Testcontainers, pytest, Playwright, OpenAPI 계약 검사, GitHub Actions</td></tr>
-</table>
-<h2>4.4 보안과 저작권</h2>
-<ul>
-  <li>API 키는 <code>.env</code>와 환경변수에만 두고 저장소에 올리지 않는다. 저장소 검사 스크립트가 CI에서 비밀값과 제외 파일을 확인한다.</li>
-  <li>개발용 자동 로그인은 local 프로필과 루프백 주소에서만 켜지고, 운영 설정에서는 금지된다.</li>
-  <li>기출 원문, 정답 라벨, 기출 선지 은행은 저작권 때문에 공개 저장소에 올리지 않았다. 실행 방법과 파일 형식은 문서로 남겼다.</li>
-</ul>
-<h2>4.5 테스트와 CI</h2>
-<table>
-  <tr><th style="width:22%">검사</th><th>내용</th></tr>
-  <tr><td>backend-check</td><td>저장소 검사, 포맷(spotless), 단위 테스트, Testcontainers 통합 테스트(실제 PostgreSQL·RabbitMQ·Flyway), JAR 빌드</td></tr>
-  <tr><td>ai-check</td><td>pytest (계약, 검증, 검색 보조, 확장 기능)</td></tr>
-  <tr><td>contracts-check</td><td>사용자·내부 OpenAPI 계약과 예시, 실제 응답 캡처 대조</td></tr>
-  <tr><td>frontend-check</td><td>화면 모듈 테스트</td></tr>
-  <tr><td>browser-check</td><td>Playwright(Chromium)로 로그인부터 결과 화면까지 흐름 검사</td></tr>
-</table>
-<p>CI는 main으로 가는 PR과 main push마다 실행된다. 외부 모델 없이 돌도록, 통합 테스트는 계약대로 응답하는 가짜 HTTP 서버를 사용한다.</p>
-
-<h1>5. 실행 예시 — 제36회 9번</h1>
-<p>로컬 실행 환경에서 실제 법령 색인과 Gemini로 분석한 결과다(기준일 2026-11-11). 판정·설명·고친 문장·인용은 DB에 저장된 결과를 그대로 옮겼다.</p>
-<p><b>입력</b></p>
-<blockquote>공인중개사법령상 중개사무소의 이전신고 및 휴업 또는 폐업의 신고 등에 관한 설명으로 옳은 것은? (제시한 정답: <b>1번</b>)</blockquote>
-<p><b>판정: ✅ 근거 확인 (SUPPORTED · SUFFICIENT_EVIDENCE)</b></p>
-<blockquote>1번 선지는 임신 또는 출산이 휴업기간 6개월을 초과할 수 있는 부득이한 사유에 해당하므로 조문과 일치하여 옳습니다.</blockquote>
-<p><b>선지별 분석</b></p>
-<table><tr><th>번호</th><th>선지</th><th>조문과의 관계</th><th>근거 조문</th><th>고친 문장</th><th>변형 유형</th></tr><tr><td>1</td><td>개업공인중개사가 출산하는 경우에는 6개월을 초과하여 휴업할 수 있다.</td><td>일치</td><td>공인중개사법 제21조, 시행령 제18조</td><td>—</td><td>—</td></tr><tr><td>2</td><td>…관할 지역 외의 지역으로 중개사무소를 이전한 때에는 이전한 날부터 10일 이내에 <b>이전하기 전의 등록관청</b>에 이전사실을 신고해야 한다.</td><td>불일치</td><td>공인중개사법 제20조</td><td>…10일 이내에 <b>이전후 등록관청</b>에 이전사실을 신고해야 한다.</td><td>주체·권한</td></tr><tr><td>3</td><td>법인인 개업공인중개사는 분사무소를 두었더라도 폐업 신고는 분사무소별로 <b>하여서는 아니된다</b>.</td><td>불일치</td><td>시행령 제18조</td><td>…분사무소를 둔 경우 폐업 신고를 분사무소별로 <b>할 수 있다</b>.</td><td>조건 추가</td></tr><tr><td>4</td><td>…휴업한 부동산중개업을 재개하려는 경우 신고서에 중개사무소등록증을 <b>첨부하여</b> 등록관청에 미리 신고해야 한다.</td><td>불일치</td><td>시행령 제18조</td><td>…신고서에 중개사무소등록증을 <b>첨부하지 않고</b> 등록관청에 미리 신고해야 한다.</td><td>조건 추가</td></tr><tr><td>5</td><td>관할 세무서장이 …폐업신고서를 받아 해당 등록관청에 송부하였더라도 등록관청에 그 폐업신고서가 제출된 것으로 <b>보지 않는다</b>.</td><td>불일치</td><td>시행령 제18조</td><td>…등록관청에 그 폐업신고서가 제출된 것으로 <b>본다</b>.</td><td>개념 오인</td></tr></table>
-<p><b>근거 인용 (원문과 글자 단위로 일치 확인)</b></p>
-<table><tr><th>조문</th><th>인용</th></tr><tr><td>공인중개사법 제20조 (중개사무소의 이전신고)</td><td>"중개사무소를 등록관청의 관할 지역 외의 지역으로 이전한 경우에는 이전 후의 중개사무소를 관할하는 시장ㆍ군수 또는 구청장(이하 이 조에서 "이전후 등록관청"이라 한다)에게 신고하여야 한다."</td></tr><tr><td>공인중개사법 제21조 (휴업 또는 폐업의 신고)</td><td>"②제1항에 따른 휴업은 6개월을 초과할 수 없다. 다만, 질병으로 인한 요양등 대통령령으로 정하는 부득이한 사유가 있는 경우에는 그러하지 아니하다."</td></tr><tr><td>공인중개사법 시행령 제18조 (휴업 또는 폐업의 신고 등)</td><td>"4. 임신 또는 출산"</td></tr></table>
-<p><b>2번 선지의 비슷한 기출</b> (같은 조문 우선, 입력한 36회 9번 자신은 제외)</p>
-<table><tr><th>기출</th><th>기출에서</th><th>문장</th><th>연결</th></tr><tr><td>제26회 10번 ①</td><td>옳은 문장</td><td>개업공인중개사는 이전 후의 중개사무소를 관할하는 등록관청에 이전사실을 신고해야 한다.</td><td>같은 근거 조문</td></tr><tr><td>제29회 16번 ②</td><td>옳은 문장</td><td>이전신고는 이전한 날부터 10일 이내에 해야 한다.</td><td>같은 근거 조문</td></tr><tr><td>제28회 15번 ①</td><td>옳은 문장</td><td>중개사무소를 이전한 때에는 이전한 날부터 10일 이내에 이전신고를 해야 한다.</td><td>문장 유사</td></tr></table>
-<blockquote>💡 공부 팁: 비슷한 기출에서 '주체·권한' 부분이 바뀌어 출제됐습니다. 누가 하는지와 인가·허가·신고·승인 중 무엇인지 구분하세요.</blockquote>
-<p><span class="note">문제·선지 출처: 한국산업인력공단(Q-Net) 공인중개사 기출. 입력 편의를 위해 띄어쓰기·오탈자 일부 정리.</span></p>
-<p><b>문제 입력 화면</b> — 시험지 문장을 붙여넣으면 과목·문제 유형·본문·선지 5개가 자동으로 채워집니다.</p>
-<p>&lt;img src="docs/images/input.png" width="760" alt="문제 입력 화면: 붙여넣은 문장이 본문과 선지 5개로 나뉘어 채워진 모습"&gt;</p>
-
-<h1>6. 검색 정확도 평가</h1>
-<h2>6.1 데이터셋</h2>
-<p>25~36회(2014~2025) 공인중개사 2차 1교시 960문제(1과목 480, 공법 480)를 모았다. 현행 법령만으로 정답을 판단할 수 없는 문제는 범위 밖으로 뺐고, 평가 대상은 <b>802문제</b>(1과목 337, 공법 465)다. 36회 공법은 글자 층이 없는 스캔본이라, Claude Code가 페이지 이미지를 판독해 40문제를 옮겨 적고 사람이 확인했다.</p>
-<table>
-  <tr><th style="width:32%">범위 밖 사유</th><th>예</th></tr>
-  <tr><td>다른 법률 소관</td><td>판례·서식 문제, 토지거래허가, 가로주택정비사업, 건축물 철거, 국민주택채권</td></tr>
-  <tr><td>제도 폐지</td><td>입지규제최소구역, 미관지구</td></tr>
-  <tr><td>개정으로 출제 당시 정답이 무효</td><td>범죄예방 대상 건축물 범위, 농지 이행강제금 비율</td></tr>
-  <tr><td>최종정답이 전항정답</td><td>29회 52번</td></tr>
-</table>
-<h2>6.2 정답 라벨과 검수</h2>
-<ul>
-  <li>문제마다 "정답을 판단하는 데 필요한 조문"을 라벨로 붙였다. 라벨 초안은 AI가 BM25 후보를 참고해 만들었다.</li>
-  <li>임수종·윤영주가 두 과목 라벨 전체를 교차 검수(전수 조사)해 확정했다.</li>
-  <li>전수 검수에 앞서 표본 검수를 했다. 1과목 20문제 중 18문제가 일치했고 2건은 조문을 추가했으며, 공법 15문제(회차별 1문제와 범위 밖 3문제)는 모두 일치했다.</li>
-</ul>
-<h2>6.3 결과 (Recall@5)</h2>
-<table>
-  <tr><th>과목</th><th>문제</th><th>BM25 (단어)</th><th>Dense (의미)</th><th>Hybrid (결합)</th></tr>
-  <tr><td>1과목</td><td>337</td><td><b>0.93</b> [0.90, 0.95]</td><td>0.90 [0.86, 0.92]</td><td>0.92 [0.89, 0.94]</td></tr>
-  <tr><td>부동산공법</td><td>465</td><td><b>0.89</b> [0.86, 0.92]</td><td>0.80 [0.77, 0.84]</td><td>0.86 [0.83, 0.89]</td></tr>
-</table>
-<p class="note">[ ]는 95% Wilson 신뢰구간. 근거가 여러 조문인 문제는 하나라도 상위 5개에 들면 맞힌 것으로 셌다. 전부 들어야 맞힌 것으로 세면 1과목 BM25 0.85·Hybrid 0.84, 공법 0.78이다. 상위 10개 기준으로는 1과목 Hybrid가 0.97로 BM25(0.93)보다 높다.</p>
-<p><b>해석.</b> 공법에서는 단어 검색이 의미 검색보다 9%p 높았다. "제2종일반주거지역", "기반시설부담구역"처럼 법률 용어가 글자 그대로 맞아야 찾히는 문제가 많기 때문이다. 상위 5개만 보면 결합 검색이 BM25 단독보다 약간 낮지만, 후보를 넓게 모은 뒤 재순위 모델이 최종 순서를 정하는 구조로 이를 보완한다.</p>
-
-<h1>7. 설계 결정과 이유</h1>
-<h2>7.1 단어 검색과 의미 검색을 결합한 이유</h2>
-<table><tr><th></th><th>내용</th></tr><tr><td>문제</td><td>선지는 조문을 그대로 옮기기도 하고("제2종일반주거지역"), 말을 바꿔 쓰기도 한다("출산하는 경우" ↔ 조문 "임신 또는 출산"). 한 가지 방식으로는 둘 다 잡기 어렵다.</td></tr><tr><td>측정</td><td>Recall@5 — 1과목 BM25 0.93 · Dense 0.90 · Hybrid 0.92 / 공법 BM25 0.89 · Dense 0.80 · Hybrid 0.86. 상위 10개로 넓히면 1과목 Hybrid 0.97로 BM25(0.93)보다 높다.</td></tr><tr><td>해석</td><td>법률 용어가 글자 그대로 맞아야 하는 공법에서는 단어 검색이 9%p 강하다. 의미 검색은 표현이 바뀐 선지를 보완해 후보 범위를 넓힌다.</td></tr><tr><td>선택</td><td>두 결과를 RRF로 결합해 후보를 넓게 모으고, 재순위 모델(bge-reranker)이 문제와 조문을 함께 읽어 최종 5개를 고른다.</td></tr><tr><td>솔직한 한계</td><td>상위 5개만 보면 결합이 BM25 단독보다 약간 낮다(0.92 vs 0.93, 0.86 vs 0.89). 재순위로 이 차이를 메우는 구조이며, 재순위를 생략하는 옵션을 쓸 때는 이 점을 감안해야 한다.</td></tr></table>
-<h2>7.2 LLM에 검색한 후보 조문만 주는 이유</h2>
-<table><tr><th></th><th>내용</th></tr><tr><td>문제</td><td>LLM에 문제만 주고 물으면, 개정 전 법령이나 존재하지 않는 조문을 근거로 그럴듯하게 답할 수 있다(환각). 법률 공부에서는 이것이 가장 위험하다.</td></tr><tr><td>선택</td><td>검색한 후보 조문 5개만 근거로 주고, 그 안에서만 판정하게 한다. 응답에는 인용 문구와 원문 위치를 받는다.</td></tr><tr><td>이중 확인</td><td>Python이 인용 문구를 원문에서 다시 찾아 위치를 계산하고, Spring이 인용·위치·시행일이 실제 원문과 맞는지 한 번 더 대조한다. 맞지 않으면 결과를 저장하지 않는다.</td></tr><tr><td>대가</td><td>정답 조문이 후보 5개에 없으면 판정할 수 없다. 이때는 판단 보류로 처리한다(9.3).</td></tr></table>
-<h2>7.3 애매하면 판단 보류(HOLD)로 내리는 이유</h2>
-<table><tr><th></th><th>내용</th></tr><tr><td>문제</td><td>수험생에게 "틀린 답을 맞다"고 하는 것과 "판단 못 함"이라고 하는 것은 비용이 다르다. 앞의 것은 잘못 외우게 만들고, 뒤의 것은 직접 확인하게 만든다.</td></tr><tr><td>선택</td><td>판정을 근거 확인·불일치·판단 보류 세 가지로 두고, 후보 조문으로 확정할 수 없으면 판단 보류를 내린다. 선지별 분석에도 "근거 부족"을 둔다.</td></tr><tr><td>화면</td><td>판단 보류는 실패가 아니라 정상 판정으로 보여 주고, 기술 오류(분석 실패)와 구분한다.</td></tr></table>
-<h2>7.4 Spring과 Python 서버를 나눈 이유</h2>
-<table><tr><th></th><th>내용</th></tr><tr><td>문제</td><td>형태소 분석(Kiwi), 임베딩·재순위 모델(sentence-transformers)은 Python 생태계에 있고, 로그인·트랜잭션·작업 관리는 Spring이 강하다. 모델은 메모리를 많이 써서 웹 서버와 같은 프로세스에 두면 서로 영향을 준다.</td></tr><tr><td>선택</td><td>Spring은 사용자 요청, 권한, 작업 상태, DB 저장을 맡고, Python은 상태 없이 계산만 하는 내부 서버로 둔다. 둘은 OpenAPI로 정한 내부 계약으로만 통신한다.</td></tr><tr><td>장치</td><td>모든 내부 요청에 내부 토큰과 계약 버전 헤더를 검사하고, 모델 버전은 커밋 해시로 고정해 Spring이 시작할 때 대조한다.</td></tr><tr><td>효과</td><td>2인 팀이 계약을 먼저 정한 뒤 각자 독립적으로 개발할 수 있었고, Spring 테스트는 계약대로 응답하는 가짜 HTTP 서버로 모델 없이 돌릴 수 있다. 계약 검사는 CI에서 매번 실행한다.</td></tr></table>
-<h2>7.5 작업 큐와 단계별 checkpoint를 쓴 이유</h2>
-<table><tr><th></th><th>내용</th></tr><tr><td>문제</td><td>분석 한 번에 1~2분이 걸린다. HTTP 요청 하나로 기다리게 하면 연결이 끊기거나 시간 제한에 걸린다. 무료 Gemini API는 하루 한도와 일시 과부하(503)가 있어 실패가 흔하다.</td></tr><tr><td>선택</td><td>요청은 즉시 접수(202)하고 RabbitMQ 큐로 넘긴다. 워커가 준비 → 검색 → 검증 → 저장 단계를 처리하고, 단계마다 결과를 checkpoint로 저장한다.</td></tr><tr><td>효과</td><td>검증이 실패해 재시도할 때 80초 안팎 걸리는 검색을 다시 하지 않는다. 멱등 키로 같은 요청이 두 번 만들어지지 않고, 리스·fencing으로 두 워커가 같은 작업을 동시에 저장하지 못한다. 화면은 새로고침해도 진행 단계를 다시 조회한다.</td></tr></table>
-
-<h1 class="pb">8. AI 코딩 도구 활용 내역</h1><div class="ai">
-<p>학과 기준(본인 작성 코드 50% 이상, AI로 구현한 부분 구체 기재)에 따라 AI 코딩 도구를 쓴 부분을 기능·코드 단위로 밝힌다.</p>
-<h2>8.1 개요</h2>
-<table><tr><th>항목</th><th>내용</th></tr><tr><td>사용 도구</td><td>Claude Code (Anthropic) 하나만 사용. 2026-11-08 이후 커밋에는 <code>Co-Authored-By: Claude</code> 표시</td></tr><tr><td>활용 이유</td><td>2인 팀이 백엔드·AI 서버·평가를 모두 구현해야 해서, 반복 코드·평가 스크립트·문서 작성 시간을 줄이기 위해</td></tr><tr><td>사람이 정한 것</td><td>서비스 범위(1과목·공법), 시스템 구조와 분석 단계, API 계약, 평가 방법(Recall@5), 범위 밖 판정 기준, 기능 우선순위</td></tr><tr><td>AI에 맡긴 것</td><td>정해진 설계에 따른 코드·테스트 작성, 데이터 변환·측정 스크립트, 측정 기록 문서 정리</td></tr><tr><td>반영 절차</td><td>AI가 만든 코드는 팀원이 읽고 로컬 테스트와 CI를 통과시킨 뒤 PR로 반영</td></tr><tr><td>라벨 원칙</td><td>정답 조문 라벨은 AI가 초안만 만들고, 임수종·윤영주가 전체를 교차 검수해 확정</td></tr><tr><td>커밋 표시</td><td>AI가 함께 작성한 커밋에는 <code>Co-Authored-By: Claude</code> 표시</td></tr></table>
-<h2>8.2 측정 방법과 요약</h2>
-<p>현재 main의 코드 파일(Java·Python·JS·SQL·CSS·HTML·YAML 등)을 <code>git blame</code>으로 줄마다 마지막으로 바꾼 커밋을 찾고, 그 커밋에 AI 표시가 있는지로 나눴습니다.</p>
-<blockquote>⚠️ <b>"표시 없음"은 AI를 쓰지 않았다는 뜻이 아닙니다.</b> 표시 없이 AI로 만든 코드가 있으면 아래 표의 "AI 활용" 칸에 따로 적습니다.</blockquote>
-<table><tr><th>구분</th><th>AI 표시 커밋</th><th>표시 없음 — 임수종</th><th>표시 없음 — 윤영주</th><th>합계</th></tr><tr><td>서비스 코드·설정·계약</td><td>2,854</td><td>3,567</td><td>15,332</td><td>21,753</td></tr><tr><td>테스트 코드</td><td>1,184</td><td>1,782</td><td>10,402</td><td>13,368</td></tr><tr><td>합계</td><td>4,038 (11.5%)</td><td>5,349</td><td>25,734</td><td>35,121</td></tr></table>
-<h2>8.3 기능·코드별 상세 — Python AI 서버 (임수종)</h2>
-<table><tr><th>기능</th><th>코드</th><th>현재 줄 수<br>AI 표시 / 표시 없음</th><th>AI 활용</th><th>AI가 한 일</th><th>사람이 한 일</th></tr><tr><td>서버 뼈대·요청 처리</td><td><code>app/main.py</code>, <code>app/common.py</code></td><td>43 / 249</td><td>일부</td><td>0.2.0 엔드포인트(<code>verify-statement</code>·<code>variation-diff</code>·<code>similar-items</code>) 라우트 추가</td><td>서버 구조와 라우트 설계, 내부 토큰·계약 버전 헤더 검사 구현, AI 코드 검토·테스트 실행</td></tr><tr><td>요청·응답 모델</td><td><code>app/contract/models.py</code>, <code>app/contract/checks.py</code></td><td>215 / 372</td><td>일부</td><td>공법 과목 값, 선지 태그, 0.2.0 요청·응답 모델 추가</td><td>0.1.0 계약 필드 정의(윤영주와 협의), 입력 검증 규칙(길이·형식) 결정, 0.2.0 확장 범위 결정</td></tr><tr><td>계약 Mock 서버</td><td><code>app/mock/logic.py</code>, <code>app/mock/server.py</code></td><td>22 / 130</td><td>대부분</td><td>0.1.0 Mock 구현, 0.2.0 Mock 응답 추가</td><td>Mock 서버 설계(모델 없이 계약대로 응답)</td></tr><tr><td>형태소 분석</td><td><code>app/services/tokenizer.py</code></td><td>0 / 77</td><td>일부</td><td>일부 코드 작성 보조</td><td>Kiwi 선택, 토큰화 규칙(품사 필터 등) 결정·구현, AI 코드 검토·테스트 실행</td></tr><tr><td>임베딩</td><td><code>app/services/embedder.py</code>, <code>app/services/hf.py</code></td><td>25 / 43</td><td>일부</td><td>공법 대량 색인용 미리 계산한 임베딩 사용 경로</td><td>bge-m3 모델 선택, 모델 로딩·벡터 계산 코드 구현, 공법 대량 색인을 Colab에서 미리 계산하기로 결정, AI 코드 검토·테스트 실행</td></tr><tr><td>재순위·모델 관리</td><td><code>app/services/reranker.py</code>, <code>app/services/registry.py</code></td><td>7 / 101</td><td>일부</td><td>공법·태그 설정 반영</td><td>재순위 모델 선택, 모델 버전을 커밋 해시로 고정하는 방식 설계, AI 코드 검토·테스트 실행</td></tr><tr><td>검증 (Gemini)</td><td><code>app/services/verifier.py</code></td><td>75 / 312</td><td>일부</td><td>공법 지원, 선지 태그 5종 프롬프트(v2)</td><td>판정 3종·사유 코드 설계, 프롬프트 방향과 규칙 작성, Gemini 모델 선택과 호출 구현, 인용 위치를 원문에서 다시 찾는 방식 결정</td></tr><tr><td>문장 하나 확인</td><td><code>app/services/statement.py</code></td><td>133 / 0</td><td>Claude Code</td><td>문장 판정 로직·응답 구성</td><td>기능 정의, 판정 기준</td></tr><tr><td>변형 비교</td><td><code>app/services/variation.py</code></td><td>131 / 0</td><td>Claude Code</td><td>글자 단위 비교, 변형 태그 추정, 공부 팁</td><td>태그 체계 5종 결정</td></tr><tr><td>비슷한 기출</td><td><code>app/services/similar.py</code></td><td>109 / 0</td><td>Claude Code</td><td>은행 로드, 자기 문제 제외, 점수 계산(유사도 + 같은 조문)</td><td>기능 선택, 결과 확인(36-09·36-27·공법 사례)</td></tr><tr><td>골든셋 평가 계산</td><td><code>app/evaluation.py</code></td><td>0 / 491</td><td>대부분</td><td>계산 로직 구현</td><td>평가 지표 정의, AI 코드 검토·테스트 실행</td></tr><tr><td>내부 API 명세 0.1.0</td><td><code>ai-service/openapi.yaml</code></td><td>1 / 1,093</td><td>대부분</td><td>명세 작성</td><td>윤영주와 계약 협의·필드 결정, AI 작성분 검토</td></tr><tr><td>내부 API 명세 0.2.0 초안</td><td><code>ai-service/openapi-0.2.0-draft.yaml</code></td><td>642 / 0</td><td>Claude Code</td><td>명세 작성</td><td>확장 범위 결정</td></tr></table>
-<h2>8.4 기능·코드별 상세 — 평가·데이터 스크립트 (임수종)</h2>
-<table><tr><th>기능</th><th>코드 (<code>ai-service/scripts/</code>)</th><th>현재 줄 수<br>AI 표시 / 표시 없음</th><th>AI 활용</th><th>AI가 한 일</th><th>사람이 한 일</th></tr><tr><td>검색 정확도 평가</td><td><code>eval_retrieval.py</code></td><td>0 / 123</td><td>일부</td><td>일부 코드 작성 보조</td><td>Recall@k·Wilson 신뢰구간 지표 결정, 평가 스크립트 구현, 결과 해석(공법 BM25 우세 등)</td></tr><tr><td>LLM 판정 점검</td><td><code>verify_probe.py</code></td><td>34 / 174</td><td>대부분</td><td>점검 스크립트 작성, 공법 문제 지원</td><td>점검 문제 선정</td></tr><tr><td>법령 가져오기 변환</td><td><code>law_to_import.py</code></td><td>13 / 135</td><td>대부분</td><td>변환 코드 구현, 긴 별표 여러 조각 분할</td><td>국가법령정보 API 응답 구조 분석, 조문 분할·변환 규칙 결정, 변환 결과 검토</td></tr><tr><td>시험용 데이터 생성</td><td><code>gen_fixtures.py</code></td><td>0 / 108</td><td>대부분</td><td>생성 코드 구현</td><td>합성 데이터 형태 결정, AI 코드 검토</td></tr><tr><td>서버 동작 점검</td><td><code>smoke.py</code></td><td>0 / 90</td><td>대부분</td><td>점검 스크립트 구현</td><td>점검 항목 결정, 실행해서 동작 확인</td></tr><tr><td>OpenAPI 내보내기</td><td><code>export_openapi.py</code></td><td>10 / 15</td><td>일부</td><td>0.2.0 명세 내보내기</td><td>스크립트 구현</td></tr><tr><td>기출 PDF → 문제 변환</td><td><code>exam_pdf_to_jsonl.py</code></td><td>111 / 0</td><td>Claude Code</td><td>PDF 글자 추출, 문제·선지 분리</td><td>결과 확인·수정</td></tr><tr><td>기출 선지 은행 생성</td><td><code>build_choice_bank.py</code></td><td>94 / 0</td><td>Claude Code</td><td>선지 3,950개 정오·근거 조문 묶기</td><td>사용 범위 결정</td></tr><tr><td>검색 단계 시간 측정</td><td><code>search_stage_probe.py</code></td><td>112 / 0</td><td>Claude Code</td><td>단계별 시간 측정</td><td>측정 조건 결정, 결과 해석</td></tr><tr><td>분석 일괄 실행</td><td><code>run_analysis.py</code></td><td>145 / 0</td><td>Claude Code</td><td>문제 등록·분석 요청·결과 수집</td><td>실행 문제 선정</td></tr><tr><td>모델 메모리 점검</td><td><code>model_scan.py</code></td><td>70 / 0</td><td>Claude Code</td><td>모델 로딩 메모리 측정</td><td>8GB PC 메모리 문제를 보고 측정 필요성 판단, 측정 결과로 실행 순서·설정 결정</td></tr><tr><td>36회 공법 스캔본 입력</td><td>(데이터, 코드 아님)</td><td>—</td><td>Claude Code</td><td>페이지 이미지 판독, 40문제 옮겨 적기</td><td>AI가 옮긴 40문제를 원본 이미지와 대조 확인, 오탈자·번호 수정</td></tr><tr><td>환경변수 설정 도우미</td><td><code>env_set.py</code></td><td>100 / 0</td><td>Claude Code</td><td><code>.env</code> 값 설정 스크립트</td><td>AI 코드 검토</td></tr></table>
-<h2>8.5 기능·코드별 상세 — Spring 백엔드 (윤영주, 일부 임수종)</h2>
-<p>경로는 <code>backend/src/main/java/com/lawground/</code> 기준입니다.</p>
-<table><tr><th>기능</th><th>코드</th><th>현재 줄 수<br>AI 표시 / 표시 없음</th><th>AI 활용</th><th>AI가 한 일</th><th>사람이 한 일</th></tr><tr><td>Google 로그인·세션</td><td><code>auth/</code>, <code>member/</code></td><td>0 / 684</td><td>일부</td><td>로컬 개발용 로그인 구현, 코드 작성 보조</td><td>Google OIDC 연동 방식 설계, 회원·로그인 계정 연결 구조 설계, 세션(JDBC)·CSRF 정책 결정, AI 코드 검토·테스트 실행</td></tr><tr><td>문제 저장·라이브러리</td><td><code>question/</code></td><td>2 / 775</td><td>일부 (AI 표시는 공법 과목 값 2줄)</td><td>라이브러리 목록·검색·페이지 구현</td><td>문제·선지 저장 구조 설계, revision으로 동시 수정 막는 방식 설계, 입력 검증 규칙 결정, AI 코드 검토·테스트 실행</td></tr><tr><td>공통 설정·오류·보안</td><td><code>global/</code>, <code>LawGroundApplication.java</code></td><td>4 / 1,042</td><td>일부 (AI 표시는 비슷한 기출 경로 허용 4줄)</td><td>오류 처리·필터 코드 작성 보조</td><td>오류 응답 형식·오류 코드 설계, 요청 ID 추적 구현, 입력 문자 정책 결정, AI 코드 검토·테스트 실행</td></tr><tr><td>법령 저장·조회</td><td><code>law/service/</code>, <code>law/dto/</code>, <code>law/controller/</code></td><td>0 / 346</td><td>일부</td><td>코드 작성 보조</td><td>시행일 버전 관리 규칙 결정, 법령 가져오기 서비스 구현, AI 코드 검토·테스트 실행</td></tr><tr><td>하이브리드 검색 (BM25·벡터·RRF)</td><td><code>law/search/</code></td><td>24 / 954</td><td>일부 (AI 표시는 재순위 생략 옵션 24줄)</td><td>RRF 결합 구현</td><td>BM25·pgvector 검색 쿼리 구현, 색인 일관성(manifest) 검사 설계, AI 코드 검토·테스트 실행</td></tr><tr><td>AI 서버 HTTP 연결</td><td><code>integration/</code></td><td>49 / 983</td><td>일부 (AI 표시는 0.2.0 호출·태그 전달)</td><td>검증 응답 검사 구현</td><td>내부 API 계약 협의(임수종과), HTTP 클라이언트 구현(시간 제한·재시도), 모델 버전 대조 방식 설계, AI 코드 검토·테스트 실행</td></tr><tr><td>작업 큐·워커·재시도</td><td><code>job/</code></td><td>41 / 1,511</td><td>일부 (AI 표시는 공법 법령 범위·재순위 생략 설정)</td><td>코드 작성 보조</td><td>작업 상태 흐름 설계, 리스·fencing 방식 설계, checkpoint·재시도 정책 결정, 복구 스케줄러 구현</td></tr><tr><td>분석 실행·결과 저장</td><td><code>trace/</code></td><td>13 / 929</td><td>일부 (AI 표시는 선지 태그 저장)</td><td>결과 응답 구성, 인용 대조 코드 작성</td><td>분석 접수 API·멱등 키 설계, 결과 원자 저장 구현, AI 코드 검토·테스트 실행</td></tr><tr><td>관련 문제 추천</td><td><code>recommendation/</code> (비슷한 기출 제외)</td><td>0 / 358</td><td>일부</td><td>조회 쿼리 구현</td><td>추천 기준(근거 조문 + 임베딩) 결정, 권한·시행기간 필터 결정</td></tr><tr><td>비슷한 기출 API</td><td><code>recommendation/SimilarChoiceController.java</code></td><td>71 / 0</td><td>Claude Code</td><td>선지 문장·근거 조문 키 구성, AI 서버 호출, 오류 처리</td><td>기능 정의 (임수종)</td></tr><tr><td>골든셋 평가</td><td><code>evaluation/</code></td><td>0 / 939</td><td>직접 작성</td><td>—</td><td>평가셋 고정·누수 검사 설계, 평가 실행·집계 구현</td></tr><tr><td>기출 일괄 실행</td><td><code>batch/</code></td><td>0 / 480</td><td>일부</td><td>코드 작성 보조</td><td>배치 실행·재개 방식 설계, 집계 구현, AI 코드 검토·테스트 실행</td></tr><tr><td>법령 가져오기 실행기</td><td><code>bootstrap/LawImportRunner.java</code></td><td>155 / 0</td><td>Claude Code</td><td>공법 법령 파일 일괄 가져오기</td><td>실행·확인 (임수종)</td></tr><tr><td>AI 연결 점검</td><td><code>bootstrap/AiConnectionSmoke.java</code></td><td>0 / 171</td><td>대부분</td><td>점검 항목 결정, 점검 코드 구현</td><td>실행해서 동작 확인</td></tr><tr><td>DB 스키마 V001~V009</td><td><code>db/migration/</code></td><td>0 / 582</td><td>일부</td><td>작성 보조</td><td>테이블·제약 조건 설계, 결과 수정 금지 트리거 설계, 마이그레이션 SQL 작성</td></tr><tr><td>DB 스키마 V010 (공법 과목)</td><td><code>V010__public_law_subject.sql</code></td><td>3 / 0</td><td>Claude Code</td><td>과목 값 추가</td><td>공법 포함 결정</td></tr><tr><td>설정</td><td><code>application*.yml</code></td><td>2 / 186</td><td>대부분</td><td>설정 파일 작성</td><td>AI 작성분 검토</td></tr></table>
-<h2>8.6 기능·코드별 상세 — 화면·계약·CI</h2>
-<table><tr><th>기능</th><th>코드</th><th>현재 줄 수<br>AI 표시 / 표시 없음</th><th>AI 활용</th><th>AI가 한 일</th><th>사람이 한 일</th></tr><tr><td>사용자 화면</td><td><code>frontend/src/</code> (<code>app.js</code>, <code>analysis.js</code>, <code>domain.js</code>, <code>api.js</code>, <code>styles.css</code>, <code>index.html</code>)</td><td>97 / 486</td><td>일부 (AI 표시는 아래 3개 기능)</td><td>화면 코드 작성 보조</td><td>화면 흐름·구성 설계, 디자인(색·배치) 결정, 화면 구현, API 연결 구현</td></tr><tr><td>└ 붙여넣기 → 선지 자동 분리</td><td><code>domain.js</code></td><td>포함</td><td>Claude Code</td><td>문장 분리 규칙</td><td>요구 사항</td></tr><tr><td>└ 공법 과목·선지 태그 표시</td><td><code>app.js</code>, <code>analysis.js</code></td><td>포함</td><td>Claude Code</td><td>화면 구현</td><td>요구 사항</td></tr><tr><td>└ 비슷한 기출 보기</td><td><code>app.js</code>, <code>analysis.js</code>, <code>styles.css</code></td><td>포함</td><td>Claude Code</td><td>버튼·펼침·다른 글자 표시</td><td>화면 확인</td></tr><tr><td>붙여넣기 분리 시제품</td><td><code>docs/prototypes/paste_split.html</code></td><td>297 / 0</td><td>Claude Code</td><td>시제품 페이지</td><td>동작 확인</td></tr><tr><td>사용자·내부 API 계약</td><td><code>docs/api/*.openapi.yaml</code></td><td>4 / 4,409</td><td>일부</td><td>명세 작성</td><td>사용자 API 설계, 내부 API 협의(임수종과), AI 작성분 검토</td></tr><tr><td>저장소·계약 검사</td><td><code>scripts/</code></td><td>0 / 465</td><td>일부</td><td>검사 스크립트 구현</td><td>검사 규칙(비밀값·제외 파일) 결정, AI 코드 검토</td></tr><tr><td>CI·실행 환경</td><td><code>.github/workflows/ci.yml</code>, <code>docker-compose.yml</code></td><td>0 / 179</td><td>일부</td><td>CI 단계 구성, docker-compose 구성</td><td>워크플로 작성</td></tr></table>
-<h2>8.7 테스트 코드</h2>
-<table><tr><th>범위</th><th>위치</th><th>현재 줄 수<br>AI 표시 / 표시 없음</th><th>AI 활용</th><th>비고</th></tr><tr><td>백엔드</td><td><code>backend/src/test/</code></td><td>195 / 10,178</td><td>일부 (윤영주: 테스트 시나리오 결정, 테스트 코드 작성, 실패 원인 수정, AI 작성분 검토)</td><td>AI 표시: 비슷한 기출 통합 테스트, 재순위 생략·공법 테스트</td></tr><tr><td>AI 서버</td><td><code>ai-service/tests/</code></td><td>943 / 1,782</td><td>일부</td><td>AI 표시: 0.2.0 기능·은행·공법·변환 테스트</td></tr><tr><td>화면</td><td><code>frontend/tests/</code></td><td>46 / 131</td><td>일부 (윤영주: 테스트 시나리오 결정, 테스트 코드 작성, 실패 원인 수정, AI 작성분 검토)</td><td>AI 표시: 붙여넣기·태그·비슷한 기출 테스트</td></tr></table>
-<h2>8.8 AI를 쓰지 않은 작업</h2>
-<table><tr><th>작업</th><th>담당</th></tr><tr><td>정답 조문 라벨 전수 교차 검수 (1과목)</td><td>임수종 · 윤영주</td></tr><tr><td>정답 조문 라벨 전수 교차 검수 (부동산공법)</td><td>임수종 · 윤영주</td></tr><tr><td>범위 밖 문제 판정 기준 결정</td><td>팀</td></tr><tr><td>서비스 기획, 기능 우선순위, 발표·시연</td><td>팀</td></tr></table>
-
-</div><h1>9. 한계와 향후 과제</h1>
-<ul>
-  <li><b>검색 누락.</b> 정답 조문이 후보 5개에 들지 않으면 판단을 보류한다. 근거가 여러 조문인 공법 문제는 모두 찾는 비율이 78%로, 검색 보강이 필요하다.</li>
-  <li><b>속도.</b> 노트북 CPU에서 임베딩·재순위 모델을 돌려 한 문제 분석에 1~2분이 걸린다. GPU 서버나 외부 재순위 API로 줄일 수 있다.</li>
-  <li><b>범위.</b> 판례·서식·다른 법률, 민법·세법 과목은 아직 지원하지 않는다. 37회(2026) 기출은 최종정답 공개 후 추가한다.</li>
-</ul>
-
-<h1>10. 결론</h1>
-<p>LawGround는 기출 선지를 현행 법령 조문과 직접 연결하는 검색·검증 서비스를 구현했다. 수험생은 붙여넣기 한 번으로 문제를 입력하고, 판정과 근거 조문 원문, 선지별 고친 문장과 변형 유형, 같은 조문을 물은 비슷한 기출을 한 화면에서 확인할 수 있다. 802문제 평가에서 정답 근거 조문을 상위 5개 안에 1과목 93%, 부동산공법 89% 찾았다.</p>
-<p>법률처럼 틀린 정보의 비용이 큰 분야에서는 LLM의 답을 그대로 쓰기보다, 검색한 원문 안에서만 판정하고 인용을 기계적으로 다시 확인하며, 근거가 부족하면 판단을 보류하는 구조가 필요하다는 것을 확인했다. <span class="todo">TODO 팀 소감 한두 문장</span></p>
-
-<h1>출처 표기</h1>
-<ul>
-  <li>본 기출문제의 저작권은 한국산업인력공단(Q-Net)에 있으며, 출처를 밝히고 사용하였습니다. 입력 편의와 화면 구성을 위해 문제 내용을 일부 재가공했습니다(선지 분리, 표기 정리, 제36회 스캔본 재입력). 공단의 공식 문제와 다를 수 있습니다.</li>
-  <li>법령 원문은 국가법령정보센터(law.go.kr) Open API에서 받았습니다.</li>
-  <li>사용 모델: BAAI/bge-m3, BAAI/bge-reranker-v2-m3, Google Gemini API.</li>
-</ul>
-<h2>부록 A. 실행 방법</h2>
 <ol>
-  <li>Docker Desktop을 켜고 저장소 루트에서 <code>docker compose up -d --wait</code> (PostgreSQL·RabbitMQ)</li>
-  <li><code>backend</code>에서 <code>.\gradlew.bat bootRun --args="--spring.profiles.active=local"</code> (포트 8081)</li>
-  <li><code>ai-service</code>에서 가상환경을 켜고 FastAPI 서버 실행 (포트 8001)</li>
-  <li>브라우저에서 <code>http://localhost:8081</code> 접속</li>
+  <li>기준일에 유효한 법령 버전과 색인을 선택한다. 긴 조문은 검색 단위로 분할한다.</li>
+  <li>Kiwi로 토큰을 만든다. PostgreSQL 전체 텍스트 검색(FTS)은 <code>ts_rank_cd</code>로 단어 검색 결과의 순위를 매긴다.</li>
+  <li>BGE-M3로 1,024차원 임베딩을 생성한다. pgvector는 코사인 거리로 의미 검색을 수행한다.</li>
+  <li>RRF로 두 순위를 결합한다. 필요 시 BGE 리랭커로 후보를 재정렬한다. 생략 옵션을 켰고 재순위 대상이 최종 후보 수 이하면 결합 순위를 사용한다.</li>
 </ol>
-<p class="note">자세한 순서, 환경변수, 메모리 주의사항은 저장소 README와 <code>시연_실행순서.md</code>, <code>docs/runbooks/</code>에 있다. GitHub: https://github.com/lawground-team/LawGround</p>
+<h2>3.4 판정과 인용 확인</h2>
+<p>Gemini는 검색한 후보 조문을 근거로 제공 정답을 판정한다. 결과는 근거 확인, 근거와 불일치, 판단 보류 중 하나다. Python은 인용 위치를 원문에서 다시 계산한다. Spring은 인용, 위치, 시행일을 검사하고 확인된 결과를 저장한다.</p>
+<h2>3.5 법령과 DB</h2>
+<table>
+  <thead><tr><th>과목</th><th>평가에 사용한 법령 범위</th><th>조문</th></tr></thead>
+  <tbody>
+    <tr><td>중개사법령 및 중개실무</td><td>공인중개사법, 부동산 거래신고 등에 관한 법률과 각 하위 법령</td><td>267개</td></tr>
+    <tr><td>부동산공법</td><td>국토계획법, 도시개발법, 도시정비법, 건축법, 주택법, 농지법과 각 하위 법령</td><td>2,155개<br>별표 106개 포함</td></tr>
+  </tbody>
+</table>
+<table>
+  <thead><tr><th style="width:26%">데이터</th><th>주요 테이블</th></tr></thead>
+  <tbody>
+    <tr><td>법령 원문·색인</td><td><code>laws</code>, <code>law_versions</code>, <code>law_articles</code>, <code>law_chunks</code>, <code>law_chunk_indexes</code></td></tr>
+    <tr><td>회원·문제</td><td><code>members</code>, <code>questions</code>, <code>question_choices</code></td></tr>
+    <tr><td>분석·근거</td><td><code>trace_runs</code>, <code>processing_jobs</code>, <code>evidence_results</code>, <code>choice_analyses</code></td></tr>
+  </tbody>
+</table>
+<p>국가법령정보센터에서 수집한 원문을 시행일별 버전으로 저장한다. Flyway 마이그레이션 V001~V010으로 스키마를 관리한다.</p>
 
+<h1 id="features">4. 주요 기능과 구현</h1>
+<section class="capture-block">
+<h2>4.1 문제 입력·저장</h2>
+<p>붙여넣은 문장을 본문과 선지 5개로 분리한다. 인식 가능한 과목과 문제 유형을 채운다. 사용자가 제공 정답과 기준일을 확인해 저장한다. 서버는 입력 길이와 형식을 검사한다.</p>
+<figure><img src="../images/poster/input.jpg" alt="본문과 선지를 나누어 채운 실제 문제 입력 화면"><figcaption>그림 2. 실제 문제 입력 화면</figcaption></figure>
+</section>
+<section class="capture-block">
+<h2>4.2 분석 진행과 결과 조회</h2>
+<p>작업은 서버에서 비동기로 진행한다. 화면을 이동한 뒤에도 내 라이브러리에서 작업을 열 수 있다. 결과는 분석 당시 입력과 함께 저장한다.</p>
+<figure><img src="../images/poster/result.jpg" alt="정답 판정, 오답 정정, 근거 조문을 함께 표시한 실제 화면"><figcaption>그림 3. 정답 판정·선지 정정·근거 조문</figcaption></figure>
+</section>
+<section class="capture-block">
+<h2>4.3 선지별 분석과 비슷한 기출</h2>
+<p>선지마다 조문과의 일치, 불일치, 근거 부족을 표시한다. 불일치와 근거가 확인된 선지는 정정 문장을 제시한다. 태그는 시점·기한, 조건 추가, 주체·권한, 개념 오인, 숫자·수치 오류를 사용한다.</p>
+<p>같은 과목에서 동일 조문을 다룬 기출을 우선한다. 표현 유사도를 함께 반영한다. 입력 문제는 제외하고 다른 문제에서 최대 3개를 표시한다. 일치하는 기출이 없으면 빈 결과를 표시한다.</p>
+<figure><img class="narrow" src="../images/poster/similar.jpg" alt="3번 선지와 같은 조문을 다룬 제35회 기출 선지 비교 화면"><figcaption>그림 4. 비슷한 기출 비교</figcaption></figure>
+</section>
+<h2>4.4 라이브러리와 접근 제어</h2>
+<p>Google OIDC와 Spring Session JDBC로 로그인과 세션을 관리한다. 사용자는 자신의 문제와 분석 기록을 조회한다. 수정 시 문제 버전을 비교한다. 상태를 변경하는 요청에는 CSRF 검사를 적용한다. 관련 문제 추천에는 공유 조문과 문제 임베딩을 사용한다.</p>
+<h2>4.5 기술 스택과 테스트</h2>
+<table>
+  <thead><tr><th style="width:23%">영역</th><th>구성과 검사</th></tr></thead>
+  <tbody>
+    <tr><td>백엔드·데이터</td><td>Java 21, Spring Boot 3.5, PostgreSQL 16, pgvector, RabbitMQ, Flyway. JUnit, MockMvc, Testcontainers로 검증한다.</td></tr>
+    <tr><td>AI 서버</td><td>Python, FastAPI, Kiwi, BGE-M3, BGE 리랭커, Gemini. pytest로 요청·응답과 서비스 기능을 확인한다.</td></tr>
+    <tr><td>화면</td><td>HTML, CSS, ES 모듈. Spring이 정적 파일을 제공한다. Playwright로 사용 경로를 검사한다.</td></tr>
+    <tr><td>CI</td><td>GitHub Actions에서 백엔드, AI, 계약, 화면, 브라우저 검사를 실행한다. 통합 테스트의 외부 모델 응답은 계약에 맞춘 테스트 서버로 재현한다.</td></tr>
+  </tbody>
+</table>
+<p>API 키는 로컬 환경변수로 관리한다. 개발용 자동 로그인은 루프백 주소의 로컬 프로필에서만 켤 수 있다. 기출 원문과 평가용 선지 은행은 로컬 자료로 관리한다.</p>
+
+<h1 id="examples">5. 실행 예시</h1>
+<h2>5.1 공인중개사법 제33조 연습문제</h2>
+<p>그림 2~4에 같은 연습문제를 사용했다. 기준일은 2024년 10월 26일이다. 제공 정답은 3번이다. 실제 모델을 연결해 분석한 결과, 근거 확인(SUPPORTED)으로 저장됐다.</p>
+<table>
+  <thead><tr><th>선지</th><th>입력 문장</th><th>판정과 근거</th></tr></thead>
+  <tbody>
+    <tr><td>1번</td><td>중개의뢰인과 직접 거래하는 것은 금지행위에 해당하지 않는다.</td><td>불일치. 공인중개사법 제33조 제1항 제6호는 중개의뢰인과 직접 거래하는 행위를 금지한다.</td></tr>
+    <tr><td>3번</td><td>거래당사자 쌍방을 대리하는 행위는 금지된다.</td><td>일치. 같은 조항에 거래당사자 쌍방을 대리하는 행위가 포함된다.</td></tr>
+  </tbody>
+</table>
+<blockquote>제33조 제1항 제6호: “중개의뢰인과 직접 거래를 하거나 거래당사자 쌍방을 대리하는 행위”</blockquote>
+<p>3번 선지와 연결된 유사 기출은 제35회 6번의 5번 선지다. 화면은 같은 조문을 다룬 기출 문장과 입력 선지를 함께 표시한다. 기출 문장의 출처는 한국산업인력공단(Q-Net)이다.</p>
+<h2>5.2 제36회 9번</h2>
+<p>기존 실측 기록에서는 중개사무소 이전신고와 휴업을 묻는 문제에 제공 정답 1번을 넣었다. 법령 기준일은 2026년 11월 11일이다. 실행 결과는 근거 확인이었다.</p>
+<table>
+  <thead><tr><th>선지</th><th>확인한 쟁점</th><th>근거</th></tr></thead>
+  <tbody>
+    <tr><td>1번</td><td>임신 또는 출산을 휴업기간 제한의 예외 사유로 확인했다.</td><td>공인중개사법 제21조·시행령 제18조</td></tr>
+    <tr><td>2번</td><td>이전사실 신고의 담당 기관을 이전 후 등록관청으로 정정했다.</td><td>공인중개사법 제20조</td></tr>
+    <tr><td>3~5번</td><td>분사무소별 폐업 신고, 재개 신고 첨부서류, 폐업신고서 제출 간주 여부를 각각 검토했다.</td><td>공인중개사법 시행령 제18조</td></tr>
+  </tbody>
+</table>
+
+<h1 id="evaluation">6. 검색·판정 평가</h1>
+<h2>6.1 평가 데이터</h2>
+<p>제25~36회(2014~2025) 기출 960문제를 수집했다. 포함 기준을 충족한 802문제를 검색 평가에 사용했다. 공인중개사법령 및 중개실무는 337문제, 부동산공법은 465문제다.</p>
+<table>
+  <thead><tr><th>제외 기준</th><th>내용</th></tr></thead>
+  <tbody>
+    <tr><td>자료 범위</td><td>판례, 서식, 평가 코퍼스에서 다루지 않는 법령</td></tr>
+    <tr><td>폐지·개정</td><td>폐지된 제도 또는 법령 개정으로 기존 정답을 적용하기 어려운 문제</td></tr>
+    <tr><td>채점 예외</td><td>공식 최종정답에서 모든 선지를 정답으로 인정한 문제</td></tr>
+  </tbody>
+</table>
+<h2>6.2 정답 조문 라벨</h2>
+<p>정답 판단에 필요한 조문을 문제별 라벨로 기록했다. AI가 BM25 후보에서 초안을 만들었다. 임수종과 윤영주가 라벨을 교차 검수했다. 표본 검수에서는 중개사법령 20문제 중 18문제가 일치했고 2문제의 근거를 추가했다. 부동산공법 15문제는 모두 일치했다.</p>
+<h2>6.3 오프라인 검색 결과</h2>
+<p>Recall@5는 정답 조문이 상위 5개 후보에 포함된 문제의 비율이다. 정답 조문이 여러 개인 문제는 최소 한 조문이 검색되면 적중으로 집계했다.</p>
+<table>
+  <thead><tr><th>과목</th><th>문제 수</th><th>BM25</th><th>의미 검색</th><th>혼합 검색</th></tr></thead>
+  <tbody>
+    <tr><td>중개사법령 및 중개실무</td><td>337</td><td><b>0.93</b><br>[0.90, 0.95]</td><td>0.90<br>[0.86, 0.92]</td><td>0.92<br>[0.89, 0.94]</td></tr>
+    <tr><td>부동산공법</td><td>465</td><td><b>0.89</b><br>[0.86, 0.92]</td><td>0.80<br>[0.77, 0.84]</td><td>0.86<br>[0.83, 0.89]</td></tr>
+  </tbody>
+</table>
+<p class="note">대괄호는 95% Wilson 신뢰구간이다. 이 표는 오프라인 검색 평가 결과다.</p>
+<p>상위 5개 기준으로 BM25가 두 과목에서 가장 높았다. 공법에서 BM25와 의미 검색의 차이는 9%p였다. 상위 10개 기준 중개사법령의 혼합 검색은 0.97이었다. 모든 정답 조문을 찾아야 적중으로 집계하면 공법의 BM25와 혼합 검색은 각각 0.78이었다.</p>
+<h2>6.4 근거 판정 시험</h2>
+<p>정답 조문을 후보에 포함하고 Gemini의 판정만 평가했다. 총 37문제를 사용했다.</p>
+<table>
+  <thead><tr><th>입력</th><th>문제 수</th><th>근거 확인</th><th>불일치</th><th>보류</th></tr></thead>
+  <tbody>
+    <tr><td>정답 번호</td><td>21</td><td>20</td><td>0</td><td>1</td></tr>
+    <tr><td>틀린 정답 번호</td><td>16</td><td>0</td><td>14</td><td>2</td></tr>
+  </tbody>
+</table>
+<p>틀린 정답 번호를 승인한 사례는 이 시험에서 0건이었다. 실제 서비스는 후보 검색을 포함하므로 검색과 판정을 각각 측정했다.</p>
+<h2>6.5 전체 연결 시험</h2>
+<p>로컬에서 Spring, RabbitMQ, PostgreSQL, Python, Gemini를 연결했다. 제36회 5문제를 연속 실행했다. 작업 5건이 저장까지 완료됐고, 판정은 근거 확인 3건과 보류 2건이었다. 재시도는 0건이다. 평균 처리 시간은 95초였다.</p>
+<table>
+  <thead><tr><th>문제</th><th>전체 처리 시간</th><th>최종 판정</th></tr></thead>
+  <tbody>
+    <tr><td>36회 1번</td><td>96초</td><td>근거 확인</td></tr>
+    <tr><td>36회 3번</td><td>94초</td><td>근거 확인</td></tr>
+    <tr><td>36회 12번</td><td>107초</td><td>판단 보류</td></tr>
+    <tr><td>36회 24번</td><td>126초</td><td>판단 보류</td></tr>
+    <tr><td>36회 27번</td><td>52초</td><td>근거 확인</td></tr>
+  </tbody>
+</table>
+<p class="note">조건: 8GB RAM 노트북의 로컬 실행. 보류 2건은 정답 조문 일부가 검색 후보에서 빠진 사례다.</p>
+
+<h1 id="decisions">7. 설계 결정</h1>
+<table>
+  <thead><tr><th style="width:28%">결정</th><th>이유와 효과</th></tr></thead>
+  <tbody>
+    <tr><td>단어·의미 검색 결합</td><td>법률 용어의 일치와 표현이 바뀐 선지를 함께 처리한다. RRF로 후보를 결합한다. 재순위 효과는 동일 표본의 적용 전후 비교로 확인할 과제다.</td></tr>
+    <tr><td>후보 조문 기반 검증</td><td>판정 근거의 범위를 고정한다. 코드가 인용 위치와 시행일을 대조한다.</td></tr>
+    <tr><td>판단 보류</td><td>후보 조문으로 결론을 확정하기 어려운 경우를 기록한다. 화면에서 기술 오류와 별도 상태로 표시한다.</td></tr>
+    <tr><td>Spring과 Python 분리</td><td>Spring이 사용자·상태·저장을 관리한다. Python이 모델 기능을 제공한다. 내부 HTTP 계약으로 두 구현을 연결한다.</td></tr>
+    <tr><td>큐와 체크포인트</td><td>사용자 요청에 먼저 접수 결과를 반환한다. 서버가 분석을 이어서 실행한다. 재시도 시 완료된 단계를 재사용한다.</td></tr>
+  </tbody>
+</table>
+
+<h1 id="ai">8. AI 코딩 도구 활용 내역</h1>
+<div class="ai">
+<p>AI 활용 범위와 팀원의 작업을 기능별로 기록했다. 줄 수는 기존 코드 기여 집계의 기준을 따른다.</p>
+<h2>8.1 개요</h2>
+<table><thead><tr><th>항목</th><th>내용</th></tr></thead><tr><td>사용 도구</td><td>Claude Code(Anthropic), Codex(OpenAI)</td></tr><tr><td>활용 이유</td><td>반복 코드, 테스트, 평가 스크립트, 문서 초안을 작성하는 데 사용했다.</td></tr><tr><td>사람이 정한 것</td><td>서비스 범위(1과목·공법), 시스템 구조와 분석 단계, API 계약, 평가 방법(Recall@5), 범위 밖 판정 기준, 기능 우선순위</td></tr><tr><td>AI에 맡긴 것</td><td>정해진 설계에 따른 코드·테스트 작성, 데이터 변환·측정 스크립트, 측정 기록 문서 정리</td></tr><tr><td>반영 절차</td><td>팀원이 코드와 테스트 결과를 검토한 뒤 PR로 반영했다.</td></tr><tr><td>라벨 원칙</td><td>정답 조문 라벨은 AI가 초안만 만들고, 임수종·윤영주가 전체를 교차 검수해 확정</td></tr><tr><td>커밋 표시</td><td>Claude 표기 커밋은 <code>Co-Authored-By: Claude</code>로 확인했다. 도구별 활용은 기능 표에 기록했다.</td></tr></table>
+<h2>8.2 측정 방법과 요약</h2>
+<p>코드 파일의 각 줄에서 <code>git blame</code>으로 마지막 수정 커밋을 찾았다. 커밋에 AI 공동 작성 표기가 있는지 집계했다.</p>
+<blockquote>공동 작성 표기가 없는 줄에도 AI 도구의 도움을 받은 코드가 포함된다. 기능별 활용 범위는 아래 표에 기록했다.</blockquote>
+<table><thead><tr><th>구분</th><th>AI 표시 커밋</th><th>표시 없음 · 임수종</th><th>표시 없음 · 윤영주</th><th>합계</th></tr></thead><tr><td>서비스 코드·설정·계약</td><td>2,854</td><td>3,567</td><td>15,332</td><td>21,753</td></tr><tr><td>테스트 코드</td><td>1,184</td><td>1,782</td><td>10,402</td><td>13,368</td></tr><tr><td>합계</td><td>4,038 (11.5%)</td><td>5,349</td><td>25,734</td><td>35,121</td></tr></table>
+<h2>8.3 기능·코드별 상세 · Python AI 서버 (임수종)</h2>
+<table><thead><tr><th>기능</th><th>코드</th><th>현재 줄 수<br>AI 표시 / 표시 없음</th><th>AI 활용</th><th>AI가 한 일</th><th>사람이 한 일</th></tr></thead><tr><td>서버 뼈대·요청 처리</td><td><code>app/main.py</code>, <code>app/common.py</code></td><td>43 / 249</td><td>일부</td><td>0.2.0 엔드포인트(<code>verify-statement</code>·<code>variation-diff</code>·<code>similar-items</code>) 라우트 추가</td><td>서버 구조와 라우트 설계, 내부 토큰·계약 버전 헤더 검사 구현, AI 코드 검토·테스트 실행</td></tr><tr><td>요청·응답 모델</td><td><code>app/contract/models.py</code>, <code>app/contract/checks.py</code></td><td>215 / 372</td><td>일부</td><td>공법 과목 값, 선지 태그, 0.2.0 요청·응답 모델 추가</td><td>0.1.0 계약 필드 정의(윤영주와 협의), 입력 검증 규칙(길이·형식) 결정, 0.2.0 확장 범위 결정</td></tr><tr><td>계약 Mock 서버</td><td><code>app/mock/logic.py</code>, <code>app/mock/server.py</code></td><td>22 / 130</td><td>대부분</td><td>0.1.0 Mock 구현, 0.2.0 Mock 응답 추가</td><td>Mock 서버 설계(모델 없이 계약대로 응답)</td></tr><tr><td>형태소 분석</td><td><code>app/services/tokenizer.py</code></td><td>0 / 77</td><td>일부</td><td>일부 코드 작성 보조</td><td>Kiwi 선택, 토큰화 규칙(품사 필터 등) 결정·구현, AI 코드 검토·테스트 실행</td></tr><tr><td>임베딩</td><td><code>app/services/embedder.py</code>, <code>app/services/hf.py</code></td><td>25 / 43</td><td>일부</td><td>공법 대량 색인용 미리 계산한 임베딩 사용 경로</td><td>bge-m3 모델 선택, 모델 로딩·벡터 계산 코드 구현, 공법 대량 색인을 Colab에서 미리 계산하기로 결정, AI 코드 검토·테스트 실행</td></tr><tr><td>재순위·모델 관리</td><td><code>app/services/reranker.py</code>, <code>app/services/registry.py</code></td><td>7 / 101</td><td>일부</td><td>공법·태그 설정 반영</td><td>재순위 모델 선택, 모델 버전을 커밋 해시로 고정하는 방식 설계, AI 코드 검토·테스트 실행</td></tr><tr><td>검증 (Gemini)</td><td><code>app/services/verifier.py</code></td><td>75 / 312</td><td>일부</td><td>공법 지원, 선지 태그 5종 프롬프트(v2)</td><td>판정 3종·사유 코드 설계, 프롬프트 방향과 규칙 작성, Gemini 모델 선택과 호출 구현, 인용 위치를 원문에서 다시 찾는 방식 결정</td></tr><tr><td>문장 하나 확인</td><td><code>app/services/statement.py</code></td><td>133 / 0</td><td>Claude Code</td><td>문장 판정 로직·응답 구성</td><td>기능 정의, 판정 기준</td></tr><tr><td>변형 비교</td><td><code>app/services/variation.py</code></td><td>131 / 0</td><td>Claude Code</td><td>글자 단위 비교, 변형 태그 추정, 공부 팁</td><td>태그 체계 5종 결정</td></tr><tr><td>비슷한 기출</td><td><code>app/services/similar.py</code></td><td>109 / 0</td><td>Claude Code</td><td>은행 로드, 자기 문제 제외, 점수 계산(유사도 + 같은 조문)</td><td>기능 선택, 결과 확인(36-09·36-27·공법 사례)</td></tr><tr><td>골든셋 평가 계산</td><td><code>app/evaluation.py</code></td><td>0 / 491</td><td>대부분</td><td>계산 로직 구현</td><td>평가 지표 정의, AI 코드 검토·테스트 실행</td></tr><tr><td>내부 API 명세 0.1.0</td><td><code>ai-service/openapi.yaml</code></td><td>1 / 1,093</td><td>대부분</td><td>명세 작성</td><td>윤영주와 계약 협의·필드 결정, AI 작성분 검토</td></tr><tr><td>내부 API 명세 0.2.0 초안</td><td><code>ai-service/openapi-0.2.0-draft.yaml</code></td><td>642 / 0</td><td>Claude Code</td><td>명세 작성</td><td>확장 범위 결정</td></tr></table>
+<h2>8.4 기능·코드별 상세 · 평가·데이터 스크립트 (임수종)</h2>
+<table><thead><tr><th>기능</th><th>코드 (<code>ai-service/scripts/</code>)</th><th>현재 줄 수<br>AI 표시 / 표시 없음</th><th>AI 활용</th><th>AI가 한 일</th><th>사람이 한 일</th></tr></thead><tr><td>검색 정확도 평가</td><td><code>eval_retrieval.py</code></td><td>0 / 123</td><td>일부</td><td>일부 코드 작성 보조</td><td>Recall@k·Wilson 신뢰구간 지표 결정, 평가 스크립트 구현, 결과 해석(공법 BM25 우세 등)</td></tr><tr><td>LLM 판정 점검</td><td><code>verify_probe.py</code></td><td>34 / 174</td><td>대부분</td><td>점검 스크립트 작성, 공법 문제 지원</td><td>점검 문제 선정</td></tr><tr><td>법령 가져오기 변환</td><td><code>law_to_import.py</code></td><td>13 / 135</td><td>대부분</td><td>변환 코드 구현, 긴 별표 여러 조각 분할</td><td>국가법령정보 API 응답 구조 분석, 조문 분할·변환 규칙 결정, 변환 결과 검토</td></tr><tr><td>시험용 데이터 생성</td><td><code>gen_fixtures.py</code></td><td>0 / 108</td><td>대부분</td><td>생성 코드 구현</td><td>합성 데이터 형태 결정, AI 코드 검토</td></tr><tr><td>서버 동작 점검</td><td><code>smoke.py</code></td><td>0 / 90</td><td>대부분</td><td>점검 스크립트 구현</td><td>점검 항목 결정, 실행해서 동작 확인</td></tr><tr><td>OpenAPI 내보내기</td><td><code>export_openapi.py</code></td><td>10 / 15</td><td>일부</td><td>0.2.0 명세 내보내기</td><td>스크립트 구현</td></tr><tr><td>기출 PDF → 문제 변환</td><td><code>exam_pdf_to_jsonl.py</code></td><td>111 / 0</td><td>Claude Code</td><td>PDF 글자 추출, 문제·선지 분리</td><td>결과 확인·수정</td></tr><tr><td>기출 선지 은행 생성</td><td><code>build_choice_bank.py</code></td><td>94 / 0</td><td>Claude Code</td><td>선지 3,950개 정오·근거 조문 묶기</td><td>사용 범위 결정</td></tr><tr><td>검색 단계 시간 측정</td><td><code>search_stage_probe.py</code></td><td>112 / 0</td><td>Claude Code</td><td>단계별 시간 측정</td><td>측정 조건 결정, 결과 해석</td></tr><tr><td>분석 일괄 실행</td><td><code>run_analysis.py</code></td><td>145 / 0</td><td>Claude Code</td><td>문제 등록·분석 요청·결과 수집</td><td>실행 문제 선정</td></tr><tr><td>모델 메모리 점검</td><td><code>model_scan.py</code></td><td>70 / 0</td><td>Claude Code</td><td>모델 로딩 메모리 측정</td><td>8GB PC 메모리 문제를 보고 측정 필요성 판단, 측정 결과로 실행 순서·설정 결정</td></tr><tr><td>36회 공법 스캔본 입력</td><td>(데이터, 코드 아님)</td><td>—</td><td>Claude Code</td><td>페이지 이미지 판독, 40문제 옮겨 적기</td><td>AI가 옮긴 40문제를 원본 이미지와 대조 확인, 오탈자·번호 수정</td></tr><tr><td>환경변수 설정 도우미</td><td><code>env_set.py</code></td><td>100 / 0</td><td>Claude Code</td><td><code>.env</code> 값 설정 스크립트</td><td>AI 코드 검토</td></tr></table>
+<h2>8.5 기능·코드별 상세 · Spring 백엔드 (윤영주, 일부 임수종)</h2>
+<p class="keep-next">파일 경로는 <code>backend/src/main/java/com/lawground/</code>를 기준으로 한다.</p>
+<table><thead><tr><th>기능</th><th>코드</th><th>현재 줄 수<br>AI 표시 / 표시 없음</th><th>AI 활용</th><th>AI가 한 일</th><th>사람이 한 일</th></tr></thead><tr><td>Google 로그인·세션</td><td><code>auth/</code>, <code>member/</code></td><td>0 / 684</td><td>일부</td><td>로컬 개발용 로그인 구현, 코드 작성 보조</td><td>Google OIDC 연동 방식 설계, 회원·로그인 계정 연결 구조 설계, 세션(JDBC)·CSRF 정책 결정, AI 코드 검토·테스트 실행</td></tr><tr><td>문제 저장·라이브러리</td><td><code>question/</code></td><td>2 / 775</td><td>일부 (AI 표시는 공법 과목 값 2줄)</td><td>라이브러리 목록·검색·페이지 구현</td><td>문제·선지 저장 구조 설계, revision으로 동시 수정 막는 방식 설계, 입력 검증 규칙 결정, AI 코드 검토·테스트 실행</td></tr><tr><td>공통 설정·오류·보안</td><td><code>global/</code>, <code>LawGroundApplication.java</code></td><td>4 / 1,042</td><td>일부 (AI 표시는 비슷한 기출 경로 허용 4줄)</td><td>오류 처리·필터 코드 작성 보조</td><td>오류 응답 형식·오류 코드 설계, 요청 ID 추적 구현, 입력 문자 정책 결정, AI 코드 검토·테스트 실행</td></tr><tr><td>법령 저장·조회</td><td><code>law/service/</code>, <code>law/dto/</code>, <code>law/controller/</code></td><td>0 / 346</td><td>일부</td><td>코드 작성 보조</td><td>시행일 버전 관리 규칙 결정, 법령 가져오기 서비스 구현, AI 코드 검토·테스트 실행</td></tr><tr><td>하이브리드 검색 (FTS·벡터·RRF)</td><td><code>law/search/</code></td><td>24 / 954</td><td>일부 (AI 표시는 재순위 생략 옵션 24줄)</td><td>RRF 결합 구현</td><td>PostgreSQL FTS·pgvector 검색 쿼리 구현, 색인 일관성(manifest) 검사 설계, AI 코드 검토·테스트 실행</td></tr><tr><td>AI 서버 HTTP 연결</td><td><code>integration/</code></td><td>49 / 983</td><td>일부 (AI 표시는 0.2.0 호출·태그 전달)</td><td>검증 응답 검사 구현</td><td>내부 API 계약 협의(임수종과), HTTP 클라이언트 구현(시간 제한·재시도), 모델 버전 대조 방식 설계, AI 코드 검토·테스트 실행</td></tr><tr><td>작업 큐·워커·재시도</td><td><code>job/</code></td><td>41 / 1,511</td><td>일부 (AI 표시는 공법 법령 범위·재순위 생략 설정)</td><td>코드 작성 보조</td><td>작업 상태 흐름 설계, 리스·fencing 방식 설계, checkpoint·재시도 정책 결정, 복구 스케줄러 구현</td></tr><tr><td>분석 실행·결과 저장</td><td><code>trace/</code></td><td>13 / 929</td><td>일부 (AI 표시는 선지 태그 저장)</td><td>결과 응답 구성, 인용 대조 코드 작성</td><td>분석 접수 API·멱등 키 설계, 결과 원자 저장 구현, AI 코드 검토·테스트 실행</td></tr><tr><td>관련 문제 추천</td><td><code>recommendation/</code> (비슷한 기출 제외)</td><td>0 / 358</td><td>일부</td><td>조회 쿼리 구현</td><td>추천 기준(근거 조문 + 임베딩) 결정, 권한·시행기간 필터 결정</td></tr><tr><td>비슷한 기출 API</td><td><code>recommendation/SimilarChoiceController.java</code></td><td>71 / 0</td><td>Claude Code</td><td>선지 문장·근거 조문 키 구성, AI 서버 호출, 오류 처리</td><td>기능 정의 (임수종)</td></tr><tr><td>골든셋 평가</td><td><code>evaluation/</code></td><td>0 / 939</td><td>직접 작성</td><td>—</td><td>평가셋 고정·누수 검사 설계, 평가 실행·집계 구현</td></tr><tr><td>기출 일괄 실행</td><td><code>batch/</code></td><td>0 / 480</td><td>일부</td><td>코드 작성 보조</td><td>배치 실행·재개 방식 설계, 집계 구현, AI 코드 검토·테스트 실행</td></tr><tr><td>법령 가져오기 실행기</td><td><code>bootstrap/LawImportRunner.java</code></td><td>155 / 0</td><td>Claude Code</td><td>공법 법령 파일 일괄 가져오기</td><td>실행·확인 (임수종)</td></tr><tr><td>AI 연결 점검</td><td><code>bootstrap/AiConnectionSmoke.java</code></td><td>0 / 171</td><td>대부분</td><td>점검 항목 결정, 점검 코드 구현</td><td>실행해서 동작 확인</td></tr><tr><td>DB 스키마 V001~V009</td><td><code>db/migration/</code></td><td>0 / 582</td><td>일부</td><td>작성 보조</td><td>테이블·제약 조건 설계, 결과 수정 금지 트리거 설계, 마이그레이션 SQL 작성</td></tr><tr><td>DB 스키마 V010 (공법 과목)</td><td><code>V010__public_law_subject.sql</code></td><td>3 / 0</td><td>Claude Code</td><td>과목 값 추가</td><td>공법 포함 결정</td></tr><tr><td>설정</td><td><code>application*.yml</code></td><td>2 / 186</td><td>대부분</td><td>설정 파일 작성</td><td>AI 작성분 검토</td></tr></table>
+<h2>8.6 기능·코드별 상세 · 화면·계약·CI</h2>
+<table><thead><tr><th>기능</th><th>코드</th><th>현재 줄 수<br>AI 표시 / 표시 없음</th><th>AI 활용</th><th>AI가 한 일</th><th>사람이 한 일</th></tr></thead><tr><td>사용자 화면</td><td><code>frontend/src/</code> (<code>app.js</code>, <code>analysis.js</code>, <code>domain.js</code>, <code>api.js</code>, <code>styles.css</code>, <code>index.html</code>)</td><td>97 / 486</td><td>일부 (AI 표시는 아래 3개 기능)</td><td>화면 코드 작성 보조</td><td>화면 흐름·구성 설계, 디자인(색·배치) 결정, 화면 구현, API 연결 구현</td></tr><tr><td>└ 붙여넣기 → 선지 자동 분리</td><td><code>domain.js</code></td><td>포함</td><td>Claude Code</td><td>문장 분리 규칙</td><td>요구 사항</td></tr><tr><td>└ 공법 과목·선지 태그 표시</td><td><code>app.js</code>, <code>analysis.js</code></td><td>포함</td><td>Claude Code</td><td>화면 구현</td><td>요구 사항</td></tr><tr><td>└ 비슷한 기출 보기</td><td><code>app.js</code>, <code>analysis.js</code>, <code>styles.css</code></td><td>포함</td><td>Claude Code</td><td>버튼·펼침·다른 글자 표시</td><td>화면 확인</td></tr><tr><td>붙여넣기 분리 시제품</td><td><code>docs/prototypes/paste_split.html</code></td><td>297 / 0</td><td>Claude Code</td><td>시제품 페이지</td><td>동작 확인</td></tr><tr><td>사용자·내부 API 계약</td><td><code>docs/api/*.openapi.yaml</code></td><td>4 / 4,409</td><td>일부</td><td>명세 작성</td><td>사용자 API 설계, 내부 API 협의(임수종과), AI 작성분 검토</td></tr><tr><td>저장소·계약 검사</td><td><code>scripts/</code></td><td>0 / 465</td><td>일부</td><td>검사 스크립트 구현</td><td>검사 규칙(비밀값·제외 파일) 결정, AI 코드 검토</td></tr><tr><td>CI·실행 환경</td><td><code>.github/workflows/ci.yml</code>, <code>docker-compose.yml</code></td><td>0 / 179</td><td>일부</td><td>CI 단계 구성, docker-compose 구성</td><td>워크플로 작성</td></tr></table>
+<h2>8.7 테스트 코드</h2>
+<table><thead><tr><th>범위</th><th>위치</th><th>현재 줄 수<br>AI 표시 / 표시 없음</th><th>AI 활용</th><th>비고</th></tr></thead><tr><td>백엔드</td><td><code>backend/src/test/</code></td><td>195 / 10,178</td><td>일부 (윤영주: 테스트 시나리오 결정, 테스트 코드 작성, 실패 원인 수정, AI 작성분 검토)</td><td>AI 표시: 비슷한 기출 통합 테스트, 재순위 생략·공법 테스트</td></tr><tr><td>AI 서버</td><td><code>ai-service/tests/</code></td><td>943 / 1,782</td><td>일부</td><td>AI 표시: 0.2.0 기능·은행·공법·변환 테스트</td></tr><tr><td>화면</td><td><code>frontend/tests/</code></td><td>46 / 131</td><td>일부 (윤영주: 테스트 시나리오 결정, 테스트 코드 작성, 실패 원인 수정, AI 작성분 검토)</td><td>AI 표시: 붙여넣기·태그·비슷한 기출 테스트</td></tr></table>
+<h2>8.8 팀원이 직접 수행한 작업</h2>
+<p>임수종과 윤영주는 두 과목의 정답 조문 라벨을 교차 검수했다. 팀은 평가 제외 기준과 기능 우선순위를 정하고, 발표와 시연을 준비했다.</p>
+
+</div>
+
+<div class="ending">
+<h1 id="limits">9. 한계와 향후 과제</h1>
+<table>
+  <thead><tr><th style="width:24%">한계</th><th>확인한 내용</th><th>향후 과제</th></tr></thead>
+  <tbody>
+    <tr><td>근거 누락</td><td>복수 조문이 필요한 문제는 후보 일부가 빠질 수 있다.</td><td>질의 구성과 후보 범위를 비교하고, 모든 근거의 검색률을 측정한다.</td></tr>
+    <tr><td>평가 표본</td><td>조건부 판정 시험은 37문제로 진행했다.</td><td>과목과 회차를 늘려 불일치, 보류, 오승인 비율을 확인한다.</td></tr>
+    <tr><td>처리 시간</td><td>로컬 전체 연결 시험은 문제당 52~126초가 걸렸다.</td><td>재순위 옵션별 처리 시간과 검색 결과를 같은 입력에서 비교한다.</td></tr>
+    <tr><td>지원 범위</td><td>판례와 서식, 적재 범위 밖 법령은 추가 자료가 필요하다.</td><td>공식 자료를 확보한 뒤 법령 버전과 기출 라벨을 갱신한다.</td></tr>
+  </tbody>
+</table>
+
+<h1 id="conclusion">10. 결론</h1>
+<p>문제 등록, 법령 검색, 정답 판정, 근거 저장, 유사 기출 비교를 구현했다. 사용자 화면에서 같은 문제의 선지 분석과 근거 원문을 함께 확인할 수 있다.</p>
+<p>오프라인 검색 평가는 802문제로 진행했다. 정답 조문을 후보에 포함한 판정 시험에서 틀린 정답을 승인한 사례는 16문제 중 0건이었다. 로컬 전체 연결 시험은 5건을 저장까지 완료했다.</p>
+<h2>팀 소감</h2>
+<p>개발 과정에서 입력·응답 계약을 먼저 정리하자 두 서버를 단계별로 확인할 수 있었다. 검색과 판정을 따로 측정하니 근거가 빠진 경우와 판정이 보류된 경우를 구분할 수 있었다.</p>
+
+<h1 id="sources">출처 표기</h1>
+<ul>
+  <li>기출문제: <a href="https://www.q-net.or.kr/">한국산업인력공단(Q-Net)</a>. 기출문제의 저작권은 한국산업인력공단에 있다. 문제 분리와 표기 정리를 위해 일부 재가공했다.</li>
+  <li>법령 원문과 시행일: <a href="https://www.law.go.kr/">국가법령정보센터</a>.</li>
+  <li>구현 및 평가 자료: <a href="https://github.com/lawground-team/LawGround">LawGround 저장소</a>의 README와 <a href="https://github.com/lawground-team/LawGround/blob/main/%EB%B0%9C%ED%91%9C_%EC%B8%A1%EC%A0%95%EA%B2%B0%EA%B3%BC.md">발표용 측정 결과</a>.</li>
+  <li>모델: BAAI/bge-m3, BAAI/bge-reranker-v2-m3, Google Gemini API.</li>
+</ul>
+
+<h1 id="run">부록 A. 실행 방법</h1>
+<ol>
+  <li>로컬 환경변수 파일을 설정한다. DB 접속 정보, 내부 API 토큰, 검증 모델 설정을 지정한다.</li>
+  <li>저장소 루트에서 <code>docker compose up -d --wait</code>를 실행한다.</li>
+  <li><code>backend</code>에서 <code>.\gradlew.bat bootRun --args="--spring.profiles.active=local"</code>을 실행한다.</li>
+  <li><code>ai-service</code> 가상환경에서 <code>uvicorn app.main:app --host 127.0.0.1 --port 8001</code>을 실행한다.</li>
+  <li><code>http://localhost:8081</code>을 연다. 분석에는 기준일에 해당하는 법령 색인과 검증 모델 설정이 필요하다.</li>
+</ol>
+<p class="note">세부 설정: <a href="https://github.com/lawground-team/LawGround/blob/main/%EC%8B%9C%EC%97%B0_%EC%8B%A4%ED%96%89%EC%88%9C%EC%84%9C.md">시연 실행 순서</a> 및 저장소 README.</p>
+</div>
 </body>
 </html>
