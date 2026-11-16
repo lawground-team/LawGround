@@ -543,7 +543,6 @@ PR과 main push마다 GitHub Actions가 다음을 검사합니다.
 |---|---|
 | 📄 결과보고서 | [결과보고서 PDF](docs/submission/결과보고서.pdf) · [편집 원본](docs/submission/report.html) |
 | 🖼️ 포스터 | [포스터 PDF](docs/submission/포스터.pdf) · [포스터 PNG](docs/submission/포스터.png) |
-| 📊 발표자료 | `TODO` |
 | 🎬 소개 영상 | [YouTube](https://youtu.be/kbe6JpGyPoM) |
 | 🎬 시연 영상 | [YouTube](https://youtu.be/QYN4slUbc9s) |
 
