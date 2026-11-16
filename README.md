@@ -12,8 +12,7 @@
 ![Python FastAPI](https://img.shields.io/badge/Python-FastAPI-009688)
 ![PostgreSQL pgvector](https://img.shields.io/badge/PostgreSQL-pgvector-336791)
 
-<!-- TODO: 결과 화면 캡처를 docs/images/result.png 로 넣고 아래 주석을 푼다 -->
-<!-- <img src="docs/images/result.png" width="820" alt="분석 결과 화면"> -->
+<img src="docs/images/result.png" width="820" alt="분석 결과 화면">
 
 </div>
 
@@ -150,7 +149,13 @@
 
 <img src="docs/images/input.png" width="760" alt="문제 입력 화면: 붙여넣은 문장이 본문과 선지 5개로 나뉘어 채워진 모습">
 
-<!-- TODO: 분석 결과 화면(docs/images/result.png)과 비슷한 기출 펼친 화면(docs/images/similar.png)을 찍어 여기에 추가 -->
+**분석 결과 화면** — 선지마다 조문과 일치하는지, 바뀐 부분이 무엇인지, 근거에 따라 어떻게 바로잡는지를 보여 주고, 오른쪽에 근거 조문 원문을 붙입니다.
+
+<img src="docs/images/result.png" width="760" alt="분석 결과 화면: 선지별 판정과 근거에 따른 정정, 오른쪽 근거 조문">
+
+**비슷한 기출 화면** — 같은 근거 조문을 다룬 기출 선지를 펼쳐, 지금 선지와 글자가 다른 곳을 표시하고 공부 팁을 보여 줍니다.
+
+<img src="docs/images/similar.png" width="760" alt="비슷한 기출 화면: 같은 근거 조문의 기출 선지와 달라진 부분 표시, 공부 팁">
 
 ## 6. 시스템 구조
 
@@ -539,7 +544,8 @@ PR과 main push마다 GitHub Actions가 다음을 검사합니다.
 | 📄 결과보고서 | [결과보고서 PDF](docs/submission/결과보고서.pdf) · [편집 원본](docs/submission/report.html) |
 | 🖼️ 포스터 | [포스터 PDF](docs/submission/포스터.pdf) · [포스터 PNG](docs/submission/포스터.png) |
 | 📊 발표자료 | `TODO` |
-| 🎬 시연 영상 | `TODO` YouTube 링크 |
+| 🎬 소개 영상 | [YouTube](https://youtu.be/kbe6JpGyPoM) |
+| 🎬 시연 영상 | [YouTube](https://youtu.be/QYN4slUbc9s) |
 
 ## 17. AI 코딩 도구 활용
 

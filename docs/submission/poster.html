@@ -138,10 +138,10 @@
   .verify .count { font-size: 27pt; margin-left: 3mm; }
   .verify .note { margin-top: 5mm; color: var(--muted); font-size: 26pt; }
   .finding {
-    margin-top: 11mm;
+    align-self: start;
     padding: 9mm 12mm;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 18mm;
     background: #f5f0e8;
     color: var(--muted);
@@ -235,7 +235,7 @@
   </section>
   <section aria-labelledby="evaluation-title">
     <div class="section-head">
-      <h2 id="evaluation-title">검색·판정 평가</h2>
+      <h2 id="evaluation-title">검색 평가</h2>
       <p>25~36회 기출 · 검색 평가 802문제</p>
     </div>
     <div class="eval-grid">
@@ -251,15 +251,9 @@
         </table>
         <p class="evaluate-note">BM25의 95% 신뢰구간은 중개사법령 및 중개실무 90~95%, 부동산공법 86~92%였다.</p>
       </div>
-      <div class="verify">
-        <h3>틀린 정답을 승인한 사례</h3>
-        <p><span class="big">0</span><span class="count">건 / 틀린 정답을 넣은 16문제</span></p>
-        <p class="note">정답 조문을 후보에 포함한 판정 시험에서 14문제는 불일치, 2문제는 보류였다. 전체 판정 시험은 37문제로 진행했다.</p>
-      </div>
-    </div>
-    <div class="finding">
+      <div class="finding">
       <p><b>공법에서는 단어 검색이 9%p 앞섰다</b>평가한 465문제에서 BM25의 Recall@5는 89%, 의미 검색은 80%였다.</p>
-      <p><b>판정 시험은 근거가 주어진 조건에서 진행했다</b>실서비스에서는 정답 근거가 후보에 빠질 수 있다. 검색 결과와 판정 결과를 각각 측정했다.</p>
+    </div>
     </div>
     <div class="methods">
       <p><b>서비스의 검색·검증 방식</b>PostgreSQL 단어·벡터 검색으로 후보를 모은다. AI가 후보 조문을 근거로 판정하고, 서버가 인용과 시행일을 원문에서 확인한다. 근거가 부족하면 판단을 보류한다.</p>
