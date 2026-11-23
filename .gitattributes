@@ -4,3 +4,4 @@
 *.png binary
 *.jpg binary
 *.pdf binary
+frontend/src/ocr-assets/*.js binary

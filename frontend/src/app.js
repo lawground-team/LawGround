@@ -1,10 +1,12 @@
 import {ApiClient} from './api.js';
+import {mountPhotoInput, photoInputMarkup} from './photo-input.js';
 import {AnalysisRequests,activeRun,pollDelay,stageLabel,failureMessage,resultMarkup,recommendationsMarkup,similarMarkup} from './analysis.js';
 import {escapeHtml as e, koreaToday, displayTime, emptyQuestion, questionPayload, validateQuestion, statusInfo, shouldPoll, safeLawLink, filterQuestions, errorMessage, SUBJECTS, subjectLabel, SOURCE_NOTICE, splitPastedQuestion, detectQuestionType, detectSubject} from './domain.js';
 
 const root = document.querySelector('#app');
 const state = {me:null, config:null, draft:null, editing:null, dirty:false, busy:false, items:[], cursor:null, query:'', filter:'all', errors:{}, epoch:0, authEpoch:0};
 let controller = new AbortController(), pollTimer;
+let disposePhotoInput;
 const api = new ApiClient({onUnauthorized:expireSession});
 const analysisRequests=new AnalysisRequests(api);
 
@@ -25,6 +27,8 @@ function header() {
   return `<header class="site-header"><div class="header-inner"><a href="/" data-nav class="brand" aria-label="LawGround 홈">LawGround<span></span></a>${state.config?.localEnvironment?'<span class="environment">로컬</span>':''}<nav aria-label="주 메뉴">${[['/','홈','home'],['/questions/new','문제 등록','new'],['/library','내 라이브러리','library']].map(([path,label,id]) => `<a href="${path}" data-nav class="${id===active?'active':''}" ${id===active?'aria-current="page"':''}>${label}</a>`).join('')}</nav><div class="account">${state.me ? `<span class="avatar" aria-hidden="true">${e([...state.me.displayName][0] || 'L')}</span><span class="member-name">${e(state.me.displayName)}</span><button class="icon-button" data-action="logout" aria-label="로그아웃" title="로그아웃">${icon('logout')}</button>` : link('/login','로그인','button small')}</div></div></header>`;
 }
 function frame(content, title='LawGround', {focus=true}={}) {
+  disposePhotoInput?.();
+  disposePhotoInput = null;
   document.title = `${title} · LawGround`;
   root.innerHTML = `${header()}<main id="main" class="main-container" tabindex="-1">${content}</main><footer><span class="brand small-brand">LawGround</span><span>법령으로 이해하는 공부</span><span class="footer-right">내가 저장한 문제는 나에게만 공개돼요.</span><p class="source-notice">${SOURCE_NOTICE}</p></footer>`;
   if (focus) document.querySelector('#main').focus({preventScroll:true});
@@ -32,7 +36,7 @@ function frame(content, title='LawGround', {focus=true}={}) {
 function loading(title='내용을 불러오고 있어요') { frame(`<div class="loading-state" aria-busy="true"><span class="spinner"></span><p>${title}</p></div>`); }
 function notify(text) { const el=document.querySelector('#toast'); el.textContent=text; el.hidden=false; clearTimeout(notify.timer); notify.timer=setTimeout(()=>el.hidden=true,4500); }
 function errorBlock(error) { return `<div class="notice error" role="alert">${icon('alert')}<div><strong>${e(errorMessage(error))}</strong>${error.requestId ? `<p>문의용 요청 번호: ${e(error.requestId)}</p>` : ''}</div></div>`; }
-function stopReads() { controller.abort(); controller=new AbortController(); clearTimeout(pollTimer); state.activeRun=null;state.activeQuestion=null;state.epoch++; }
+function stopReads() { disposePhotoInput?.(); controller.abort(); controller=new AbortController(); clearTimeout(pollTimer); state.activeRun=null;state.activeQuestion=null;state.epoch++; }
 function clearPrivateState() { stopReads();analysisRequests.clear(); state.authEpoch++; Object.assign(state,{me:null,draft:null,editing:null,dirty:false,busy:false,items:[],cursor:null,query:'',filter:'all',errors:{}}); document.querySelector('#confirm-dialog').close(); }
 function expireSession() { clearPrivateState(); go('/login?expired=1',true); }
 function go(path, replace=false) { history[replace?'replaceState':'pushState']({},'',path); window.scrollTo(0,0); void route(); }
@@ -83,7 +87,19 @@ function fieldError(name) { return `<span id="error-${name}" class="field-error"
 function invalid(name) { return state.errors[name] ? `aria-invalid="true" aria-describedby="error-${name}"` : ''; }
 function editorView() {
   const d=state.draft;
-  frame(`<div class="breadcrumb">문제 등록 <span>/</span> ${state.editing?'문제 수정':'문제 입력'}</div><div class="page-heading"><div><h1>${state.editing?'문제 내용을 수정해 주세요':'문제와 정답을 입력해 주세요'}</h1><p>입력한 내용은 다음 단계에서 확인하고 저장할 수 있어요.</p></div><span class="private-pill">${icon('lock')}비공개 저장</span></div>${steps(1)}<section class="panel paste-panel"><div class="label-row"><label for="paste-input"><strong>문제 붙여넣기로 채우기</strong></label><span class="field-limit">선택</span></div><p class="helper">휴대폰으로 책 문제를 찍어 글자를 복사한 뒤 붙여 넣으면 본문과 선지 5개를 나눠 채워요. 정답과 기준일은 직접 확인해 주세요.</p><textarea id="paste-input" rows="4" placeholder="예) 12. 공인중개사법령상 … 옳은 것은? ① … ② … ③ … ④ … ⑤ …"></textarea><div id="paste-result" role="status"></div><button class="button secondary" type="button" data-action="apply-paste">본문·선지 나눠 채우기</button></section><div class="editor-layout"><form id="question-form" class="panel question-form" novalidate><div class="field"><label for="question-subject">과목 <span class="required">*</span></label><select id="question-subject" name="subject">${Object.entries(SUBJECTS).map(([value,label])=>`<option value="${value}" ${d.subject===value?'selected':''}>${label}</option>`).join('')}</select></div><div class="field"><label for="question-type">문제 유형 <span class="required">*</span></label><select id="question-type" name="questionType" ${invalid('questionType')}><option value="SELECT_CORRECT" ${d.questionType==='SELECT_CORRECT'?'selected':''}>옳은 설명을 고르는 문제</option><option value="SELECT_INCORRECT" ${d.questionType==='SELECT_INCORRECT'?'selected':''}>틀린 설명을 고르는 문제</option></select>${fieldError('questionType')}</div><div class="field"><div class="label-row"><label for="question-stem">문제 본문 <span class="required">*</span></label><span class="field-limit">최대 10,000자</span></div><textarea id="question-stem" name="stem" rows="4" placeholder="문제의 질문을 입력하세요." ${invalid('stem')}>${e(d.stem)}</textarea>${fieldError('stem')}</div><fieldset class="choice-fields"><legend>선지 <span class="required">*</span></legend>${d.choices.map(({number,text})=>`<div class="choice-field"><label class="choice-number" for="choice-${number}">${number}<span class="sr-only">번 선지</span></label><div class="choice-input"><textarea id="choice-${number}" name="choice${number}" rows="2" placeholder="${number}번 선지 내용을 입력하세요." ${invalid(`choice${number}`)}>${e(text)}</textarea>${fieldError(`choice${number}`)}</div></div>`).join('')}</fieldset><div class="answer-date"><fieldset class="answer-field"><legend>제공된 정답 <span class="required">*</span></legend><div class="answer-options">${[1,2,3,4,5].map(n=>`<label class="answer-option"><input type="radio" name="providedAnswerNumber" value="${n}" ${d.providedAnswerNumber===n?'checked':''} ${invalid('providedAnswerNumber')}><span>${n}</span></label>`).join('')}</div>${fieldError('providedAnswerNumber')}<p class="helper">내 답이 아닌 시험지·교재의 정답을 선택하세요.</p></fieldset><div class="field date-field"><label for="reference-date">법령 기준일 <span class="required">*</span></label><input type="date" id="reference-date" name="referenceDate" value="${e(d.referenceDate)}" ${invalid('referenceDate')}>${fieldError('referenceDate')}<p class="helper">오늘 날짜를 미리 채웠어요. 과거 기출은 적용할 날짜를 확인해 주세요.</p></div></div><div id="form-error" role="alert">${Object.keys(state.errors).length?`<p class="validation-summary">빠진 항목을 확인해 주세요. 입력한 내용은 유지돼요.</p>`:''}</div><div class="form-actions">${link(state.editing?`/questions/${state.editing.id}`:'/','돌아가기','button secondary')}<button class="button" type="submit">입력 내용 확인 ${icon('arrow')}</button></div></form><aside class="input-guide"><h2>입력할 때 확인하세요</h2>${[['1','질문과 5개 선지를 입력하세요.','순서와 부정 표현을 그대로 입력해 주세요.'],['2','제공된 정답을 선택하세요.','내가 고른 답이 아닌, 시험지·교재에서 제공한 정답이에요.'],['3','법령 기준일을 확인하세요.','원하는 날짜를 직접 바꿀 수 있어요. 저장한 문제의 날짜는 자동으로 바뀌지 않아요.']].map(([n,t,p])=>`<div class="guide-item"><span>${n}</span><div><h3>${t}</h3><p>${p}</p></div></div>`).join('')}<div class="guide-bottom">${icon('info')}과목은 공인중개사법령 및 중개실무와 부동산공법을 지원해요.</div></aside></div>`,'문제 입력');
+  frame(`<div class="breadcrumb">문제 등록 <span>/</span> ${state.editing?'문제 수정':'문제 입력'}</div><div class="page-heading"><div><h1>${state.editing?'문제 내용을 수정해 주세요':'문제와 정답을 입력해 주세요'}</h1><p>입력한 내용은 다음 단계에서 확인하고 저장할 수 있어요.</p></div><span class="private-pill">${icon('lock')}비공개 저장</span></div>${steps(1)}<section class="panel paste-panel"><div class="label-row"><label for="paste-input"><strong>문제 붙여넣기로 채우기</strong></label><span class="field-limit">선택</span></div><p class="helper">사진을 찍거나 글자를 붙여 넣어 본문과 선지 5개를 채울 수 있어요. 정답과 기준일은 직접 확인해 주세요.</p>${photoInputMarkup}<textarea id="paste-input" rows="4" placeholder="예) 12. 공인중개사법령상 … 옳은 것은? ① … ② … ③ … ④ … ⑤ …"></textarea><div id="paste-result" role="status"></div><button class="button secondary" type="button" data-action="apply-paste">본문·선지 나눠 채우기</button></section><div class="editor-layout"><form id="question-form" class="panel question-form" novalidate><div class="field"><label for="question-subject">과목 <span class="required">*</span></label><select id="question-subject" name="subject">${Object.entries(SUBJECTS).map(([value,label])=>`<option value="${value}" ${d.subject===value?'selected':''}>${label}</option>`).join('')}</select></div><div class="field"><label for="question-type">문제 유형 <span class="required">*</span></label><select id="question-type" name="questionType" ${invalid('questionType')}><option value="SELECT_CORRECT" ${d.questionType==='SELECT_CORRECT'?'selected':''}>옳은 설명을 고르는 문제</option><option value="SELECT_INCORRECT" ${d.questionType==='SELECT_INCORRECT'?'selected':''}>틀린 설명을 고르는 문제</option></select>${fieldError('questionType')}</div><div class="field"><div class="label-row"><label for="question-stem">문제 본문 <span class="required">*</span></label><span class="field-limit">최대 10,000자</span></div><textarea id="question-stem" name="stem" rows="4" placeholder="문제의 질문을 입력하세요." ${invalid('stem')}>${e(d.stem)}</textarea>${fieldError('stem')}</div><fieldset class="choice-fields"><legend>선지 <span class="required">*</span></legend>${d.choices.map(({number,text})=>`<div class="choice-field"><label class="choice-number" for="choice-${number}">${number}<span class="sr-only">번 선지</span></label><div class="choice-input"><textarea id="choice-${number}" name="choice${number}" rows="2" placeholder="${number}번 선지 내용을 입력하세요." ${invalid(`choice${number}`)}>${e(text)}</textarea>${fieldError(`choice${number}`)}</div></div>`).join('')}</fieldset><div class="answer-date"><fieldset class="answer-field"><legend>제공된 정답 <span class="required">*</span></legend><div class="answer-options">${[1,2,3,4,5].map(n=>`<label class="answer-option"><input type="radio" name="providedAnswerNumber" value="${n}" ${d.providedAnswerNumber===n?'checked':''} ${invalid('providedAnswerNumber')}><span>${n}</span></label>`).join('')}</div>${fieldError('providedAnswerNumber')}<p class="helper">내 답이 아닌 시험지·교재의 정답을 선택하세요.</p></fieldset><div class="field date-field"><label for="reference-date">법령 기준일 <span class="required">*</span></label><input type="date" id="reference-date" name="referenceDate" value="${e(d.referenceDate)}" ${invalid('referenceDate')}>${fieldError('referenceDate')}<p class="helper">오늘 날짜를 미리 채웠어요. 과거 기출은 적용할 날짜를 확인해 주세요.</p></div></div><div id="form-error" role="alert">${Object.keys(state.errors).length?`<p class="validation-summary">빠진 항목을 확인해 주세요. 입력한 내용은 유지돼요.</p>`:''}</div><div class="form-actions">${link(state.editing?`/questions/${state.editing.id}`:'/','돌아가기','button secondary')}<button class="button" type="submit">입력 내용 확인 ${icon('arrow')}</button></div></form><aside class="input-guide"><h2>입력할 때 확인하세요</h2>${[['1','질문과 5개 선지를 입력하세요.','순서와 부정 표현을 그대로 입력해 주세요.'],['2','제공된 정답을 선택하세요.','내가 고른 답이 아닌, 시험지·교재에서 제공한 정답이에요.'],['3','법령 기준일을 확인하세요.','원하는 날짜를 직접 바꿀 수 있어요. 저장한 문제의 날짜는 자동으로 바뀌지 않아요.']].map(([n,t,p])=>`<div class="guide-item"><span>${n}</span><div><h3>${t}</h3><p>${p}</p></div></div>`).join('')}<div class="guide-bottom">${icon('info')}과목은 공인중개사법령 및 중개실무와 부동산공법을 지원해요.</div></aside></div>`,'문제 입력');
+  disposePhotoInput = mountPhotoInput(root, {
+    hasDraft: () => Boolean(state.draft.stem.trim() || state.draft.choices.some(choice => choice.text.trim())),
+    onApply(parsed, raw) {
+      applyParsedQuestion(parsed);
+      document.querySelector('#paste-input').value = raw;
+      const host = document.querySelector('#paste-result');
+      const note = document.createElement('p');
+      note.className = 'notice success';
+      note.textContent = '사진에서 읽은 본문과 선지를 채웠어요. 과목, 문제 유형, 정답과 기준일을 확인해 주세요.';
+      host.append(note);
+    },
+  });
 }
 function steps(current) { return `<ol class="steps" aria-label="문제 저장 단계">${['문제 입력','입력 확인','저장 완료'].map((s,i)=>`<li class="${i+1===current?'current':i+1<current?'complete':''}" ${i+1===current?'aria-current="step"':''}><span>${i+1<current?icon('check'):i+1}</span>${s}</li>`).join('')}</ol>`; }
 function questionBody(q) { return `<div class="question-type">${e(subjectLabel(q.subject))} <span class="type-pill ${q.questionType==='SELECT_INCORRECT'?'incorrect':''}">${q.questionType==='SELECT_INCORRECT'?'틀린 설명 고르기':'옳은 설명 고르기'}</span></div><h2 class="stem">${e(q.stem)}</h2><ol class="choices-list">${q.choices.map(c=>`<li class="${c.number===q.providedAnswerNumber?'provided-answer':''}"><span class="choice-number">${c.number}</span><p>${e(c.text)}</p>${c.number===q.providedAnswerNumber?'<span class="answer-tag">제공된 정답</span>':''}</li>`).join('')}</ol><div class="question-footer"><span>제공된 정답 <strong>${q.providedAnswerNumber}번</strong></span><span>법령 기준일 <strong>${e(q.referenceDate)}</strong></span></div>`; }
@@ -197,13 +213,22 @@ async function saveQuestion() {
     if(error.status===400 && error.fieldErrors.length)notify('입력 내용을 다시 확인해 주세요.');
   } finally {state.busy=false;const b=document.querySelector('[data-action="save"]');if(b){b.disabled=false;b.innerHTML=`${icon('check')}${edit?'수정 내용 저장':'문제 저장하기'}`;}const back=document.querySelector('[data-action="back-editor"]');if(back)back.disabled=false;}
 }
+function applyParsedQuestion(parsed, fields = {}) {
+  Object.assign(state.draft, {
+    stem: parsed.stem,
+    choices: parsed.choices.map((text, i) => ({ number: i + 1, text })),
+    ...fields,
+  });
+  state.dirty = true;
+  state.errors = {};
+  editorView();
+}
 function applyPaste() {
   const raw=document.querySelector('#paste-input')?.value ?? '', parsed=splitPastedQuestion(raw);
   const host=document.querySelector('#paste-result');
   if(!parsed){if(host)host.innerHTML='<p class="notice warning">선지 번호(① 또는 1. 1) (1))를 5개 찾지 못했어요. 아래 칸에 직접 나눠 입력해 주세요.</p>';return;}
   const type=detectQuestionType(parsed.stem), subject=detectSubject(raw);
-  Object.assign(state.draft,{stem:parsed.stem, choices:parsed.choices.map((text,i)=>({number:i+1,text})), ...(type?{questionType:type}:{}), ...(subject?{subject}:{})});
-  state.dirty=true;state.errors={};editorView();
+  applyParsedQuestion(parsed, { ...(type ? { questionType: type } : {}), ...(subject ? { subject } : {}) });
   document.querySelector('#paste-input').value=raw;
   document.querySelector('#paste-result').innerHTML=`<p class="notice success">본문과 선지 5개를 채웠어요${type?' · 문제 유형 자동 선택':''}${subject?` · 과목: ${e(SUBJECTS[subject])}`:''}. 정답 번호와 기준일을 확인해 주세요.</p>`;
 }
