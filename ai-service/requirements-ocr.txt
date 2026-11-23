@@ -1,0 +1,5 @@
+# Optional CPU OCR process for the loopback-only LawGround preview.
+fastapi==0.142.4
+uvicorn==0.54.0
+paddleocr==3.7.0
+paddlepaddle==3.3.1

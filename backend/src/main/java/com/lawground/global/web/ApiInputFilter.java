@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.util.List;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -48,6 +49,14 @@ public class ApiInputFilter extends OncePerRequestFilter {
         if (List.of("X-Member-Id", "Member-Id", "X-Owner-Id").stream()
                 .anyMatch(name -> request.getHeader(name) != null)) {
             error(request, response, 400, ErrorCode.VALIDATION_FAILED, "인증 주체는 서버에서 결정합니다.");
+            return;
+        }
+        if (HttpMethod.POST.matches(request.getMethod())
+                && request.getRequestURI().equals(request.getContextPath() + "/api/v1/photo-ocr")
+                && MediaType.IMAGE_PNG_VALUE.equalsIgnoreCase(request.getContentType())) {
+            // Spring Security checks authentication and CSRF before the OCR controller reads its
+            // bounded PNG.
+            chain.doFilter(request, response);
             return;
         }
         if (request.getContentLengthLong() > MAX_BODY_BYTES) {
