@@ -12,6 +12,37 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 class ApiInputFilterTest {
     @Test
+    void photoOcrPngUsesItsOwnLimitAndCannotSupplyAnIdentity() throws Exception {
+        int length = ApiInputFilter.MAX_BODY_BYTES + 1;
+        var request = new MockHttpServletRequest("POST", "/api/v1/photo-ocr");
+        request.setContentType("image/png");
+        request.setContent(new byte[length]);
+        var filter =
+                new ApiInputFilter(
+                        JsonMapper.builder().addModule(new JavaTimeModule()).build(),
+                        Clock.systemUTC());
+        var response = new MockHttpServletResponse();
+        filter.doFilter(
+                request,
+                response,
+                (req, res) -> {
+                    assertThat(req).isSameAs(request);
+                    assertThat(req.getInputStream().readAllBytes()).hasSize(length);
+                });
+        assertThat(response.getStatus()).isEqualTo(200);
+
+        request.addHeader("X-Member-Id", "other-member");
+        var rejected = new MockHttpServletResponse();
+        filter.doFilter(
+                request,
+                rejected,
+                (req, res) -> {
+                    throw new AssertionError("Identity header allowed");
+                });
+        assertThat(rejected.getStatus()).isEqualTo(400);
+    }
+
+    @Test
     void unknownLengthIsBoundedAndAllowedBodyIsPreserved() throws Exception {
         for (int length :
                 new int[] {ApiInputFilter.MAX_BODY_BYTES, ApiInputFilter.MAX_BODY_BYTES + 1}) {

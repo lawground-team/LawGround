@@ -12,6 +12,17 @@ V001~V008이 적용된다. V008은 선택적인 선지5개와 복수인용의 �
 
 Python 실제 모델의 내부 HTTP 호출은 [AI 연결 검사](ai-connection.md)를 따른다. 사용자 분석 워커 전체 연결과 별도로 검수하며 기본 기동에서 진단 호출을 실행하지 않는다.
 
+## 한국어 PaddleOCR 로컬 검수
+
+기본 문제 입력은 브라우저 OCR을 사용한다. 로컬에서 한국어 PaddleOCR를 사용하려면 별도 Python 환경에 `ai-service/requirements-ocr.txt`를 설치한다. 공식 [글자 영역 검출 모델](https://huggingface.co/PaddlePaddle/PP-OCRv5_mobile_det/tree/0d63e78e2b680928f6b1747d76a08db6e645efb7)과 [한국어 인식 모델](https://huggingface.co/PaddlePaddle/korean_PP-OCRv5_mobile_rec/tree/c02ecaf1f22bfd1c618cce154fd19185b47e663a)의 `inference.json`, `inference.pdiparams`, `inference.yml`을 각 모델 이름의 하위 폴더에 둔다. Windows에서는 한글이 포함된 경로에서 Paddle 모형 로딩에 실패할 수 있으므로 모델 폴더에 ASCII 경로를 사용한다.
+
+1. Python 프로세스에 `LAWGROUND_OCR_MODEL_DIR`을 상위 모델 폴더로 지정한다. 비어 있지 않은 `LAWGROUND_OCR_TOKEN`을 Python과 Spring에 동일하게 설정한다.
+2. `ai-service`에서 `python -m uvicorn app.photo_ocr:app --host 127.0.0.1 --port 8002 --no-access-log`로 실행한다.
+3. Spring을 `local` 프로필과 루프백 주소에서 `LAWGROUND_OCR_SERVER_ENABLED=true`로 실행한다.
+4. 문제 입력에서 캡처 이미지를 붙여 넣고 글자 추출을 누른다. 나눠진 선지 번호와 본문을 원본과 비교한 뒤 반영한다.
+
+선택한 영역의 PNG는 최대 8 MiB이며 두 프로세스의 메모리에서만 처리된다. 선지 번호 하나가 깨지고 수정 위치가 명확하면 화면이 번호 수정을 제안한다. 사진과 대조하고 제안 버튼을 누르면 번호만 바뀐다.
+
 ## 문제 등록·조회 재현 (local 전용)
 
 아래는 Google 로그인과 별개인 선택적 개발 회원 재현이다. 실제 사용자 화면은 [Google 설정](oauth-preparation.md)과 `LAWGROUND_DEV_AUTH_ENABLED=false`를 사용한다. 개발 회원 재현 시에만 `LAWGROUND_OIDC_ENABLED=false`, `LAWGROUND_DEV_AUTH_ENABLED=true`를 명시하고 local/127.0.0.1로 기동한다. prod/test 또는 외부 바인딩에서는 차단한다. 개발 회원 하나를 서버에서 생성하며 클라이언트 memberId로 계정을 고를 수 없다.

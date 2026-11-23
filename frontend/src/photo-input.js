@@ -1,5 +1,5 @@
 import { detectQuestionType, detectSubject, SUBJECTS } from './domain.js';
-import { drawPhoto, isSupportedPhoto, PHOTO_INPUT_LIMIT, PHOTO_PIXEL_LIMIT, recognizePhoto, splitPhotoQuestion } from './ocr.js';
+import { drawPhoto, isSupportedPhoto, missingPhotoChoice, PHOTO_INPUT_LIMIT, PHOTO_PIXEL_LIMIT, recognizePhoto, recognizePhotoOnServer, splitPhotoQuestion } from './ocr.js';
 
 export const photoInputMarkup = `
   <div class="photo-entry" aria-label="사진으로 문제 입력">
@@ -8,9 +8,10 @@ export const photoInputMarkup = `
     <input type="file" data-photo-file="camera" accept="image/*" capture="environment" hidden>
     <input type="file" data-photo-file="gallery" accept="image/jpeg,image/png,image/webp" hidden>
   </div>
+  <p class="helper">복사한 스크린샷은 이 화면에서 Ctrl+V로 넣을 수 있어요.</p>
   <dialog class="photo-dialog" aria-labelledby="photo-title">
     <h2 id="photo-title">사진에서 문제 읽기</h2>
-    <p>문제 한 개가 보이게 맞춰 주세요. 사진은 브라우저에서 처리해요.</p>
+    <p>문제 한 개가 보이게 맞춰 주세요. <span data-photo-privacy>사진은 브라우저에서 처리해요.</span></p>
     <div class="photo-columns">
       <div>
         <canvas class="photo-preview" role="img" aria-label="문제 사진 미리보기" hidden></canvas>
@@ -34,6 +35,10 @@ export const photoInputMarkup = `
         <label for="photo-text">인식 텍스트</label>
         <textarea id="photo-text" rows="8" placeholder="추출한 글자를 사진과 대조해 수정할 수 있어요."></textarea>
         <p class="helper">‘옳지 않은’, 숫자, 조문 번호와 선지 ①~⑤를 확인해 주세요.</p>
+        <div data-photo-repair class="photo-repair" hidden>
+          <p class="helper" role="status"></p>
+          <button type="button" class="button secondary" data-photo-control="repair" hidden></button>
+        </div>
         <p data-photo-suggestion class="helper" hidden></p>
       </div>
     </div>
@@ -44,19 +49,23 @@ export const photoInputMarkup = `
     </div>
   </dialog>`;
 
-export function mountPhotoInput(host, { hasDraft, onApply }) {
+export function mountPhotoInput(host, { hasDraft, onApply, serverOcrApi }) {
   const dialog = host.querySelector('.photo-dialog');
   const preview = dialog.querySelector('canvas');
   const raw = dialog.querySelector('#photo-text');
   const status = dialog.querySelector('[data-photo-status]');
   const suggestion = dialog.querySelector('[data-photo-suggestion]');
+  const repair = dialog.querySelector('[data-photo-repair]');
+  const repairMessage = repair.querySelector('p');
   const control = name => dialog.querySelector(`[data-photo-control="${name}"]`);
   const edges = [...dialog.querySelectorAll('[data-photo-edge]')];
+  if (serverOcrApi) dialog.querySelector('[data-photo-privacy]').textContent = '자른 사진을 이 PC의 OCR 서버에서 처리해요.';
   let bitmap;
   let rotation = 0;
   let loadVersion = 0;
   let task;
   let confirmReplace = false;
+  let missingChoice;
 
   const crop = () => Object.fromEntries(edges.map(input => [input.dataset.photoEdge, Number(input.value)]));
   const render = () => { if (bitmap) drawPhoto(preview, bitmap, rotation, crop(), 850); };
@@ -83,6 +92,8 @@ export function mountPhotoInput(host, { hasDraft, onApply }) {
     raw.value = '';
     status.textContent = '';
     suggestion.hidden = true;
+    repair.hidden = true;
+    missingChoice = null;
     confirmReplace = false;
     control('apply').textContent = '입력란에 반영';
     control('apply').disabled = true;
@@ -93,6 +104,16 @@ export function mountPhotoInput(host, { hasDraft, onApply }) {
     control('apply').textContent = '입력란에 반영';
     control('apply').disabled = !raw.value.trim();
     const parsed = splitPhotoQuestion(raw.value);
+    missingChoice = parsed ? null : missingPhotoChoice(raw.value);
+    repair.hidden = !missingChoice;
+    if (missingChoice) {
+      const { number, repaired, next } = missingChoice;
+      repairMessage.textContent = repaired
+        ? `‘${next.length > 60 ? next.slice(0, 60) + '…' : next}’ 앞 번호가 ${number}번인지 사진과 대조해 주세요.`
+        : `${number}번 선지 번호를 읽지 못했어요. 인식 텍스트에서 번호를 확인해 주세요.`;
+      control('repair').hidden = !repaired;
+      control('repair').textContent = `${number}번 번호로 고치기`;
+    }
     const subject = parsed && detectSubject(raw.value);
     const type = parsed && detectQuestionType(parsed.stem);
     const typeLabel = type && (type === 'SELECT_INCORRECT' ? '틀린 설명 고르기' : '옳은 설명 고르기');
@@ -153,17 +174,24 @@ export function mountPhotoInput(host, { hasDraft, onApply }) {
     task = operation;
     control('read').textContent = '추출 취소';
     control('apply').disabled = true;
+    repair.hidden = true;
     raw.readOnly = true;
     status.textContent = '사진에서 글자를 읽고 있어요.';
     try {
       const canvas = document.createElement('canvas');
       drawPhoto(canvas, bitmap, rotation, crop(), 2600);
-      const text = await recognizePhoto(canvas, { signal: operation.signal });
+      const signal = operation.signal;
+      const text = serverOcrApi
+        ? await recognizePhotoOnServer(canvas, { signal, api: serverOcrApi })
+        : await recognizePhoto(canvas, { signal });
       if (task !== operation) return;
       raw.value = text.trim();
       status.textContent = raw.value ? '인식한 글자를 사진과 대조해 주세요.' : '읽을 글자를 찾지 못했어요. 사진 범위를 조정해 보세요.';
-    } catch {
-      if (task === operation) status.textContent = '글자 추출을 완료하지 못했어요. 다시 시도하거나 직접 입력해 주세요.';
+    } catch (error) {
+      if (task !== operation) return;
+      if (error.status === 413) status.textContent = '사진이 너무 커요. 문제 한 개만 보이게 잘라 다시 시도해 주세요.';
+      else if (error.status === 429) status.textContent = '이전 사진을 처리하고 있어요. 잠시 후 다시 시도해 주세요.';
+      else status.textContent = '글자 추출을 완료하지 못했어요. 다시 시도하거나 직접 입력해 주세요.';
     } finally {
       if (task === operation) {
         cancelTask();
@@ -182,6 +210,13 @@ export function mountPhotoInput(host, { hasDraft, onApply }) {
       if (file) void select(file);
     };
   }
+  function pastePhoto(event) {
+    const photo = Array.from(event.clipboardData?.files ?? []).find(file => file.type.startsWith('image/'));
+    if (!photo) return;
+    event.preventDefault();
+    void select(photo);
+  }
+  document.addEventListener('paste', pastePhoto);
   control('close').onclick = () => dialog.close();
   dialog.onclose = resetPhoto;
   control('rotate').onclick = () => {
@@ -192,6 +227,14 @@ export function mountPhotoInput(host, { hasDraft, onApply }) {
   for (const edge of edges) edge.oninput = changeCrop;
   control('read').onclick = () => void read();
   raw.oninput = updateText;
+  control('repair').onclick = () => {
+    if (!missingChoice?.repaired || task) return;
+    const { number, repaired } = missingChoice;
+    raw.value = repaired;
+    updateText();
+    status.textContent = `${number}번 선지 번호를 고쳤어요. 내용을 확인한 뒤 입력란에 반영해 주세요.`;
+    control('apply').focus();
+  };
   control('apply').onclick = () => {
     const text = raw.value.trim();
     const parsed = splitPhotoQuestion(text);
@@ -208,5 +251,8 @@ export function mountPhotoInput(host, { hasDraft, onApply }) {
     }
     onApply(parsed, text);
   };
-  return resetPhoto;
+  return () => {
+    document.removeEventListener('paste', pastePhoto);
+    resetPhoto();
+  };
 }

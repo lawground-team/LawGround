@@ -86,6 +86,7 @@ public class SecurityConfiguration {
                                 .permitAll();
                     }
                     requests.requestMatchers(HttpMethod.POST, "/api/v1/questions").authenticated();
+                    requests.requestMatchers(HttpMethod.POST, "/api/v1/photo-ocr").authenticated();
                     requests.requestMatchers(HttpMethod.GET, "/api/v1/questions/*").permitAll();
                     requests.requestMatchers(
                                     HttpMethod.GET, "/api/v1/questions", "/api/v1/law-articles/*")

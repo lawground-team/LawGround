@@ -15,6 +15,8 @@ server:
   address: ${SERVER_ADDRESS:127.0.0.1}
 
 lawground:
+  ocr:
+    server-enabled: ${LAWGROUND_OCR_SERVER_ENABLED:false}
   security:
     allow-local-docs: true
 

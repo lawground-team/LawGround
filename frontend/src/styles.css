@@ -29,6 +29,8 @@
 .photo-columns>div{min-width:0}
 .photo-columns label{font-weight:650}
 .photo-dialog textarea{margin-top:8px;resize:vertical}
+.photo-repair{margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px}
+.photo-repair button{margin-top:8px}
 .photo-preview:not([hidden]){display:block;max-width:100%;height:auto;max-height:46vh;object-fit:contain;margin:0 auto 12px;border:1px solid var(--line);border-radius:8px}
 .photo-crop{margin:12px 0}
 .photo-crop summary{cursor:pointer}

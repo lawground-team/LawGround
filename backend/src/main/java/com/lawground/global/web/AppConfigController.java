@@ -1,5 +1,6 @@
 package com.lawground.global.web;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.lawground.auth.OidcLoginSupport;
 import com.lawground.job.service.LiveRunPlan;
 import org.springframework.beans.factory.ObjectProvider;
@@ -16,16 +17,19 @@ public class AppConfigController {
     private final Environment environment;
     private final LiveRunPlan live;
     private final boolean uiEnabled;
+    private final boolean serverOcr;
 
     public AppConfigController(
             ObjectProvider<OidcLoginSupport> oidc,
             Environment environment,
             LiveRunPlan live,
-            @Value("${lawground.ui.analysis-enabled:false}") boolean uiEnabled) {
+            @Value("${lawground.ui.analysis-enabled:false}") boolean uiEnabled,
+            @Value("${lawground.ocr.server-enabled:false}") boolean serverOcr) {
         this.oidc = oidc;
         this.environment = environment;
         this.live = live;
         this.uiEnabled = uiEnabled;
+        this.serverOcr = serverOcr;
     }
 
     @GetMapping("/api/v1/app/config")
@@ -37,9 +41,13 @@ public class AppConfigController {
                         new Config(
                                 oidc.getIfAvailable() != null,
                                 environment.matchesProfiles("local & !prod & !test"),
-                                uiEnabled && live.enabled() && live.verificationEnabled()));
+                                uiEnabled && live.enabled() && live.verificationEnabled(),
+                                serverOcr && environment.matchesProfiles("local & !prod & !test")));
     }
 
     public record Config(
-            boolean googleLoginEnabled, boolean localEnvironment, boolean analysisAvailable) {}
+            boolean googleLoginEnabled,
+            boolean localEnvironment,
+            boolean analysisAvailable,
+            @JsonInclude(JsonInclude.Include.NON_DEFAULT) boolean serverOcr) {}
 }
