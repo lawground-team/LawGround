@@ -32,6 +32,10 @@ import org.springframework.security.web.servlet.util.matcher.PathPatternRequestM
 
 @Configuration(proxyBeanMethods = false)
 public class SecurityConfiguration {
+    private static final String OCR_WORKER = "/app/ocr-assets/worker.min.js";
+    private static final String CONTENT_POLICY =
+            "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'";
+
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
@@ -131,11 +135,22 @@ public class SecurityConfiguration {
         http.headers(
                 headers ->
                         headers.addHeaderWriter(
-                                new DelegatingRequestMatcherHeaderWriter(
-                                        request ->
-                                                !request.getServletPath().startsWith("/swagger-ui"),
-                                        new ContentSecurityPolicyHeaderWriter(
-                                                "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"))));
+                                        new DelegatingRequestMatcherHeaderWriter(
+                                                request ->
+                                                        !request.getServletPath()
+                                                                        .startsWith("/swagger-ui")
+                                                                && !OCR_WORKER.equals(
+                                                                        request.getServletPath()),
+                                                new ContentSecurityPolicyHeaderWriter(
+                                                        CONTENT_POLICY)))
+                                .addHeaderWriter(
+                                        new DelegatingRequestMatcherHeaderWriter(
+                                                request ->
+                                                        OCR_WORKER.equals(request.getServletPath()),
+                                                new ContentSecurityPolicyHeaderWriter(
+                                                        CONTENT_POLICY.replace(
+                                                                "script-src 'self';",
+                                                                "script-src 'self' 'wasm-unsafe-eval';")))));
         http.exceptionHandling(
                 errors ->
                         errors.authenticationEntryPoint(
