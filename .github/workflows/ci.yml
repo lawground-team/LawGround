@@ -35,6 +35,17 @@ jobs:
         run: ./gradlew clean check bootJar --no-daemon
       - name: Verify backend container build
         run: docker build --tag lawground-backend:ci --file backend/Dockerfile .
+      - name: Upload deployable Spring jar
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: lawground-deploy-jar
+          path: |
+            backend/build/libs/lawground-backend-*.jar
+            !backend/build/libs/*-plain.jar
+          if-no-files-found: error
+          overwrite: true
+          retention-days: 7
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -140,3 +151,29 @@ jobs:
           test "$AI_RESULT" = "success"
           test "$FRONTEND_RESULT" = "success"
           test "$BROWSER_RESULT" = "success"
+
+  publish-deployment:
+    needs: ci-summary
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: lawground-deploy-jar
+          path: staging/jar
+      - name: Bundle the tested application
+        run: bash ops/build-deploy-bundle.sh "$GITHUB_SHA" staging/jar/lawground-backend-*.jar
+      - name: Publish the deployment asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="deploy-$GITHUB_SHA-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          gh release create "$tag" "lawground-$GITHUB_SHA.tar.gz" \
+            --target "$GITHUB_SHA" --prerelease --latest=false \
+            --title "Deployment ${GITHUB_SHA:0:12} ($GITHUB_RUN_ATTEMPT)" \
+            --notes "Built by https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
